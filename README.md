@@ -2,4 +2,6 @@
 Today I learned :)
 
 ## Java
-* [Basics](https://github.com/injuk/TIL/blob/master/Java/Basics/Basics001.md)
+### Basics
+* [Basics001](https://github.com/injuk/TIL/blob/master/Java/Basics/Basics001.md)
+* [Basics002](https://github.com/injuk/TIL/blob/master/Java/Basics/Basics002.md)
