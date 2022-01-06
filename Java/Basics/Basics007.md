@@ -47,3 +47,157 @@ class TempB {
   * 자식 클래스의 오버라이딩된 메소드는 부모 클래스의 static을 제거하거나, 새로 붙일 수 없다.
 * 위 세 제약 조건은 is - a 관계를 토대로 생각해보면 쉽다. 자식 클래스는 부모 클래스를 대체할 수 있어야 한다!
 
+### super
+* 부모 클래스로부터 상속받은 멤버를 참조하기 위해 사용되는 참조 변수이다.
+* this의 예시에서, 멤버 변수와 지역 변수의 이름을 구분할 수 있었듯 super는 상속 받은 멤버와 인스턴스 자신의 멤버를 구분한다.
+* 상속 받은 멤버 또한 자신의 멤버이므로 this로 참조할 수 있다.
+  * 따라서 super는 상속 받은 부모의 멤버와 자식의 멤버가 중복 정의되어 구분이 필요할 때만 사용하는 것이 좋다.
+* super와 this는 근본적으로 같다. 모든 **인스턴스의 메소드에는 자신이 속한 인스턴스의 주소가 지역 변수로 저장**되고, 이것이 this와 super의 값이 된다.
+* static 메소드는 인스턴스와 관련이 없으므로, this와 super를 사용할 수 없다.
+```
+class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello World!");
+        Child c = new Child();
+        c.hello();
+        c.methodForPrint();
+    }
+}
+
+class Parent {
+  int num = 10;
+  
+  void methodForPrint() {
+    System.out.println("Hellooo");
+  }
+}
+class Child extends Parent {
+  int num = 30;
+  
+  void hello() {
+    System.out.println(num); // 30
+    System.out.println(this.num); // 30
+    System.out.println(super.num); // 10
+  }
+  void methodForPrint() {
+    super.methodForPrint(); // 부모 클래스의 동명의 메소드를 호출
+  }
+}
+```
+
+### super()
+* 부모 클래스의 생성자를 호출할 때 사용한다.
+* 부모로부터 상속 받은 자식 클래스를 인스턴스화할 때, 우선 부모 클래스의 멤버가 초기화되어 있어야 한다.
+* 따라서 자식 클래스의 생성자는 우선 부모 클래스의 생성자를 호출해야 한다.
+  * 이는 자식 클래스의 멤버가 부모 클래스의 멤버를 사용해야할 수도 있기 때문에 그렇다.
+  * 부모 클래스의 생성자인 super()를 명시적으로 호출하지 않으면 컴파일러가 자동으로 super();를 첫 줄에 추가한다. 
+* 이러한 부모 클래스 생성자의 호출 흐름은 Object 클래스에 거슬러 올라갈 때까지 반복된다.
+```
+class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello World!");
+        
+        Child c = new Child();
+    }
+}
+
+class Parent {
+  int a;
+  int b;
+//   Parent() {}; // 1. 주석을 풀어 줘야 에러가 발생하지 않는다.
+  Parent(int a, int b) {
+    // 2. super()가 없으므로 컴파일러가 자동으로 super();를 호출하며, 이는 Object();에 대응된다.
+    this.a = a;
+    this.b = b;
+  }
+}
+class Child extends Parent {
+  Child() {
+    // 3. super()가 없으므로 컴파일러가 자동으로 super();를 호출하나, 부모 클래스에 대응되는 생성자가 없어 에러가 발생한다.
+    System.out.println("Constructor!!!");
+  }
+}
+```
+* **부모 클래스로부터 상속 받은 멤버 변수는 부모 클래스의 생성자로 초기화되도록 구현**되어야 한다.
+* 위 코드 블록의 코드를 이상 없이 수정하면, 다음과 같은 순서로 생성자가 호출된다.
+```
+// Parent() {}에도 super()가 없으므로, 자동으로 추가되며 이는 Object()에 대응된다.
+Child() > Parent() > Object()
+```
+
+### Package
+* 패키지란 클래스의 집합, 모임이다.
+  * 패키지는 서로 관련이 있는 클래스 및 인터페이스들을 모아두는 용도이며, 결과 클래스들을 효율적으로 관리할 수 있다.
+* 패키지 역시 하위 패키지를 가질 수 있으며, 경로명은 온점(.)으로 구분한다.
+* 클래스가 물리적으로는 하나의 .class 파일에 저장되듯, **패키지는 물리적으로 하나의 디렉토리로 저장**된다.
+  * 예를 들어, String은 java.lang 디렉토리에 포함된다.
+  * 결국 패키지는 물리적으로 .class 파일들을 포함하는 디렉토리의 계층 구조이다.
+* 같은 이름의 클래스도 다른 패키지에 존재할 수 있다.
+* 클래스의 full name은 실제로는 패키지 경로가 함께 포함되어 있다.
+* 하나의 소스 파일(.java)은 첫 문장으로 단 1회의 패키지 선언을 허용한다.
+  * 패키지는 소스 파일 당 단 한 번만 선언할 수 있고, 소스 파일은 하나의 패키지에만 포함된다.
+  * 해당 소스 파일에 작성된 클래스는 해당 패키지에 포함된다.
+```
+package [패키지 이름];
+// 위 패키지 선언문을 .java 파일의 맨 위에 1회 작성한다.
+// IntelliJ의 경우, src/main/java를 기준으로 패키지 명이 작성된다. 
+// 클래스의 위치가 java/models/subModels인 경우 package models.subModels;인 식.
+```
+* 패키지 명은 클래스 명과의 혼동을 피하기 위해 되도록 소문자로 작성하는 것이 권장된다.
+* Java는 기본적으로 unnamed package 개념을 제공한다. 소스 파일에 아무런 패키지를 작성하지 않은 클래스는 모두 해당 패키지의 소속으로 취급된다.
+
+### import
+* import문은 컴파일러에게 소스 파일에서 사용하는 클래스의 패키지 정보를 제공하기 위해 사용된다.
+  * 컴파일러는 컴파일 시점에 import 문의 정보를 토대로 소스 파일에서 호출하는 클래스에 패키지 명을 붙여준다.
+* 만약 다른 패키지에 위치한 클래스를 사용하려면 패키지 명과 합쳐진 클래스 이름을 모두 작성하여야 한다.
+* 클래스를 호출하기 전에 import 문을 통해 사용하고자 하는 클래스의 패키지를 미리 명시하는 것으로 클래스 이름에서 패키지 명을 제거하고 사용할 수 있다.
+* **import 문은 컴파일 시간에 영향을 주지만, App.의 성능에는 전혀 영향을 주지 않는다**.
+* 일반적인 소스 파일의 구성은 다음과 같다.
+  * import는 package 선언 다음, 클래스 본문 이전에 위치한다.
+  * import 문은 소스 파일에 여러 줄 존재할 수 있다.
+```
+pacakage 선언
+import문
+
+class 작성
+```
+* 이 때, import문은 다음과 같이 작성할 수 있다.
+```
+import [package].[class];
+// 또는 import [package].*;
+```
+* import를 통해 패키지 명 prefix를 생략하고자 하는 패키지와 클래스를 작성한다.
+* 같은 패키지에 위치한 여러 클래스를 사용하고 싶은 경우, [패키지 명].*을 사용할 수 있다.
+  * 이는 컴파일러가 컴파일 시점에 해당 패키지에서 클래스를 찾는 시간이 더 길어지는 결과를 낳는다.
+  * 반면 **App. 실행 시의 성능 차이는 없다**!
+* 패키지의 모든 클래스를 import하기 위해 *이 사용된 경우, 하위의 모든 package depth를 import하는 것은 아니다.
+* 때문에 아래와 같은 축약은 불가하다.
+```
+import java.util.*;
+import java.lang.*;
+
+// import java.*; 로 대체할 수 없다!
+```
+* **같은 패키지에 위치한 클래스는 import 없이 패키지 명을 생략**할 수 있다.
+* 예외적으로, String과 같이 java.lang 패키지에 소속된 클래스들은 암시적으로 import되므로 별도의 import 문 또는 패키지 명시가 필요하지 않다.
+```
+// 아래의 내용은 클래스에 암시적으로 import된다. 
+// 때문에 java.lang.String과 같이 표기하지 않고도 String 클래스를 사용할 수 있다.
+// java.lang 패키지의 구성 요소들은 모두 매우 빈번하게 사용되는 핵심 클래스이기 때문에 그렇다!
+import java.lang.*;
+```
+
+### static import
+* 클래스의 static 멤버를 호출할 때 클래스 이름을 생략할 수 있다.
+```
+// static 멤버인 random을 import한다.
+import static java.lang.Math.random;
+
+class Temp {
+  Temp() {
+    // Math.random()으로 호출하지 않아도 호출히 가능해진다.
+    System.out.println(random());
+  }
+}
+```
+* 해당 기능은 특정 클래스의 static 멤버를 자주 사용할 때 코드를 깔끔하게 관리할 수 있도록 한다.
