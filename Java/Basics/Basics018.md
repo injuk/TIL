@@ -137,3 +137,44 @@ public class ThreadTester {
   * 데몬 쓰레드가 생성한 쓰레드는 자동적으로 데몬 쓰레드가 된다.
 * Java App. 실행시 JVM은 GC, 이벤트처리, 그래픽처리와 같이 App.에 필수적인 보조 작업을 수행하는 데몬 쓰레드들을 자동으로 생성한다.
   * 이들은 당연히 main 또는 system 쓰레드 그룹에 속한다.
+
+### 쓰레드의 상태
+* 쓰레드는 생성 후 큐에 저장되어 자신의 차례를 기다리고, 주어진 실행 시간이 다 된 경우 다시 큐의 마지막으로 돌아가 자신의 차례를 기다린다.
+* 이러한 전제 하에 쓰레드는 다음의 상태를 가질 수 있다.
+  * NEW: 생성되었지만 start()가 호출되지 않음
+  * RUNNABLE: 실행 중이거나, 실행이 가능함
+  * BLOCKED: 동기화 블럭에 의해 일시 중지된 상태
+  * WAITING: 쓰레드의 작업이 아직 종료되지 않았지만 실행이 가능하지 않은 일시 중지 상태
+  * TIMED_WAITING: 정해진 시간 만큼 일시 중지된 상태
+    * 위 세 개의 상태는 일시 중지 상태이며, 일시 중지 시간이 다 되거나 interrupt / notify 메소드가 호출되면 다시 큐의 마지막으로 들어간다.
+    * interrupt 메소드는 해당 쓰레드를 깨워 다시 큐에 되돌리기 위해 InterruptedException을 발생시킨다.
+  * TERMINATED: 쓰레드의 작업이 종료된 상태
+  * 위 상태값들은 Thread의 getState()를 통해 확인할 수 있다.
+* 일시 중지 상태인 쓰레드를 깨우기 위해 interrupt를 사용한다면, InterruptedException에 대비하여 try - catch를 활용한 예외 처리가 필수적이다.
+
+### sleep 메소드
+* 메소드에 지정된 시간만큼 쓰레드를 일시 중지 상태로 만든다.
+* **해당 메소드는 항상 현재 실행 중인 쓰레드에 대해 적용**된다.
+  * 때문에 Thread t1 = new Thread; t1.sleep(1000); 을 하여도 sleep은 해당 문장을 실행한 main 쓰레드에 적용된다.
+  * 이러한 이유로 인해 sleep은 클래스 메소드로 선언되어 있으며, Thread.sleep(1000);과 같이 실행해주어야 한다.
+  * yield 메소드 역시 같은 이유에서 클래스 메소드로 선언되어 있다.
+
+### interrupt 메소드
+* 진행 중인 쓰레드의 작업을 중도 취소하고 싶은 경우에 사용할 수 있다.
+  * 그러나 이는 취소 '요청'이지 '강제 취소'가 아니다. 쓰레드를 강제로 종료시키지는 않는다!
+* interrupt 메소드는 해당 쓰레드의 멤버 변수인 interrupted 값을 true로 변경시킨다.
+* interrupted 변수의 값은 다음의 메소드를 통해 확인할 수 있다.
+  * isInterrupted: 쓰레드의 현재 interrupted 상태를 반환한다.
+  * interrupted: 쓰레드의 interruped 상태를 반환하고, 값을 false로 변경한다.
+* 쓰레드가 sleep, wait, join 메소드에 의해 WAITING 상태에 있을 경우, interrupt 호출 시 InterruptedException이 발생하고 sleep, wait, join으로부터 벗어나게 된다.
+  * 결과 쓰레드의 상태는 WAITING에서 RUNNABLE이 된다
+  * **이 떄, interrupted의 값은 자동으로 false로 변경**된다.
+
+### join 메소드
+* 쓰레드가 하던 작업을 잠시 멈추고, 다른 쓰레드가 지정된 시간 동안 작업을 수행하도록 한다.
+  * 자신의 작업에 다른 쓰레드를 참여시키므로 [쓰레드].join()이라는 시멘틱이 적용되었다.
+  * 메소드에 시간을 지정하지 않으면 해당 쓰레드의 작업이 종료될 때까지 기다린다.
+* join 역시 interrupt에 의해 대기 상태를 더 빠르게 벗어날 수 있다.
+  * 이 경우, InterruptedException에 대비하여 join이 호출되는 부분은 try - catch를 통한 예외 처리가 적용되어 있어야 한다.
+* join은 sleep이나 yield와 달리 참조 변수가 가리키는 특정 쓰레드에 대해 동작한다.
+* join은 특정 쓰레드의 작업이 종료되기 전에 다른 쓰레드의 작업이 먼저 진행되어야할 떄 활용해볼 수 있다.
