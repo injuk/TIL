@@ -97,3 +97,138 @@ class Main {
 * Main에서는 getLambda를 통해 람다식을 반환받고, 이 람다식을 그대로 runLambda에 전달한다.
 * 이렇듯 **함수의 역할을 하는 람다식을 마치 변수처럼 메소드간에 주고 받도록** 할 수 있다.
     * 실제로는 익명 클래스의 인스턴스를 메소드 간에 주고 받는 것이지만, 람다식 개념이 도입됨으로써 식이 더 간결해지고 가독성이 좋아진다.
+* 람다식의 타입이 함수형 인터페이스로 명시된 인터페이스와 일치하는 것은 아니다.
+      * 그러나 인터페이스를 구현한 클래스의 인스턴스화 동일하므로 인터페이스로의 형변환을 허용하며, 이러한 형변환은 생략이 가능하다.
+      * 인터페이스로 형변환된 람다식은 Object 클래스로 형변환이 가능하다. 람다식을 바로 Object 클래스로 형변환하는 것은 불가능하다.
+
+### java.util.function
+* 대부분의 메소드는 타입이나 매개 변수 정보, 반환형이 비슷하다.
+* 이러한 사실을 전제로 java.util.function 패키지에는 **자주 쓰이는 형식의 메소드 형태를 기반으로 함수형 인터페이스를 정의**해두었다.
+   * 매번 함수형 인터페이스를 정의하기보다는 해당 패키지의 인터페이스를 활용하는 것이 바람직하다.
+* 매개 변수가 하나인 함수형 인터페이스:
+   1. Supplier: 매개 변수 없이 하나의 값을 반환한다.
+   2. Consumer: 매개 변수를 하나 받지만 값을 반환하지 않는다.
+   3. Function: 매개 변수를 하나 받아 하나의 값을 반환한다.
+      * 자식으로는 UnaryOperator 인터페이스가 있다.
+      * UnaryOperator는 T apply(T t)형태이다. 
+   4. Predicate: 매개 변수를 하나 받아 boolean을 반환한다.
+      * 조건식 표현에 유용하다.
+```
+import java.util.function.Predicate;
+
+class Main {
+  public static void main(String[] args) {
+    Predicate<Integer> isZero = num -> num == 0;
+
+    System.out.println(isZero.test(0)); // test는 Predicate 인터페이스에 정의된 메소드이다.
+    System.out.println(isZero.test(10)); // boolean test(T t);
+    
+    Function<Integer, String> toStr = num -> num.toString();
+    System.out.println(toStr.apply(10)); // apply는 Function 인터페이스에 정의된 메소드이다.
+    // R apply(T t);
+  }
+}
+```
+* Function과 Predicate의 차이는 조건식 표현에 시멘틱상 Predicate가 더 적합하다는 점이다.
+* 매개 변수가 두 개인 함수형 인터페이스:
+   * 이름 앞에 접두사 Bi가 붙는다.
+   1. BiConsumer: 매개 변수를 두 개 받지만 값을 반환하지 않는다.
+   2. BiPredicate: 매개 변수를 두 개 받아 boolean을 반환한다. 
+   3. BiFunction: 매개 변수를 두 개 받아 하나의 값을 반환한다.
+      * BinaryOperator: 자식 인터페이스이며, T apply(T t, T t)형태를 갖는다. 
+* **두 개 이상의 매개 변수를 갖는 함수형 인터페이스는 직접 정의해서 사용**해야 한다.
+
+### 컬렉션 프레임워크와 함수형 인터페이스
+* 컬렉션 프레임워크의 인터페이스에 포함된 default 메소드 중 일부는 함수형 인터페이스를 사용한다.
+* Collection
+   * removeIf: Preficate를 받아 조건에 맞는 요소를 삭제한다.
+* List
+   * replaceAll: UnaryOperator를 받아 모든 요소를 변환하여 대체한다.
+* Iterable
+   * forEach: Consumer를 받아 모든 요소에 정의된 작업을 수행한다.
+* Map
+   * compute: key와 BiFunction을 받아 해당 key에 정의된 작업을 수행한다.
+   * forEach: BuConsumer를 받아 모든 요소에 대해 정의된 작업을 수행한다.
+   * replaceAll: BiFunction을 받아 모든 요소를 변환하여 대체한다.
+   * merge: key, value, BiFunction을 받아 모든 요소에 대해 정의된 병합 작업을 수행한다.
+
+### Function의 합성과 Predicate의 결합
+* Function 인터페이스에는 default 메소드인 andThen과 compose가 제공된다.
+   1. andThen: f.andThen(g)의 형태로 사용하여 g(f(x))의 새로운 Function을 반환한다.
+   2. compose: f.compose(g)의 형태로 사용하여 f(g(x))의 새로운 Function을 반환한다.
+* Predicate 인터페이스에는 default 메소드인 and, or, negate가 제공된다.
+   * 여러 조건식을 논리 연산자로 묶어 하나의 식을 만들듯, 여러 Predicate를 묶어 하나의 새로운 Predicate로 만들어주는데에 사용한다.
+   * p.and(q), p.or(q), p.negate() 형식으로 사용한다.
+   * p.negate()는 조건식 전체에 대한 부정을 나타낸다.
+* Predicate.isEqual(Object o) 두 대상을 비교한 Predicate의 생성에 사용한다.
+   * 첫 비교 대상은 isEqual의 매개 변수이고, 두 번째 비교 대상은 test의 매개 변수로 넣어준다.
+```
+class Main {
+  public static void main(String[] args) {
+    System.out.println(Predicate.isEqual(10).test(20)); // 10과 20을 비교하며, 결과는 false이다.
+  }
+}
+```
+
+### 메소드 참조
+* 메소드 참조는 메소드를 간단하게 표현하는 람다식을 한 단계 더 간소화한다.
+* 메소드 참조는 람다식이 하나의 메소드만 호출하는 경우에 사용할 수 있다.
+```
+class Main {
+  public static void main(String[] args) {
+    List<Integer> list = new ArrayList<>();
+    list.add(10);
+    list.add(20);
+    list.add(30);
+
+    list.forEach(num -> System.out.println(num));
+    list.forEach(System.out::println); // 메소드 참조가 적용되었다. 윗 줄과 기능이 같다!
+  }
+}
+```
+* 람다식의 매개 변수가 둘이여도, 하나의 메소드만 호출하는 경우라면 메소드 참조가 가능하다.
+```
+class Main {
+  public static void main(String[] args) {
+    BiFunction<String, String, Boolean> bf1 = (str1, str2) -> str1.equals(str2);
+    BiFunction<String, String, Boolean> bf2 = String::equals;
+  }
+}
+```
+* 특정 클래스의 메소드를 호출하는 경우에도 참조 변수를 활용하여 메소드 참조가 가능하다.
+```
+class Main {
+  public static void main(String[] args) {
+    Calculator calculator = new Calculator();
+    Function<Integer, Integer> f = calculator::add10; // 참조 변수 calculator를 반드시 명시한다.
+  }
+}
+
+class Calculator {
+  public Integer add10(Integer num) {
+    return num + 10;
+  }
+}
+```
+* **하나의 메소드만 호출하는 람다식은 [클래스명]::[메소드명] 또는 [참조변수]::[메소드명]으로 바꾸어 간소화**할 수 있다.
+* 생성자 역시 같은 원리에서 메소드 참조가 가능하며, **[클래스명]::new 형태로 작성**한다.
+   * 이 때, 매개 변수가 있는 생성자인 경우 적절한 함수형 인터페이스를 사용해야 한다.
+```
+class Main {
+  public static void main(String[] args) {
+    Supplier<Calculator> s = Calculator::new; // 매개 변수가 없는 생성자를 사용한 경우.
+    Function<String, Calculator> f = Calculator::new; // String 매개 변수를 받는 생성자를 사용한 경우.
+  }
+}
+
+class Calculator {
+  String name;
+  Calculator() {
+    this.name = "temp";
+  }
+  Calculator(String name) {
+    this.name = name;
+  }
+}
+```
+* 메소드 참조는 람다식을 마치 static 변수처럼 사용할 수 있도록 해주며, 코드 간소화에 유용한 테크닉이다.
