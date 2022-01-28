@@ -169,3 +169,34 @@ public void deletePageAndAllReferences(Page page) throws Exception {
 * 상술한 원칙들은 함수를 잘 만드는 원칙이며, 이를 따른다면 길이가 짧고, 직관적인 이름을 갖는 체계적인 함수가 작성된다.
   * 그러나 이러한 **함수 역시 시스템의 이야기를 풀어나가기 위한 도구인 점을 명확하게 이해**해야 한다.
   * 분명하고 정확히 표현된 함수는 쉽게 이야기를 풀어나갈 수 있도록 만든다.
+* 여럿으로 쪼개어진 함수는 아래와 같이 작성하고, 위에서부터 읽히는 순서로 작성하는 것이 좋다.
+```
+(() => {
+    func1();
+    func2();
+    func3();
+    func4();
+})();
+// func1이 가장 먼저 읽히므로, 가장 위에 작성한다.
+function func1() {
+    func5();
+}
+// func1을 추적하면 func5를 우선 호출하게 되므로, func5가 func2보다 먼저 작성된다.
+function func5() {
+};
+function func2() {
+    func6();
+    func7();
+}
+function func6() {
+    func8();
+}
+function func8() {
+}
+function func7() {
+}
+function func3() {
+}
+function func4() {   
+}
+```
