@@ -12,8 +12,9 @@
 * [CleanCode008](https://github.com/injuk/TIL/blob/master/Code/CleanCode/CleanCode008.md)
 * [CleanCode009](https://github.com/injuk/TIL/blob/master/Code/CleanCode/CleanCode009.md)
 
-### Pattern
+### DesignPattern
 ### 2022.02.02 ~
 * [TemplateMethod](https://github.com/injuk/TIL/blob/master/Code/DesignPattern/DesignPattern001.md)
 * [Factory, FactoryMethod](https://github.com/injuk/TIL/blob/master/Code/DesignPattern/DesignPattern002.md)
 * [AbstractFactory](https://github.com/injuk/TIL/blob/master/Code/DesignPattern/DesignPattern003.md)
+* [Facade](https://github.com/injuk/TIL/blob/master/Code/DesignPattern/DesignPattern004.md)
