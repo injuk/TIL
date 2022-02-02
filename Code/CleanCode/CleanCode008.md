@@ -35,7 +35,7 @@
   * 메소드를 더 추상화하여 새로운 맥락에서 재사용할 수 있게 한다면 더 좋다.
   * 이러한 소규모 재사용은 시스템의 복잡도를 크게 줄여주며, 소규모 재사용을 익혀야만 대규모의 재사용이 가능하다.
 * 고차원의 중복을 제거하기 위해 템플릿 메소드 패턴을 활용해볼 수 있다.
-  * [TemplateMethod](https://github.com/injuk/TIL/blob/master/Code/Pattern/Pattern001.md)
+  * [TemplateMethod](https://github.com/injuk/TIL/blob/master/Code/DesignPattern/DesignPattern001.md)
 
 ### 규칙 3. 표현하기
 * 코드를 작성하는 동안에는 코드를 구석구석 이해하며, 자신이 쉽게 이해하는 코드를 짜기 쉽다.
