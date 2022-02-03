@@ -33,3 +33,100 @@
 * 나쁜 코드도 깨끗한 코드가 될 수 있지만, 개선하는 작업은 비용이 크게 드는 작업이며 상당한 시간과 인내를 필요로 한다.
   * 반면 **처음부터 깨끗한 코드를 작성하고, 계속해서 유지하는 것은 상대적으로 쉽다**.
 * **코드는 언제나 깔끔하고 단순하게 정리해야 하며, 썩어 문드러지도록 방치해서는 안된다**.
+
+## 2022-02-04 Fri
+### 내용 보완
+* if 문의 복잡한 조건식은 적절한 이름을 가진 메소드를 활용한 캡슐화를 고려한다.
+  * 조건식이 충분히 간단하다면 캡슐화를 고려하지 않아도 좋다.
+* 일반적으로 부정문은 긍정문보다 이해하기 어렵다. 가능하다면 조건식을 캡슐화한 메소드의 이름은 긍정문으로 작성한다.
+```
+// bad
+if(a == null || b == null || c == null)
+// good, 메소드를 활용한 캡슐화
+if(shouldNotAccepted())
+// best, 부정문을 긍정문으로 변경한다
+if(canBeAccepted())
+```
+* 클래스의 인스턴스 변수와 메소드의 지역 변수의 이름이 같아 this로 구분해야 하는 상황을 지양하자.
+  * 서로 다른 의미의 변수라면 이름은 명확하게 붙여야 한다.
+* 파사드 패턴으로 작성된 메소드에서, 가능하다면 메소드의 사용 방식의 일관성을 맞추어준다.
+```
+// good
+private void doSomething() {
+  given();
+  when = when();
+  then = then();
+}
+// better
+private void doSomething() {
+  given = given();
+  when = when();
+  then = then();
+}
+```
+* 숨겨진 시간적인 결합이란, 메소드 사이에 암시적으로 숨겨진 호출 순서를 말한다. 
+  * 의도치 않게 숨겨진 시간적 결합이 적용된 경우, 디버깅이 매우 어려워질 수 있다.
+  * **숨겨진 시간적인 결합을 명시적으로 노출하려면 반환값과 인수를 활용할 수 있다**.
+```
+let globalVar = 0;
+let first = makeFirst();
+let second = makeSecond();
+
+function makeFirst() {
+  globalVar += 1;
+  return globalVar
+}
+function makeSecond() {
+  globalVar += first;
+  return globalVar;
+}
+```
+* 위 예시의 경우, makeSecond 함수는 makeFirst의 결과를 사용할 것을 전제한다. 
+  * 그러나 이 사실은 코드 상단의 세 줄만 봐서는 드러나지 않는다.
+* 다음과 같이 반환값과 인수를 활용하도록 수정하여 숨겨진 시간적인 결합을 명시할 수 있다.
+```
+let globalVar = 0;
+let first = makeFirst();
+// 반환값과 인수를 활용하여 함수의 실행 순서를 명시적으로 드러낸다.
+let second = makeSecond(first);
+
+function makeFirst() {
+  globalVar += 1;
+  return globalVar
+}
+function makeSecond(first) {
+  globalVar += first;
+  return globalVar;
+}
+```
+* 상술한 수정 방안은 first 변수의 필요성이 잘 드러나지 않을 수도 있다.
+  * 이러한 경우, 함수의 이름을 바꾸고 메소드 내부에서 또 다른 메소드를 호출하도록 다음의 방식을 활용해볼 수도 있다.
+  * 이를 통해 함수의 호출 순서를 보다 확실하게 드러내어줄 수 있다.
+```
+let globalVar = 0;
+let second = makeSecondAfterFirst();
+
+function makeSecondAfterFirst() {
+  let first = makeFirst();
+  globalVar += first;
+  return globalVar;
+}
+function makeFirst() {
+  globalVar += 1;
+  return globalVar
+}
+```
+* 메소드들은 위상적으로 정렬하며, 각 메소드가 호출된 직후에 정의되도록 작성한다.
+* import 문에서 같은 패키지의 여러 클래스를 여러 줄에 걸쳐 import한다면, *을 붙여 한 줄로 축약할 수 있다.
+* 오래된 코드를 보면 static final 상수 모음을 갖는 인터페이스를 상속 받는 클래스를 종종 볼 수 있다.
+  * 이러한 것은 구시대적인 방식이며, 클래스 내부에 public static enum을 정의하여 사용하는 것이 적절하다.
+* **상술한 원칙은 리팩토링 과정에서 얼마든지 롤백될 수 있다**.
+  * 리팩토링 도중에는 결정했던 변경 사항을 원복하는 경우가 흔하다.
+  * **리팩토링은 코드가 어느 정도 깨끗한 수준에 이를 때까지 끊임 없이 시행착오를 겪는 작업임을 명심**하자.
+* **세상에 개선이 필요하지 않는 모듈과 코드는 없다**.
+  * **코드를 처음보다 조금이라도 더 깨끗하게 만들 책임은 우리 모두에게 있음을 기억**하자.
+```
+보이스카우트 규칙
+> 우리는 언제나 코드를 더 쉽게 만든 후에 떠나야 한다. 
+> 우리보다 다음에 올 사람은 이로 인해 보다 쉽게 코드를 이해하고, 더 쉽게 개선하고 떠날 것이다.
+```
