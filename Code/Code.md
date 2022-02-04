@@ -22,3 +22,4 @@
 * [Builder](https://github.com/injuk/TIL/blob/master/Code/DesignPattern/DesignPattern005.md)
 * [Singleton](https://github.com/injuk/TIL/blob/master/Code/DesignPattern/DesignPattern006.md)
 * [Adapter](https://github.com/injuk/TIL/blob/master/Code/DesignPattern/DesignPattern007.md)
+* [Strategy](https://github.com/injuk/TIL/blob/master/Code/DesignPattern/DesignPattern008.md)
