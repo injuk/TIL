@@ -1,4 +1,4 @@
 # Kotlin
 ## Basics
-### 2022.00.00 ~ 
-* 
+### 2022.02.05 ~ 
+* [Basics001](https://github.com/injuk/TIL/blob/master/Kotlin/Basics/Basics001.md)
