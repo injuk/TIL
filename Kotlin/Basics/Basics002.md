@@ -137,3 +137,141 @@ println("\${one + two * three}") // ${one + two * three}
 println("${if(one > 0) one + two * three else "one is zero!"}")
 ```
 * 기본적으로 가독성 측면에서 $만 사용하는 것보다 ${}로 작성하는 습관을 들이는 것이 바람직하다.
+
+## 2022-02-06 Sun
+### Kotlin의 클래스
+* **값 객체란, 코드 없이 데이터만 저장하기 위한 클래스**이다.
+* Kotlin에서는 이러한 값 객체를 간결하게 표현할 수 있다.
+```
+class Person(val name: String)
+```
+* Kotlin의 기본 접근제어자는 public으로 적용되므로, public을 생략할 수 있다.
+* 클래스의 목적은 데이터를 캡슐화하고, 캡슐화된 데이터를 다루는 코드를 하나의 주체 아래에 두는 것이다.
+  * Java에서, 데이터는 필드에 저장된다.
+  * Java에서, 데이터에 접근하거나 변경할 수 있도록 getter나 setter와 같은 접근자 메소드를 생성할 수 있다.
+  * **Java에서, 필드와 접근자 메소드를 합쳐 프로퍼티라고 부른다**. 
+* **Kotlin에서, 프로퍼티는 언어 자체적인 기능으로 제공**된다.
+  * 클래스의 프로퍼티 선언은 읽기 전용 또는 변경 가능성에 따라 val과 var 키워드로 정의된다.
+  1. val: **읽기 전용이며, Kotlin은 비공개 필드와 공개된 getter를 자동으로 생성**한다.
+  2. var: **변경 가능한 프로퍼티이며, Kotlin은 비공개 필드와 공개된 getter와 setter를 자동으로 생성**한다.
+* 이렇듯 Kotlin의 프로퍼티 선언은 프로퍼티와 관련이 있는 접근자 메소드를 선언하는 것이다. 
+  * **이 과정에서 비공개 필드와 getter, setter와 같은 간단한 디폴트 접근자 구현이 제공**된다.
+```
+private class Animal(
+    val name: String,
+    var age: Int
+)
+
+fun main(args:Array<String>) {
+    // new 키워드 없이 생성자를 바로 호출한다.
+    val dog = Animal("dog", 1)
+    // 읽기 전용 프로퍼티 name에 대한 setter는 생성되지 않는다.
+    // dog.name = "temp" 
+    dog.age = 10
+    println(dog.name)
+    println(dog.age)
+}
+```
+* 상술한 Animal 클래스에는 비공개 필드가 포함되고, 생성자가 각 필드를 초기화하며, 각 필드에 접근하기 위한 getter와 setter가 제공된다.
+* Kotlin에서 자동으로 제공되는 getter의 특징은 다음과 같다.
+  1. getXXX의 형식을 사용하지 않고, 바로 프로퍼티에 접근한다.
+     * 상술한 예시에서, dog.getName()이 아닌 dog.name을 호출하는 것을 확인할 수 있다.
+     * 이렇듯 프로퍼티의 이름을 바로 사용해도 Kotlin은 자동으로 getter를 호출한다.
+  2. 예외적으로 **프로퍼티 명이 is로 시작하는 경우, Java 코드에서는 getIsXXX가 아닌 프로퍼티 명을 그대로 사용**한다.
+     * 예를 들어, 프로퍼티 명이 isChild라면 Java에서는 getIsChild가 아닌 isChild로 호출해야 한다.
+* Kotlin에서 자동으로 제공되는 setter의 특징은 다음과 같다.
+  1. var로 선언되어 변경 가능한 프로퍼티인 경우에만 setter가 자동으로 제공된다.
+  2. setter 역시 getter와 같은 형식으로 사용하여, 프로퍼티에 바로 접근한다.
+     * 상술한 예시에서, setAge의 형식이 아닌 dog.age로 바로 접근하는 것을 확인할 수 있다.
+
+### 커스텀 접근자 정의하기
+* 대부분의 프로퍼티에는 프로퍼티의 값을 저장하기 위한 필드가 있으며, 이를 backing field라고 부른다.
+* 필요한 경우, 프로퍼티의 값을 그때그때 계산하는 접근자 메소드를 정의할 수 있다.
+```
+private class Animal(
+    val name: String,
+    var age: Int
+) {
+    // 이미 정의된 프로퍼티를 사용자 정의할 수는 없다.
+    // val name: String
+    
+    // 커스텀 접근자
+    val isLessThanTen: Boolean
+    get() = age < 10 // get() { return age < 10 }과 같은 블록 형태로도 작성할 수 있다.
+}
+
+fun main(args:Array<String>) {
+    val dog = Animal("dog", 1)
+    println(dog.isLessThanTen) // true
+    
+    dog.age = 10
+    // 커스텀 접근자는 val이지만 값을 호출한 시점에 계산하므로, 매 호출마다 결과가 바뀔 수 있다.
+    println(dog.isLessThanTen) // false
+}
+```
+* **사용자가 직접 정의한 isLessThanTen 프로퍼티는 값을 저장하는 비공개 필드를 따로 두지 않는다**.
+  * 사용자가 자체적으로 구현한 getter만이 존재하며, 클라이언트가 프로퍼티에 접근할 때마다 getter가 그 값을 계산한다.
+  * 프로퍼티와 필드는 같은 의미가 아닌 것을 명심하자. 상술한 isLessThanTen은 사용자 정의된 프로퍼티이지, 필드가 아니다!
+* 일반적으로, 상술한 기능의 구현을 위해서 파라미터가 없는 함수와 커스텀 접근자 메소드 중 하나를 선택할 수 있다.
+  * 이 경우, **구현하려는 기능이 클래스의 프로퍼티와 관련이 있다면 시멘틱상 커스텀 접근자가 권장**된다.
+  * 두 방식의 구현 및 성능 상의 차이는 없다.
+
+### Kotlin의 소스 코드 구조
+* Java의 경우 모든 클래스를 패키지 단위로 관리한다.
+* Kotlin에도 패키지 개념이 존재하며, 모든 Kotlin 파일 맨 앞에 package 문을 작성할 수 있다.
+  1. **해당 파일의 모든 클래스, 함수, 프로퍼티 선언은 해당 패키지에 속하게 된다**.
+  2. **같은 패키지에 속한 클래스, 함수, 프로퍼티는 다른 파일에서 정의되었더라도 직접 사용**할 수 있다.
+* 다른 패키지에서 정의된 클래스, 함수, 프로퍼티는 import 키워드를 통해 불러와야 한다.
+  * Java와 마찬가지로 import 문은 파일의 최상단에 위치해야 한다.
+* 최상위 함수의 경우, 클래스 임포트와 마찬가지 방식으로 import 키워드를 통해 가져올 수 있다.
+  * 최상위 함수의 경우 함수의 이름을 써서 import 할 수 있다.
+* 패키지 이름 뒤에 *을 추가하는 경우, 패키지 내부에 선언된 모든 내용을 임포트할 수 있다.
+  * **이 경우, 패키지 내부의 클래스 및 함수와 프로퍼티 모두를 가져온다**.
+```
+// kotlinStudy/diff/Funcs.kt
+package kotlinStudy.diff
+
+fun hello(str: String) = println(str)
+fun getMax(num1: Int, num2: Int) = if(num1 > num2) num1 else num2
+
+// kotlinStudy/MyFirstKotlin.kt
+import kotlinStudy.diff.getMax // 같은 파일의 함수도 각각 import한다.
+import kotlinStudy.diff.hello  // 같은 파일의 함수도 각각 import한다.
+// import kotlinStudy.diff.* // star import를 통해 한 번에 import할 수 있다.
+
+private class Animal(
+    val name: String,
+    var age: Int
+)
+
+fun main(args:Array<String>) {
+    val dog = Animal("dog", 1)
+
+    hello(dog.name)
+    println(getMax(1, dog.age))
+}
+```
+
+### Java와 Kotlin의 패키지 구조 차이
+* Java에서는 패키지 구조와 디렉토리 계층 구조를 일치화시켜야 한다.
+  * Kotlin에서는 패키지 구조와 관계 없이 어느 디렉토리든 소스 코드를 위치시킬 수 있다.
+* Java에서는 소스 코드의 이름과 작성된 클래스의 이름이 같아야 한다.
+  * Kotlin에서는 소스 코드의 이름과 클래스의 이름이 일치하지 않아도 무방하다.
+  * Kotlin에서는 하나의 소스 코드 내부에 여러 클래스가 포함될 수 있다.
+* **대부분의 경우, Kotlin의 패키지 구조 역시 상호운용성을 보장하도록 Java의 관례를 따르는 것이 권장**된다.
+* 그러나 **여러 작은 클래스를 하나의 파일에 작성하는 것은 주저하지 않아야 한다**.
+```
+// 실제 디렉토리는 kotlinStudy/diff/Funcs.kt이다.
+// 다른 소스 코드에서 import시 아래에 명시된 패키지 구조만 사용하면 정의된 선언을 사용할 수 있다.
+package kotlinStudy.diff.test.deep.depth
+
+fun hello(str: String) = println(str)
+
+fun getMax(num1: Int, num2: Int) = if(num1 > num2) num1 else num2
+
+// 여러 public 클래스를 하나의 파일에 작성할 수 있으며, 파일의 이름과 클래스의 이름을 일치시킬 필요가 없다.
+
+public class Test(val name: String)
+public class Temp(val age: String)
+public class A(val a: String)
+```
