@@ -95,3 +95,161 @@ fun complicatedFunction(num:Int = 0, name: String, bool: Boolean = false) {
 var num = 3
 const val temp = 10
 ```
+
+### 확장 함수와 확장 프로퍼티
+* Java 코드와 Kotlin 코드를 자연스럽게 통합하는 것은 Kotlin의 핵심 목표 중 하나이다.
+  * 이에 따라, 기존 Java 프로젝트에 Kotlin을 통합하는 경우에는 Kotlin으로 변환할 수 없거나 미처 변환하지 못한 Java 코드를 처리할 수 있어야 한다.
+  * **기존 Java API를 재작성하는 일 없이 Kotlin이 제공하는 편리한 기능을 사용할 수 있도록 확장 함수 개념이 지원된다**.
+* **확장 함수란, 어떤 클래스의 멤버 메소드인것처럼 호출할 수 있지만 실제로는 클래스 밖에 선언된 함수**이다.
+* 확장 함수의 작성 방식은 일반적인 메소드와 같지만, 메소드 이름 앞에 함수가 확장할 클래스의 이름을 작성한다.
+```
+// Person.kt
+data class Person(
+    val name: String,
+    val age: Int = 0,
+)
+// MyFirstKotlin.kt
+fun main(args: Array<String>) {
+    val person = Person(name = "Hello", age = 11)
+    println(person.isAgeOdd())
+}
+// 확장 함수는 확장하려는 클래스.메소드이름 형태로 작성한다.
+fun Person.isAgeOdd(): Boolean = this.age % 2 === 0
+```
+* 확장 대상이 되는 클래스는 수신 객체 타입, 확장 함수가 호출하는 대상이 되는 값(=객체)은 수신 객체라고 한다.
+  * 상술한 예시에서, 수신 객체 타입은 Person이며 수신 객체는 person이 참조하는 인스턴스이다.
+* 예를 들어, String 클래스에 확장 함수를 추가하는 경우를 가정하면 다음과 같은 큰 의미를 확인할 수 있다.
+  1. String은 우리가 작성한 코드가 아님에도 메소드를 추가한 것처럼 동작시킬 수 있다.
+  2. String은 우리가 소유한 클래스가 아님에도 메소드를 추가한 것처럼 동작시킬 수 있다.
+* 확장 함수는 일반적인 인스턴스 메소드에서 this를 사용할 수 있는 것처럼 확장 함수에서도 this를 사용할 수 있다.
+  * 또한 인스턴스 메소드에서 this를 생략할 수 있는 것처럼 확장 함수에서도 this를 생략할 수 있다.
+```
+fun main(args: Array<String>) {
+    val person = Person(name = "Hello", age = 12)
+    println(person.isAgeOdd())
+    println(person.isAge(12))
+}
+
+// 마치 클래스 내부에 정의된 메소드인 것처럼 this를 생략할 수 있다.
+fun Person.isAgeOdd(): Boolean = age % 2 === 0
+// 마치 클래스 내부에 정의된 메소드인 것처럼 this를 활용할 수 있다.
+fun Person.isAge(age: Int): Boolean = this.age == age
+```
+* 이렇듯 확장 함수 내부에서는 일반적인 인스턴스 메소드와 마찬가지로 수신 객체의 메소드와 프로퍼티를 사용할 수 있다.
+  * 그러나 **클래스 내부에서 정의된 메소드와 달리 private, protected 멤버는 사용할 수 없다**.
+  * **즉, 확장 함수는 캡슐화를 깨트리지 않는다**.
+* 일반적으로 함수를 호출하는 측에서는 호출 대상이 확장 함수인지 멤버 메소드인지 구분할 수 없다.
+  * 사실 이를 구분해야할 필요가 있는 경우도 많지 않다.
+
+### import와 확장 함수
+* 확장 함수는 정의된 동시에 전역에서 접근할 수 있지는 않으며, 필요시 import 문을 통해 가져와야 한다.
+  * 이런 방식을 취하지 않으면 전역에서 동일한 확장 함수가 정의될 때마다 충돌할 수 있을 것이다.
+* import는 일반적인 최상위 함수를 import하는 방법과 동일하며, 스타 임포트도 가능하다.
+* as 키워드를 사용하면 다른 이름으로 가져와 활용할 수도 있다.
+  * 하나의 파일 안에서 여러 다른 패키지의 동명의 메소드를 사용하는 경우, as 키워드를 통해 이름 충돌을 방지할 수 있다.
+  * Kotlin 문법 상 확장 함수는 짧은 이름을 사용하므로, as를 사용하여 이름을 바꾸는 것이 확장 함수의 이름 충돌을 방지할 수 있는 유일한 방법이다.
+```
+// Funcs.kt
+package kotlinStudy.diff.test.deep.depth
+
+fun String.isHelloWorld(): Boolean = this === "HelloWorld"
+
+// MyFirstKotlin.kt
+// 다른 패키지에 있는 함수를 호출하려면 반드시 import해야 한다.
+import kotlinStudy.diff.test.deep.depth.isHelloWorld
+
+// 위 문장을 제거하고 아래 문장을 주석 해제하면, isHelloWorld 메소드를 test라는 이름으로 사용할 수 있다.
+// import kotlinStudy.diff.test.deep.depth.isHelloWorld as test
+
+fun main(args: Array<String>) {
+    println("HelloWorld".isHelloWorld())
+    println("ByeWorld".isHelloWorld())
+}
+```
+* 내부적으로 확장 함수는 수신 객체를 첫 번째 인자로 받는 정적 메소드로 변환된다.
+  * Java에서 확장 함수를 사용하려면 정적 메소드를 호출하며 수신 객체를 인자로 넘겨주기만 하면 된다.
+  * 즉, **확장 함수는 정적 메소드 호출에 대한 문법적인 편의 기능에 지나지 않는다**.
+* 클래스 이름은 최상위 함수와 마찬가지로 소스 코드 파일 명에 따라 결정되며, 상술한 isHelloWorld의 경우 다음과 같이 변환된다.
+```
+FuncsKt.isHelloWorld("HelloWorld");
+FuncsKt.isHelloWorld("ByeWorld");
+```
+
+### 확장 함수와 오버라이드
+* **확장 함수는 정적 메소드와 같은 특징을 지니므로, 하위 클래스에서 오버라이드할 수 없다**.
+* 일반적으로, 부모 클래스의 메소드는 자식 클래스에서 오버라이드할 수 있다.
+  * 또한 부모 클래스의 타입 변수에 자식 클래스의 변수를 대입할 수 있다.
+  * 이 경우, 메소드를 호출하면 자식 클래스의 메소드가 호출된다.
+* **이는 실행 시점에 객체의 실제 타입에 따라 동적으로 호출될 대상 메소드를 결정하는 방식이므로, dynamic dispatch에 해당**한다.
+  * 반면 컴파일 시점에 정해진 메소드를 호출하는 방식은 static dispatch이다.
+  * **프로그래밍 언어에서, dynamic은 런타임을 / static은 컴파일 시점을 의미**한다.
+* 확장 함수는 동적으로 동작하지 않으며, 애초에 클래스의 일부가 아니다.
+  * **확장 함수는 클래스 밖에 선언된다**.
+* 따라서 메소드 시그니쳐가 같은 함수를 자식 클래스에서 정의하더라도 실제로는 수신 객체로 지정한 변수의 정적 타입에 의해 호출될 함수가 결정된다.
+  * **val animal: Animal = Bird()의 경우, Animal이 정적 타입이며 이 변수에 저장된 실제 객체인 Bird는 동적 타입이 된다**.
+  * 즉, 확장 함수는 항상 정적 타입을 따르며 dynamic dispatch가 아닌 static dispatch로 동작한다.
+    * **Kotlin은 호출될 확장 함수를 정적으로 결정한다**.
+```
+fun main(args: Array<String>) {
+    val animal: Animal = Bird()
+    // 런타임 시점에 변수가 참조하는 대상의 실제 타입인 Bird의 오버라이드된 메소드로 결정된다.
+    animal.move()
+    
+    // 호출될 확장 함수는 수신 객체의 정적 타입인 Animal에 따라 컴파일 시점에 결정된다.
+    // 때문에 이 경우 Bird.stop이 아닌 Animal.stop이 호출된다.
+    animal.stop()
+}
+
+open class Animal() {
+    open fun move() = println("Animal moving")
+}
+
+fun Animal.stop() = println("Animal stopping")
+
+class Bird: Animal() {
+    override fun move() = println("Bird flying")
+}
+
+fun Bird.stop() = println("Bird stopping")
+```
+* 확장 함수가 실제로 컴파일되는 방식을 알고 있다면 이해하기 쉽다.
+  * animal.stop은 [파일명]Kt.stop(animal) 형식의 정적 메소드가 된다.
+  * 이 경우, animal이 참조하는 정적 타입은 알 수 있지만 런타임에 결정되는 실제 타입은 알 수 없다.
+  * Java 역시 호출될 static 메소드는 static dispatch 방식으로 결정된다.
+* **동명의 확장 함수와 멤버 함수가 존재할 수 있으며, 호출시 멤버 함수가 우선적으로 호출**된다.
+```
+fun main(args: Array<String>) {
+    val animal = Animal()
+    animal.move() // dynamic move
+}
+
+fun Animal.move() = println("static move")
+
+class Animal {
+    fun move() = println("dynamic move")
+}
+```
+
+### 확장 프로퍼티
+* 확장 프로퍼티는 상태를 저장할 방법이 없으므로, 실제로는 어떠한 상태도 가질 수 없다.
+* 확장 프로퍼티 역시 일반 프로퍼티와 동일하게 작성하지만, 수신 객체 타일을 추가한다.
+```
+fun main(args: Array<String>) {
+    val animal = Animal();
+    // 확장 프로퍼티인 greeting의 getter
+    println(animal.greeting)
+    // 확장 프로퍼티인 greeting의 setter
+    animal.greeting = "not animal"
+    println(animal.greeting)
+}
+
+// val인 경우 setter를 설정할 수 없으므로, 학습을 위해 var로 선언
+var Animal.greeting: String
+get() = "Hello, $name!"
+set(name: String) {
+    this.name = name
+}
+
+class Animal (var name: String = "animal")
+```
+* Java에서 확장 프로퍼티를 사용하는 경우, [소스 코드 파일명]Kt.getGreeting(animal)과 같은 형식이 될 것이다.
