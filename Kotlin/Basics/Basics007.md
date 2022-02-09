@@ -95,3 +95,148 @@ internal class Bird(): Animal() {
 * Kotlin 컴파일러는 internal 가시성 변경자가 적용된 선언을 가독성이 떨어지는 이름으로 바꾼다.
   1. 이는 컴파일 후에 발생할 수 있는 우연한 메소드의 오버라이드를 막고,
   2. 실수로 internal 클래스를 외부 모듈에서 사용하는 것을 미연에 방지하기 위함이다.
+
+### Java의 중첩 클래스
+* Java에서는 클래스 내부에 다른 클래스를 선언할 수 있다.
+  * 이러한 구조는 캡슐화에 유용하며, 특정한 클래스 코드를 해당 클래스를 사용하는 코드에 가까이 두고 싶을 떄 유용하다.
+* Java의 경우, 다른 클래스 안에 정의한 클래스는 자동으로 내부 클래스가 된다.
+  * 기본적으로, **Java의 내부 클래스는 외부 클래스에 대한 참조를 암시적으로 포함**한다.
+  * 직렬화 등의 이유로 인해 암시적인 참조를 제거해야하는 경우, 내부 클래스를 static으로 정의하여 중첩 클래스로 만들어야 한다.
+    * **static으로 선언된 중첩 클래스는 외부 클래스에 대한 암시적인 참조가 사라진다**.
+
+### Kotlin의 중첩 클래스
+* Kotlin의 중첩 클래스는 Java와 달리 기본적으로 **외부 클래스에 대한 접근이 불가능**하다.
+* Kotlin에서 클래스 정의 내부에 포함된 클래스는 기본적으로 Java의 중첩 클래스와 대응된다.
+* **내부에 포함된 클래스를 내부 클래스로 변경하여 외부 클래스에 대한 참조를 포함하도록 하고자 하는 경우, inner 키워드를 붙여주어야 한다**.
+* Java와 딜리, **Kotlin은 내부 클래스가 외부 클래스에 접근하기 위해 this@[Outer_Class_Name] 키워드를 사용**해야 한다.
+  * Inner 클래스에 동명의 프로퍼티가 없다면 this@키워드를 생략할 수 있다.
+```
+fun main(args: Array<String>) {
+    val outer: Outer = Outer("ingnoh")
+    val nested: Outer.Nested = outer.getNested()
+    val inner: Outer.Inner = outer.getInner()
+
+    nested.sayHello()
+    inner.sayHello()
+}
+
+class Outer(val name: String) {
+
+    fun getNested() = Nested("nested")
+    fun getInner() = Inner("inner")
+
+    class Nested(private val name: String) {
+        fun sayHello() {
+            // 중첩 클래스는 외부 프로퍼티에 접근할 수 없으므로, name과 this.name 모두 자신의 프로퍼티이다.
+            println(name)
+            println(this.name)
+            // println(this@Outer.name)
+        }
+    }
+
+    // 내부 클래스가 외부 클래스의 참조에 접근할 필요가 있다면 inner로 정의한다.
+    inner class Inner(private val name: String) {
+        fun sayHello() {
+            // name, this.name은 Inner.name이다.
+            println("hello, ${name}!")
+            // Outer.name을 참조하려면 this@Outer.name 키워드를 사용한다.
+            // 만약 Inner에 name이라는 프로퍼티가 없으면, this@Outer를 생략할 수 있다.
+            println("hello, ${this.name}!")
+            println("hello, ${this@Outer.name}!")
+        }
+    }
+}
+```
+
+### 중첩 클래스와 내부 클래스
+1. 중첩 클래스(Nested class): 외부 클래스에 대한 암시적인 참조를 저장히지 않는다.
+   * Java의 경우, 클래스 내부에 정의된 static class이다.
+   * Kotlin의 경우, 클래스 내부에 정의된 class이다.
+2. 내부 클래스(Inner class): 외부 클래스에 대한 암시적인 참조를 저장한다.
+   * Java의 경우, 클래스 내부에 정의된 class이다.
+   * Kotlin의 경우, 클래스 내부에 정의된 inner class이다.
+
+### 봉인된 클래스
+* **when 식에서 부모 클래스를 자식 클래스로 스마트 캐스트하는 과정은 반드시 else 분기가 강제된다**.
+  * 일반적으로 상술한 용도에서는 else 분기는 유효하지 않은 처리를 하므로 예외를 던지도록 한다.
+  * 만약 부모 클래스에 새로운 자식 클래스가 추가되었는데, 이를 when 분기에 추가하는 것일 잊었다면 시스템의 에러로 이어질 수 있다.
+```
+fun main(args: Array<String>) {
+    checkChild(FirstBone())
+    checkChild(SecondBone())
+    checkChild(ThirdBone())
+}
+
+open class Parent()
+class FirstBone(): Parent()
+class SecondBone(): Parent()
+class ThirdBone(): Parent()
+
+fun checkChild(parent: Parent) =
+    when(parent) {
+        is FirstBone -> println("First!")
+        is SecondBone -> println("Second!")
+        else -> {
+            println("...") 
+            // 만약 아래처럼 구현되었다면 이 시스템은 컴파일은 되지만 예외가 발생하여 종료될 것이다.
+            // throw IllegalArgumentException("...")
+        }
+    }
+```
+* 즉, 상술한 방식은 다음의 두 가지 문제가 있다.
+  1. else 분기의 처리가 강제된다.
+  2. 자식 클래스가 늘어날 때 시스템이 에러가 발생하지 않으리라고 보장할 수 없다.
+* Kotlin의 sealed 클래스는 이에 대한 해법을 제공한다.
+  * **sealed 키워드가 붙은 부모 클래스는 상속될 자식 클래스를 제한할 수 있다**.
+  * sealed 클래스의 자식 클래스는 반드시 sealed 클래스 내부에 정의되어야 한다.
+    * 자식 클래스를 같은 소스 코드의 외부에 정의할 수는 있으나, 이는 sealed 클래스의 용도에 맞지 않으므로 지양한다.
+  * sealed 클래스는 기본적으로 open 되어 있으므로, open 키워드를 생략할 수 있다.
+* **sealed 클래스를 사용하는 when식이 자식 클래스의 처리를 잊었다면 Kotlin 컴파일러는 컴파일하지 않는다**.
+  * 다음과 같은 오류 메시지를 통해 해당 자식을 처리하는 분기 또는 else와 같은 추가 분기를 요구한다.
+  * 따라서 자식 클래스가 추가되더라도 처리를 잊어 버그가 발생하는 상황은 미연에 방지된다.
+* sealed 클래스의 생성자는 외부에서 호출이 불가하며, 클래스 내부에서만 호출이 가능하다.
+```
+Kotlin: 'when' expression must be exhaustive, add necessary 'is ThirdBone' branch or 'else' branch instead
+```
+* sealed 클래스는 다음과 같이 작성한다.
+```
+fun main(args: Array<String>) {
+    checkChild(Parent.FirstBone())
+    checkChild(Parent.SecondBone())
+    checkChild(Parent.ThirdBone())
+    checkChild(Who())
+    // sealed 클래스의 생성자는 기본적으로 외부에서 직접 호출될 수 없다.
+    // checkChild(Parent())
+}
+
+sealed class Parent {
+    class FirstBone(): Parent()
+    class SecondBone(): Parent()
+    class ThirdBone(): Parent()
+}
+// sealed 클래스 외부에 자식을 둘 수는 있다.
+class Who(): Parent()
+
+fun checkChild(parent: Parent) =
+    when(parent) {
+        is Parent.FirstBone -> println("First!")
+        is Parent.SecondBone -> println("Second!")
+        is Parent.ThirdBone -> println("Third!")
+        // sealed 외부에 정의된 자식 클래스도 분기 처리가 강제된다.
+        is Who -> println("who")
+        // 더 이상 else 분기가 필요하지 않다.
+    }
+```
+* **sealed 키워드는 인터페이스에도 적용할 수 있다**.
+```
+sealed interface Hello {
+    fun hello()
+    class HelloImpl(): Hello {
+        // 인터페이스의 메소드는 반드시 구현되어야 한다.
+        override fun hello() {
+            TODO("Not yet implemented")
+        }
+
+    }
+}
+```
