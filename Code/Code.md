@@ -24,3 +24,4 @@
 * [Singleton](https://github.com/injuk/TIL/blob/master/Code/DesignPattern/DesignPattern006.md)
 * [Adapter](https://github.com/injuk/TIL/blob/master/Code/DesignPattern/DesignPattern007.md)
 * [Strategy](https://github.com/injuk/TIL/blob/master/Code/DesignPattern/DesignPattern008.md)
+* [Decorator](https://github.com/injuk/TIL/blob/master/Code/DesignPattern/DesignPattern009.md)
