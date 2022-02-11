@@ -159,3 +159,116 @@ fun main(args: Array<String>) {
      println(lambda(4, 3))
 }
 ```
+
+## 2022-02-12 Sat
+### 람다와 포획된 변수
+* Java의 경우, 메소드 안에 정의된 무명 내부 클래스는 메소드의 로컬 변수에 접근할 수 있다.
+* Kotlin의 경우, 메소드 안에 저으이된 람다는 메소드의 파라미터와 로컬 변수에 접근하여 읽거나 쓸 수 있다.
+  * 또한 Kotlin에서는 Java와 달리 final이 아닌 변수도 읽고 쓸 수 있다.
+* 이렇듯 **람다 내부에서 사용하는 외부 메소드의 변수를 람다가 포획한 변수라고 한다**.
+  * 아래의 예시에서, 람다는 메소드의 변수인 suffix, prefix, length에 접근하고 있다.
+```
+fun main(args: Array<String>) {
+     val animals = listOf(
+          Animal("Animal", 5),
+          Animal("Bnimal", 15),
+          Animal("Cnimal", 3),
+          Animal("Dnimal", 20),
+          Animal("Enimal", 12),
+          Animal("Fnimal", 7),
+          Animal("Gnimal", 9),
+     )
+
+     describe(animals, ", and")
+}
+data class Animal(val name: String, val age: Int)
+
+fun describe(animals: List<Animal>, suffix: String) {
+     var length: Int = 0
+     val prefix: String = "next element is: "
+     // prefix, suffix에 접근하고 있다.
+     animals.forEach {
+          // 메소드의 변수를 쓸 수도 있다.
+          length++
+          println("$prefix$it$suffix")
+     }
+     println("length: $length")
+}
+```
+* 참고로, **forEach는 간결함 외에는 for문보다 나은 것이 없으므로 항상 forEach만을 사용할 필요는 없다**.
+* 기본적으로 함수 내부에서 정의된 로컬 변수의 생명 주기는 함수가 반환되는 시점에 함께 종료된다.
+  * 그러나 **어떤 함수가 로컬 변수를 포획한 람다를 반환하거나, 람다를 다른 변수에 저장하는 경우 로컬 변수와 함수의 생명 주기는 달라질 수 있다**.
+* 아래의 예시에서, **getLambda는 람다를 반환하고 종료되지만 반환된 람다식은 name과 plus 변수의 값을 포획한 상태를 유지**한다.
+  * 변수의 final 여부에 따라, 변수 포획은 내부적으로 다음과 같이 이루어진다.
+  1. final 변수: 변수의 값과 람다 코드를 함께 저장한다.
+  2. final이 아닌 변수: 변수를 읽고 변경할 수 있는 특별한 래퍼 클래스로 감싼 후, 래퍼의 참조를 람다 코드와 함께 저장한다. 
+```
+fun main(args: Array<String>) {
+     val lambda = getLambda("ingnoh", 10)
+     println(lambda(3))
+     println(lambda(4))
+     println(lambda(2))
+}
+
+fun getLambda(name: String, plus: Int) = { number: Int ->
+          println("name: $name")
+          number + plus
+     }
+```
+
+### 멤버 참조
+* forEach와 같은 예시에서, 람다를 활용해서 코드 블록 자체를 다른 함수에 인자로 넘기도록 했다.
+  * 그러나 넘기려는 코드 블록이 이미 함수로 정의되어 있다면, 람다 내부에서 함수를 호출하는 것은 코드 중복이 된다.
+* **이러한 중복 문제를 해결하고자 함수를 직접 넘기려는 경우에 멤버 참조를 사용할 수 있다**.
+* **Kotlin에서는 Java 8의 경우와 마찬가지로 멤버 참조를 활용하여 함수를 값으로 바꿀 수 있으며, 이중 콜론을 사용**한다. 
+  * 자세한 형식은 [클래스명]::[멤버명]이 된다.
+  * **매 번 인스턴스를 참조하는 변수를 활용하지 않고, 클래스명과 멤버 명을 활용할 수 있으므로 편리**하다.
+  * **클래스에 정의된 확장 함수 역시 멤버 참조 구문을 활용할 수 있다**.
+```
+// 이름을 얻는 동작을 getName 변수에 저장한다.
+val getAge = Animal::age
+// 람다식으로 정의된 동작을 마치 변수처럼 전달한다.
+val oldest = animals.maxByOrNull(getAge)
+println(oldest)
+```
+* **멤버 참조는 프로퍼티나 메소드를 단 하나만 호출하는 함수 값을 만드는 역할**을 한다.
+  * 예를 들어, 상술한 Animal::name은 { animal: Animal -> animal.name }을 간결화한 것이다.
+* 이를 이용하여 최상위 함수를 호출할 수도 있다.
+  * 아래 예시에서, run은 인자로 받은 람다식을 실행하는 역할을 수행한다.
+```
+// 최상위 함수 정의
+fun helloWorld() = println("Hello world!")
+fun main(args: Array<String>) {
+     // 최상위 함수 호출
+     run(::helloWorld)
+}
+```
+* **멤버 참조를 활용하면 생성자를 참조하여 클래스 생성 작업을 연기하거나 저장해둘 수 있다**.
+  * 아래 예시에서, getAnimalInstance 변수에 Animal 인스턴스를 만드는 동작을 값으로써 저장한다.
+```
+fun main(args: Array<String>) {
+     // Animal 인스턴스를 만드는 동작을 저장한다.
+     val getAnimalInstance = ::Animal
+     // Animal 인스턴스를 만들고자 하는 경우에 호출한다.
+     println(getAnimalInstance("Hello", 0))
+     println(getAnimalInstance("World", 1))
+}
+data class Animal(val name: String, val age: Int)
+```
+* 람다가 여러 파라미터를 받는 다른 함수를 호출하기만 하는 역할을 수행하는 경우, 람다를 별도로 정의하지 않고 위임 함수에 대한 참조를 제공할 수 있다.
+  * 이 경우, 람다는 다른 함수에 작업을 위임하는 역할만을 수행하므로 굳이 함수 호출만을 위한 람다식을 작성하지 않아도 된다.
+```
+fun main(args: Array<String>) {
+     // describe 메소드에 작업을 위임하는 람다식의 예시이다.
+     val redundant = { animal: Animal, suffix: String ->
+          describe(animal, suffix)
+     }
+     // 람다식을 작성하는 대신 멤버 참조를 활용한다.
+     val better = ::describe
+}
+data class Animal(val name: String, val age: Int)
+
+fun describe(animal: Animal, suffix: String) {
+     println("$animal $suffix")
+}
+```
