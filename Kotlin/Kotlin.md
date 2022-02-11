@@ -10,3 +10,4 @@
 * [Basics007](https://github.com/injuk/TIL/blob/master/Kotlin/Basics/Basics007.md)
 * [Basics008](https://github.com/injuk/TIL/blob/master/Kotlin/Basics/Basics008.md)
 * [Basics009](https://github.com/injuk/TIL/blob/master/Kotlin/Basics/Basics009.md)
+* [Basics010](https://github.com/injuk/TIL/blob/master/Kotlin/Basics/Basics010.md)
