@@ -415,3 +415,67 @@ fun main(args: Array<String>) {
      println(animals.count { it.age < 10 })
 }
 ```
+
+## 2022-02-13 Sun
+### groupBy
+* 컬렉션의 요소들 어떤 조건에 따라 여러 그룹으로 나누고 싶은 경우에 사용할 수 있다.
+* **나누고자 하는 조건을 파라미터로 전달하면 해당 조건에 따라 컬렉션의 요소를 나누며, 이 때 조건이 키 / 요소 리스트가 값이 된다**.
+  * 즉, 결과로 반환되는 것은 Map이며 value는 List이다.
+```
+fun main(args: Array<String>) {
+     val map = animals.groupBy { it.age % 3 }
+     println(map)
+     println(map.keys)
+     println(map[2]!!.filter { it.age < 10 })
+}
+```
+
+### flatMap, flatten
+* flatMap 함수는 인자로 주어지는 람다를 컬렉션의 모든 요소에 적용한 후, **결과로 얻어지는 여러 리스트를 펼쳐 하나의 리스트로 만든다**.
+* **flatMap은 리스트의 리스트가 있는 경우, 모든 중첩된 리스트의 요소를 하나의 리스트로 모아야하는 경우에 유용하다**.
+* flatMap의 동작은 크게 각 요소를 돌며 모든 요소에 람다를 적용하여 변환하는 map과 결과를 펼쳐 하나의 목록으로 만드는 flatten으로 구성된다.
+  * map: 아래의 예시에서, it.name.toList()는 컬렉션에 포함된 모든 요소의 이름을 글자로 리스트화한다.
+  * flatten: 리스트화된 글자들을 하나의 리스트로 합친다.
+  * 그 이후 toSet()을 통해 리스트를 집합으로 바꾸어 중복을 제거한다.
+```
+val animals = listOf(
+     Animal("Animal", 5),
+     Animal("Bnimal", 15, listOf("Animal")),
+     Animal("Cnimal", 3),
+     Animal("Dnimal", 20),
+     Animal("Enimal", 12, listOf("Cnimal")),
+     Animal("Fnimal", 0),
+     Animal("Gnimal", 2, listOf("Enimal, Animal")),
+     Animal("Hnimal", 13),
+     Animal("Inimal", 29, listOf("Knimal, Jnimal")),
+     Animal("Jnimal", 6),
+     Animal("Knimal", 19),
+)
+
+fun main(args: Array<String>) {
+     val parents = animals.flatMap { it.parents }
+     println(parents)
+     // flatMap의 동작을 map > flatten 단계 별로 구현하면 다음과 같다.
+     // val characters = animals.map(Animal::parents).flatten()
+     val characters = animals.flatMap { it.name.toList() }.toSet()
+     println(characters)
+}
+data class Animal(val name: String, val age: Int, val parents: List<String> = emptyList())
+```
+* 만약 map 과정 없이 하나의 목록으로 펼치기만 하는 경우, flatten() 함수의 사용을 고려할 수 있다.
+```
+fun main(args: Array<String>) {
+     val list1 = listOf(1, 2, 3)
+     val list2 = listOf(4, 5, 6)
+     val listOfLists = listOf(list1, list2)
+     println(listOfLists)
+     println(listOfLists.flatten())
+}
+```
+
+### 결론
+* Kotlin 표준 라이브러리에는 컬렉션 연산을 지원하는 많은 메소드가 존재한다.
+* 컬렉션을 다루는 코드를 작성해야 하는 경우, 다음과 같은 절차에 의해 개발하도록 한다.
+  1. 어떻게 해야 일반적인 변환 절차를 거쳐 원하는 결과를 얻어낼 수 있을지 고민한다.
+  2. **이를 도울 수 있는 라이브러리 함수를 찾는다**.
+* 대부분의 경우 원하는 함수를 찾을 수 있으며, 이를 통해 개발하는 것이 직접 코드를 개발하는 것보다 빠르다.
