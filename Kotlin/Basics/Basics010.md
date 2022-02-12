@@ -272,3 +272,146 @@ fun describe(animal: Animal, suffix: String) {
      println("$animal $suffix")
 }
 ```
+
+### 컬렉션의 함수형 API
+* 컬렉션을 다루는 과정에서 함수형 프로그래밍 스타일을 적용하면 코드를 간결하게 만들며, 편리할 수 있다.
+* 예를 들어 filter와 map은 컬렉션 활용의 기반이 되는 함수이며, 대부분의 컬렉션 연산은 이 두 함수로 표현이 가능하다.
+
+### filter 함수
+* filter는 함수를 걸러내는 역할을 하며, 컬렉션을 순회하며 주어진 조건에 맞는 원소만을 모은다.
+* **filter 연산의 결과는 입력 컬렉션 원소 중 조건을 만족하는 원소만으로 구성된 새로운 컬렉션**이다.
+* filter는 컬렉션에서 필요하지 않은 원소는 제거할 수 있지만, 원소의 값을 변환할 수는 없다.
+```
+val animals = listOf(
+     Animal("Animal", 5),
+     Animal("Bnimal", 15),
+     Animal("Cnimal", 3),
+     Animal("Dnimal", 20),
+     Animal("Enimal", 12),
+     Animal("Fnimal", 0),
+     Animal("Gnimal", 2),
+     Animal("Hnimal", 13),
+     Animal("Inimal", 29),
+     Animal("Jnimal", 6),
+     Animal("Knimal", 19),
+)
+
+fun main(args: Array<String>) {
+     println(animals.size)
+     val filtered = animals.filter { it.age < 10 }
+     println(filtered.size)
+     val notFiltered = animals.filter { it.age >= 10 }
+     println(notFiltered.size)
+}
+data class Animal(val name: String, val age: Int)
+```
+
+### map 함수
+* map 함수는 요소를 변환하는 역할을 하며, 컬렉션을 순회하며 주어진 동작을 적용하여 새로운 원소를 만든다.
+* **map 함수의 결과는 변경된 요소들을 포함하는 새로운 컬렉션**이다.
+  * 따라서 결과 컬렉션의 요소 개수는 원본의 요소 개수와 같지만, 내용이 다르다.
+```
+fun main(args: Array<String>) {
+     val mapped = animals.map { it.name }
+     // 멤버 참조를 활용해도 결과는 같다.
+     // val mapped = animals.map(Animal::name)
+     println(mapped)
+}
+```
+
+### filter와 map의 메소드 체이닝
+* filter 연산과 map 연산의 결과는 새로운 컬렉션이므로, 이어서 연산을 수행할 수 있다.
+```
+fun main(args: Array<String>) {
+     val result = animals
+          .filter { it.age < 10 }
+          .map { it.name }
+     println(result)
+}
+```
+* 이러한 연쇄는 가독성이 좋지만, 잘 못 작성된 경우 내부적인 로직은 매우 비효율적일 수 있다.
+* 예를 들어, 아래의 filter는 매 순회마다 maxByOrNull을 호출한다.
+  * 미리 최대값을 변수에 저장하고, 변수를 활용하는 연산으로 수정하는 것이 좋다.
+  * 이렇듯 **map과 filter 함수를 적용한 경우 내부적으로 어떻게 처리되는지를 이해하는 것은 중요**하다.
+```
+fun main(args: Array<String>) {
+     val result = animals
+          .filter { it.age == animals.maxByOrNull(Animal::age)!!.age }
+     
+     // 아래처럼 수정하는 것이 더 효율적이다.     
+     // val max = animals.maxByOrNull(Animal::age)!!.age
+     // val result = animals
+     //      .filter { it.age == max }     
+          
+     println(result)
+     
+}
+```
+
+### Map에 filter와 map 함수 적용
+* filter와 map 메소드는 Map에도 적용이 가능하며, 호출해야 하는 메소드의 이름이 다음과 같이 키와 값 각각에 대해 존재한다.
+1. filter
+   * filterKeys: Map의 각 요소를 순회하며 키를 기준으로 걸러낸다.
+   * filterValues: Map의 각 요소를 순회하며 값을 기준으로 걸러낸다.
+2. map
+   * mapKeys: Map의 각 요소를 순회하며 키를 변환한다.
+   * mapValues: 각 요소를 순회하며 값을 변환한다.
+```
+fun main(args: Array<String>) {
+     val map = mapOf(1 to "one", 2 to "two", 3 to "three")
+     println(map.mapValues { it.value.uppercase(Locale.getDefault()) })
+}
+```
+
+### all, any, count, find
+* all과 any는 컬렉션의 모든 요소가 임의의 조건을 만족하는지 확인하는 함수이다.
+  * all: 모든 요소가 조건을 만족하는 경우 true를 반환한다.
+  * any: 조건을 만족하는 요소가 하나라도 있는 경우 true를 반환한다.
+* count는 조건을 만족하는 요소의 개수를 반환하는 함수이다.
+* find는 컬렉션 요소 중 조건을 만족하는 첫 요소를 반환하는 함수이다.
+  * 조건을 만족하는 요소가 없다면 null이 반환된다.
+```
+fun main(args: Array<String>) {
+     val lessThan20 = { animal: Animal -> animal.age < 20 }
+     val all = animals.all(lessThan20)
+     val any = animals.any(lessThan20)
+     val count = animals.count(lessThan20)
+     val find = animals.find(lessThan20)
+     println(all)
+     println(any)
+     println(count)
+     println(find)
+}
+```
+* all과 any의 경우, boolean이므로 !를 붙이는 경우가 있다.
+  * 만약 !를 붙이는 경우 가독성이 떨어질 수 있을 것 같다면, all과 any를 서로 바꾸어 사용하거나 조건의 부정을 활용하는 것이 좋다.
+  * 이 때, 다음과 같은 드 모르간의 법칙을 적용해볼 수 있다.
+    1. **어떤 조건의 !all은 어떤 조건의 부정의 any와 같다**. 
+    2. **어떤 조건의 !any는 어떤 조건의 부정의 all과 같다**.
+* **대부분의 경우, 가독성 측면에서는 !all또는 !any를 사용하지 않는 것이 좋다((.
+```
+fun main(args: Array<String>) {
+     val lessThan20 = { animal: Animal -> animal.age < 20 }
+     val all = animals.all(lessThan20)
+     // 아래와 같은 식의 사용은 가독성이 떨어진다.
+     val notAll = !animals.all(lessThan20)
+     println(all)
+     println(notAll)
+     
+     val greaterThan20 = { animal: Animal -> animal.age >= 20 }
+     // 드 모르간의 법칙을 적용하여 가독성을 높인다.
+     val likeThis = animals.any(greaterThan20)
+     println(likeThis)
+}
+```
+* 아래의 식에서, count와 컬렉션의 size 결과는 같다.
+  * 그러나 중간 처리 과정은 다르며, filter를 적용하는 경우 불필요한 중간 연산에 의해 조건을 만족하는 컬렉션이 생성된다.
+  * **count 함수는 중간 컬렉션을 생성하지 않고 개수만을 추적하므로, 이 경우에는 count 함수를 사용하는 것이 훨씬 더 바람직**하다.
+```
+fun main(args: Array<String>) {
+     // filter 함수에 의해 불필요한 중간 연산 결과가 생성된다.
+     println(animals.filter { it.age < 10 }.size)
+     // 중간 컬렉션을 생성하지 않고 개수를 추적한다.
+     println(animals.count { it.age < 10 })
+}
+```
