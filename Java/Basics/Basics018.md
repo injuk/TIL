@@ -168,7 +168,7 @@ public class ThreadTester {
   * interrupted: 쓰레드의 interruped 상태를 반환하고, 값을 false로 변경한다.
 * 쓰레드가 sleep, wait, join 메소드에 의해 WAITING 상태에 있을 경우, interrupt 호출 시 InterruptedException이 발생하고 sleep, wait, join으로부터 벗어나게 된다.
   * 결과 쓰레드의 상태는 WAITING에서 RUNNABLE이 된다
-  * **이 떄, interrupted의 값은 자동으로 false로 변경**된다.
+  * **이 때, interrupted의 값은 자동으로 false로 변경**된다.
 
 ### join 메소드
 * 쓰레드가 하던 작업을 잠시 멈추고, 다른 쓰레드가 지정된 시간 동안 작업을 수행하도록 한다.
@@ -177,7 +177,7 @@ public class ThreadTester {
 * join 역시 interrupt에 의해 대기 상태를 더 빠르게 벗어날 수 있다.
   * 이 경우, InterruptedException에 대비하여 join이 호출되는 부분은 try - catch를 통한 예외 처리가 적용되어 있어야 한다.
 * join은 sleep이나 yield와 달리 참조 변수가 가리키는 특정 쓰레드에 대해 동작한다.
-* join은 특정 쓰레드의 작업이 종료되기 전에 다른 쓰레드의 작업이 먼저 진행되어야할 떄 활용해볼 수 있다.
+* join은 특정 쓰레드의 작업이 종료되기 전에 다른 쓰레드의 작업이 먼저 진행되어야할 때 활용해볼 수 있다.
 
 ## 2022-01-15 Sat
 ### 임계 영역, lock, 동기화
