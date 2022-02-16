@@ -205,3 +205,54 @@ fun main(args: Array<String>) {
      println(collection) // [1, 2, 3, 4]
 }
 ```
+
+### Kotlin과 Java의 컬렉션 혼용
+* Java 메소드를 호출하되 컬렉션을 인자로 넘기는 경우, 추가 작업 없이 Kotlin 컬렉션을 넘길 수 있다.
+  * 때문에 Java 코드에서 컬렉션의 변경 가능성을 위배하거나, null을 삽입하는 문제가 발생할 수 있다.
+  * 이에 대한 처리는 온전히 개발자의 몫이며, Kotlin 타입이 Java 코드에서 발생할 수 있는 변경을 사항을 반영할 수 있도록 해야 한다.
+* Java 코드에서 정의한 타입은 Kotlin에서 플랫폼 타입이므로, 널이 될 수 있는 타입 또는 널이 될 수 없는 타입으로 취급할 수 있다.
+  * 둘 중 어느쪽으로 취급해도 무방하다.
+* 컬렉션 역시 플랫폼 타입을 지원하며, Kotlin에서는 Java 코드의 컬렉션을 읽기 전용 타입과 변경 가능 타입 어느 쪽으로도 취급할 수 있다.
+* Kotlin과 Java 코드의 컬렉션을 어느 타입으로 취급할지 결정한 후, 결정 사항이 코드에 잘 드러나도록 작성하는 것이 바람직하다.
+  * 정확한 결정을 위해 Java 코드에서 사용된 컬렉션의 용도와 맥락을 정확히 파악할 수 있어야 한다.
+
+### Kotlin 배열
+* Kotlin의 배열은 타입 파라미터를 받는 클래스이며, 배열의 원소 타입은 타입 파라미터에 의해 결정된다.
+```
+fun main(args: Array<String>) {
+     val arr = Array<Int>(10) { it }
+     println(arr[7])
+     println(arr[8])
+     println(arr[9])
+}
+```
+* 제네릭 타입과 마찬가지로, 배열 타입의 타입 인자 역시 객체 타입이다.
+  * 예를 들어, val arr = Array<Int>(10) { it }의 원소는 모두 래퍼 클래스인 Integer 타입이다.
+* 박싱되지 않은 원시 타입의 배열이 필요한 경우, 별도의 원시 타입 배열 클래스를 활용해야 한다.
+  * 예를 들어, IntArray, CharArray 등 각 원시 타입에 대응되는 이름을 갖는 클래스가 제공된다.
+```
+fun main(args: Array<String>) {
+     val arr = intArrayOf(1, 2, 3, 4, 5)
+     println(arr.asList())
+     val withLambda = IntArray(5) { it + it }
+     println(withLambda.asList())
+}
+```
+* Kotlin 표준 라이브러리는 배열 기본 연산에 더해 컬렉션 연산 역시 확장 함수로 제공한다.
+  * 예를 들어, 배열 요소에 대해 map, filter 연산을 적용할 수 있다.
+  * 이 경우, 반환되는 타입은 배열이 아닌 List이다.
+* 아래의 예시에서 사용된 forEachIndexed는 배열과 컬렉션에 적용할 수 있으며, 람다식을 받아 인덱스와 요소를 함께 순회한다.
+```
+fun main(args: Array<String>) {
+     val withLambda = IntArray(5) { it + it }
+     println(withLambda.map { it * 2 }.forEachIndexed { index, i -> println("$index: $i") })
+}
+```
+
+### 결론
+* Kotlin에서, 널이 될 수 있는 타입이 지원되므로 NPE 오류를 컴파일 시점에 감지할 수 있다.
+* Kotlin에서, 수를 표현하는 타입은 일반 클래스와 동일하게 사용되며, 동일하게 동작된다.
+  * 대부분의 경우, 실제로는 숫자 타입을 Java의 원시 타입으로 컴파일한다.
+* Kotlin에서, Int? 등의 널이 될 수 있는 원시 타입은 Java의 원시 타입 별 래퍼 클래스에 대응한다.
+* Kotlin에서, Array 클래스는 제네릭 클래스처럼 보이지만 실제로는 Java의 배열로 컴파일된다.
+* Kotlin에서, 원시 타입의 배열은 IntArray와 같이 타입 별로 정해진 배열 클래스로 표현된다.
