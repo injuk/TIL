@@ -106,5 +106,79 @@ operator fun Point.plus(other: Point): Point {
 }
 ```
 * += 연산자를 재정의하고 싶은 경우 plusAssign 메소드를 재정의할 수 있다.
-  * plus와 plusAssign은 동시에 재정의하는 경우 오류가 발생하므로, 이러한 방식을 지양해야 한다.
-    * 정확히는 둘을 동시에 재정의할 수 있지만, += 연산자를 사용하는 문장에서 오류가 발생한다.
+  * 이러한 방식은 += 연산으로 인해 객체의 참조를 변경하지 않고, 기존 객체의 상태를 변경하고 싶은 경우에 유용하다.
+* plus와 plusAssign은 동시에 재정의하는 경우 오류가 발생하므로, 이러한 방식을 지양해야 한다.
+  * 정확히는 둘을 동시에 재정의할 수 있지만, += 연산자를 사용하는 문장에서 오류가 발생한다.
+
+## 2022-02-18 Wed
+### 단항 연산자 오버로딩
+* 단항 연산자 역시 +, * 등의 이항 연산자와 마찬가지로 미리 정해진 이름의 함수를 선언하여 operator 키워드를 정의한다.
+  1. +a: unaryPlus
+  2. -a: unaryMinus
+  3. !a: not
+  4. ++a / a++: inc
+  5. --a / a--: dec
+* 아래의 예시에서, -point를 원하는 방식으로 동작시키고자 하므로 unaryMinus를 사용한다.
+```
+fun main(args: Array<String>) {
+     var point1: Point = Point(10, 22)
+     println(-point1)
+}
+// -point 형태의 단항 연산자 역시 다른 산술 연산자와 동일한 방식으로 오버로딩한다.
+operator fun Point.unaryMinus(): Point {
+     return Point(-x, -y)
+}
+data class Point(val x: Int, val y: Int)
+```
+
+## 비교 연산자 오버로딩
+* Kotlin에서는 산술 연산자와 마찬가지로 원시 타입 값 이외의 모든 객체에 대해 비교 연산을 수행할 수 있다.
+* 비교 연산자인 ==, >, < 등은 클래스 내부에서 equals와 compareTo 메소드를 오버라이드하는 것으로 재정의할 수 있다.
+
+### equals
+* a == b는 내부적으로 a.equals(b)로 컴파일된다.
+  * != 연산자의 결과값 역시 equals를 활용하며, !a.equals(b)의 형식과 같다.
+  * 때문에 != 연산자를 재정의하는 방법은 없다.
+* data 클래스는 Kotlin 컴파일러에 의해 equals 메소드가 자동으로 생성되지만, 필요시 직접 구현할 수도 있다.
+* 식별자 비교 연산자 ===는 두 피연산자가 서로 같은 객체를 참조하는지 비교한다.
+  * === 연산자는 오버로딩할 수 없다.
+* equals는 Any에 오버로딩된 operator 메소드이며, 이를 상속 받는 클래스에서는 재정의를 위해 override 키워드를 사용한다.
+  * 즉, Any의 자손은 operator fun equals가 아닌 override fun equals로 재정의해야 한다.
+  * 한 편, equals는 Any에서 오버로드되었으므로 모든 Kotlin 객체는 동등성을 비교할 수 있다.
+* Any로부터 상속받는 equals 메소드가 확장 함수보다 높은 우선 순위를 가지므로, equals 메소드는 확장 함수로 정의할 수 없다.
+
+### compareTo
+* Java의 경우, 값을 비교하는 알고리즘을 적용하는 클래스는 Comparable을 구현해야 한다.
+  * 해당 인터페이스에는 크기를 비교하여 정수를 반환하는 compareTo 메소드가 정의되어 있다.
+* 그러나 Java는 반드시 a.compareTo(b)의 형식으로 호출해야 하며, 이를 짧게 호출할 수 있는 방법을 지원하지 않는다.
+  * <, >와 같은 연산은 Java의 원시 타입에만 적용이 가능하다.
+* Kotlin 역시 Comparable 인터페이스를 지원하며, 나아가 compareTo를 호출하는 관례를 제공한다.
+  * 때문에 Kotlin의 Comparable 구현체는 <, >와 같은 비교 연산자로 비교가 가능하다.
+* 비교 연산자 역시 equals의 경우와 마찬가지로 확장 함수를 작성할 필요가 없다.
+
+## 컬렉션과 관례
+### 인덱스로 컬렉션 요소에 접근
+* 맵의 요소에 접근하는 등의 용도로 사용하는 인덱스 연산자 [] 역시 Kotlin이 제공하는 관례를 따른 예시이다.
+* 인덱스 연산자를 사용해 요소를 읽으려면 get 연산자를 오버로드하고, 요소를 쓰려면 set 연산자를 오버로드한다.
+  * Map, MutableMap은 이미 get과 set 메소드가 정의되어 있다.
+* get의 경우, 반드시 Int 인자를 사용할 필요는 없다.
+  * Map의 예시와 유사하며, 필요하다면 다양한 인자에 대해 여러 get 메소드를 오버로드하여 다양한 키 타입을 지원할 수 있다.
+* set의 경우, 여러 인자를 받을 수 있지만 할당되는 값은 항상 가장 오른쪽의 인자이다.
+  * 예를 들어, point[4, 5] = 3은 point.set(4, 5, 3)으로 컴파일된다.
+
+### in 연산자
+* 컬렉션에 지원되는 또 다른 연산자이며, 객체가 컬렉션 내부에 들어있는지 검사하기 위해 사용한다.
+* in 연산자에 대응되는 메소드는 contains이며, contains 함수를 operator 키워드와 함께 오버로드하는 것으로 in 연산자를 활용할 수 있다.
+* 이 때, element in collection 은 collection.contains(element)로 컴파일된다.
+
+### .. 연산자
+* 단힌 범위를 만들기 위해 사용하는 .. 구문은 rangeTo 함수로 재정의할 수 있다.
+  * 예를 들어, first..end는 first.rangeTo(end)로 컴파일된다.
+* rangeTo는 어떠한 클래스에도 정의할 수 있으나, Comparable을 구현한 경우에는 필요가 없다.
+  * Kotlin의 표준 라이브러리에는 모든 Comparable에 적용 가능한 rangeTo 메소드가 포함된다.
+
+### for 반복문에서의 in 연산자
+* for 반복문 역시 in 연산자를 사용할 수 있지만, 이 in은 컬렉션에서 살펴본 경우와는 의미가 다르다.
+  * for(e in collection)을 예로 들면, collection.iterator()를 호출한 후 hasNext와 next를 반복하는 식으로 동작한다.
+* 이 역시 Kotlin이 제공하는 관례에 해당하므로, iterator라는 이름의 메소드를 operator 키워드와 함께 확장 함수로 정의할 수 있다.
+* 예를 들어, Kotlin의 표준 라이브러리에는 String의 상위 클래스에 대해 iterator 확장 함수를 제공하므로 문자열 순회가 가능하다.
