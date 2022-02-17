@@ -84,3 +84,27 @@ operator fun Point.plus(other: Point): String {
      return (x + other.x).toString() + (y + other.y).toString()
 }
 ```
+
+### += 연산자 오버로딩
+* plus와 같은 + 연산자를 오버로딩하면 Kotlin은 += 연산자도 자동으로 지원한다.
+* 아래의 예제에서, += 연산자 적용시 기존의 참조가 반환되는 새로운 객체의 참조로 변경된다.
+```
+fun main(args: Array<String>) {
+     var point1: Point = Point(10, 22)
+     val point2: Point = Point(5, 2)
+
+     val temp: Point = point1;
+     // 참조를 비교한 경우 true가 반환된다.
+     println(temp === point1);
+     point1 += point2;
+     // 새로운 객체가 반환되었으므로, false가 반환된다.
+     println(temp === point1);
+}
+
+operator fun Point.plus(other: Point): Point {
+     return Point(x + other.x, y + other.y)
+}
+```
+* += 연산자를 재정의하고 싶은 경우 plusAssign 메소드를 재정의할 수 있다.
+  * plus와 plusAssign은 동시에 재정의하는 경우 오류가 발생하므로, 이러한 방식을 지양해야 한다.
+    * 정확히는 둘을 동시에 재정의할 수 있지만, += 연산자를 사용하는 문장에서 오류가 발생한다.
