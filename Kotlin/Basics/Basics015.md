@@ -158,3 +158,56 @@ fun high(callback: (Int, Int) -> Int) {
   2. Java 8 이전 버전의 경우, 함수 타입 인터페이스를 구현하는 무명 객체를 전달한다.
 * 반환형이 Unit인 Kotlin 고차 함수를 Java에서 호출하는 경우, return Unit.INSTANCE를 반드시 작성한다.
   * **Unit에 대응되는 Java의 타입은 void이지만, Kotlin의 Unit은 값이 존재하므로 void 형태의 Java 람다를 전달할 수는 없다**.
+  
+### 함수 타입
+* 함수의 동작을 더 유연하게 바꾸는 방법 중 하나는 인자로 람다를 받아 함수 본문에서 활용하는 방식이다.
+```
+fun main(args: Array<String>) {
+     println(doSomething(1, 3) { a, b -> a + b })
+}
+
+fun doSomething(a: Int, b: Int, lambda: (Int, Int) -> Int): Int {
+     return lambda(a, b)
+}
+```
+* **람다의 기본적인 동작을 지정하여 매번 람다를 전달하지 않아도 되게 하고 싶은 경우, 함수의 인자로 전달된 람다에 디폴트 값을 지정**할 수 있다. 
+  * 함수의 파라미터에 전달 될 람다의 기본값은 일반적인 파라미터의의 기본값 설정 방법과 같다. 
+* **널이 될 수 있는 함수 타입을 사용해도 좋지만, 이 경우 NPE를 방지하기 위해 반드시 함수 본문에서 null을 체크하는 로직이 작성되어야만 한다**.
+  * 이러한 로직은 순수하게 null 여부를 if문으로 체크할 수도 있지만, 안전한 참조 또는 엘비스 연산자를 활용할 수도 있다.
+```
+fun main(args: Array<String>) {
+     // 람다식을 전달하지 않은 경우, 두 값을 더하는 디폴트 람다가 실행된다.
+     println(doSomething(1, 3))
+     // 람다식을 전달한 경우, 디폴트 람다 대신 전달한 람다가 실행된다.
+     println(doSomething(1, 3) { a, b -> a * b })
+}
+
+fun doSomething(a: Int, b: Int, lambda: (Int, Int) -> Int = { a, b -> a + b }): Int {
+     return lambda(a, b)
+}
+```
+
+### 고차 함수에서의 함수 반환
+* 애플리케이션의 상태나 다른 조건에 따라 로직이 달라질 수 있는 경우, 함수를 반환하는 고차 함수를 유용하게 사용할 수 있다.
+  * 아래의 예시에서, getSomething은 인자로 전달 받은 enum의 값에 따라 서로 다른 람다를 반환한다.
+  * 반환된 람다는 변수에 저장할 수 있으며, 변수() 형태로 메소드처럼 호출할 수 있다.
+* **고차 함수에서 함수를 반환하고자 하는 경우, 고차 함수의 반환형은 함수 타입**이 되어야 한다.
+  * **단순히 메소드의 반환형에 함수 타입을 작성하는 것만으로, 함수를 반환하는 고차 함수를 쉽게 정의**할 수 있다.
+```
+fun main(args: Array<String>) {
+     val sumLambda = getSomething(LAMBDA.SUM)
+     val multiLambda = getSomething(LAMBDA.MULTI)
+     println(sumLambda(1, 2))
+     println(multiLambda(4, 3))
+}
+
+enum class LAMBDA {
+     SUM,
+     MULTI
+}
+fun getSomething(type: LAMBDA): (Int, Int) -> Int = when(type) {
+     LAMBDA.SUM -> { a: Int, b: Int -> a + b }
+     LAMBDA.MULTI -> { a: Int, b: Int -> a * b }
+}
+```
+* **상술한 방식들을 활용하여 작성한 고차 함수는 코드 구조를 개선하고 중복을 제거하기 위해 유용하게 사용**할 수 있다.
