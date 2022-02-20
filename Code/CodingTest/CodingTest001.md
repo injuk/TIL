@@ -74,6 +74,12 @@ public static String reverseWithStringBuilder(String current) {
   * 즉, **두 클래스의 가장 큰 차이는 변조 과정에서 새로운 인스턴스가 만들어지는지의 여부**이다.
   * StringBuilder가 String보다 딱히 무겁지도 않으므로, 변조 작업이 많은 경우 StringBuilder를 활용하는 것이 바람직하다.
 
+### 문자열에서 정규 표현식을 활용하여 영어 대문자 이외의 특수문자 제거하기
+* 정규 표현식에서 부정 표현은 ^을 활용한다.
+```
+String str = target.replaceAll("[^A-Z]", "");
+```
+
 ## 문자(char)
 ### 문자 읽어들이기
 * 우선 문자열을 받아온 후, charAt 메소드로 인덱스를 활용한다
@@ -88,7 +94,7 @@ char character = scanner.next().charAt(0);
 int ascii = character;
 ```
 
-###문자의 대소 판별
+### 문자의 대소 판별
 * ASCII 코드를 사용할 수도 있지만, Character.isLowerCase 또는 isUpperCase를 활용하는 것이 가독성이 좋다.
   * ASCII 방식: 97 <= char <= 122 가 소문자 범위, 65 <= char <= 90이 대문자 범위
 ```
@@ -102,4 +108,32 @@ System.out.println(character);
 char[] charArray = { 'h', 'e', 'l', 'l', 'o', };
 String string = String.valueOf(charArray);
 System.out.println(string);
+```
+
+### 문자의 대소 판별하기
+* ASCII 코드 범위를 활용할 수도 있지만, Character 클래스의 정적 메소드는 isAlphabetic은 더 좋은 가독성을 갖는다.
+```
+char character = 'c';
+if(Character.isAlphabetic(character))
+  System.out.println("Yes!");
+```
+
+### 문자가 숫자인지 판별하기
+* 역시 Character의 정적 메소드인 isDigit을 활용하는 방식과, ASCII 코드를 활용하는 방식이 있다.
+  * ASCII 범취: 48 <= character <= 57
+```
+if(Character.isDigit(character))
+  System.out.println("digit!");
+// 또는 메소드를 직접 구현
+public static boolean isDigit(char character) {
+  return character >= 48 && character <= 57;
+}
+```
+## 숫자
+### 문자열을 숫자로 변환
+* Integer 클래스의 정적 메소드인 parseInt를 활용한다.
+  * 이 경우, 0200은 200으로 변환 되는 식으로 앞의 0을 무시한다.
+```
+String string = "0200";
+System.out.println(Integer.parseInt(string));
 ```
