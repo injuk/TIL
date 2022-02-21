@@ -21,3 +21,7 @@
 * [Basics018](https://github.com/injuk/TIL/blob/master/Java/Basics/Basics018.md)
 * [Basics019](https://github.com/injuk/TIL/blob/master/Java/Basics/Basics019.md)
 * [Basics020](https://github.com/injuk/TIL/blob/master/Java/Basics/Basics020.md)
+
+## EffectiveCodes
+### 2022.02.21 ~ 
+* [EffectiveCodes001](https://github.com/injuk/TIL/blob/master/Java/EffectiveCodes/EffectiveCodes001.md)
