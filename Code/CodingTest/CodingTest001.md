@@ -80,6 +80,10 @@ public static String reverseWithStringBuilder(String current) {
 String str = target.replaceAll("[^A-Z]", "");
 ```
 
+### 문자열에서 정규식 활용하기
+* String 클래스의 matches 메소드는 정규식을 활용하기 가장 쉬운 방식이지만, 성능이 중요한 상황에서는 권장되지 않는다.
+  * 이는 matches가 내부적으로는 생성 비용이 큰 유한 상태 머신인 Pattern 객체를 사용하고 버리는 식으로 동작하기 때문이다.
+
 ## 문자(char)
 ### 문자 읽어들이기
 * 우선 문자열을 받아온 후, charAt 메소드로 인덱스를 활용한다
@@ -129,6 +133,11 @@ public static boolean isDigit(char character) {
   return character >= 48 && character <= 57;
 }
 ```
+
+### 문자를 숫자로 변환하기
+* (char) 로 명시적 형변환을 수행한다.
+  * char는 int 보다 작으므로 오토박싱이 되지 않는다.
+
 ## 숫자
 ### 문자열을 숫자로 변환
 * Integer 클래스의 정적 메소드인 parseInt를 활용한다.
