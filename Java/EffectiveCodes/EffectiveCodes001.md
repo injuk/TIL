@@ -1,4 +1,4 @@
-# CodingTest
+# EffectiveCodes
 ## 2022-02-21 Mon
 
 ## 관례적이고 효과적인 용법
