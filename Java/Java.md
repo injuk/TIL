@@ -26,3 +26,4 @@
 ### 2022.02.21 ~ 
 * [EffectiveCodes001](https://github.com/injuk/TIL/blob/master/Java/EffectiveCodes/EffectiveCodes001.md)
 * [EffectiveCodes002](https://github.com/injuk/TIL/blob/master/Java/EffectiveCodes/EffectiveCodes002.md)
+* [EffectiveCodes003](https://github.com/injuk/TIL/blob/master/Java/EffectiveCodes/EffectiveCodes003.md)
