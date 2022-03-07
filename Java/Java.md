@@ -29,3 +29,4 @@
 * [EffectiveCodes003](https://github.com/injuk/TIL/blob/master/Java/EffectiveCodes/EffectiveCodes003.md)
 * [EffectiveCodes004](https://github.com/injuk/TIL/blob/master/Java/EffectiveCodes/EffectiveCodes004.md)
 * [EffectiveCodes005](https://github.com/injuk/TIL/blob/master/Java/EffectiveCodes/EffectiveCodes005.md)
+* [EffectiveCodes006](https://github.com/injuk/TIL/blob/master/Java/EffectiveCodes/EffectiveCodes006.md)
