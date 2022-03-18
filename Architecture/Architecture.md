@@ -15,3 +15,4 @@
 * [CleanWebApplication001](https://github.com/injuk/TIL/blob/master/Architecture/CleanWebApplication/CleanWebApplication001.md)
 * [CleanWebApplication002](https://github.com/injuk/TIL/blob/master/Architecture/CleanWebApplication/CleanWebApplication002.md)
 * [CleanWebApplication003](https://github.com/injuk/TIL/blob/master/Architecture/CleanWebApplication/CleanWebApplication003.md)
+* [CleanWebApplication004](https://github.com/injuk/TIL/blob/master/Architecture/CleanWebApplication/CleanWebApplication004.md)
