@@ -43,3 +43,4 @@
 * [Objects009](https://github.com/injuk/TIL/blob/master/Code/Objects/Objects009.md)
 * [Objects010](https://github.com/injuk/TIL/blob/master/Code/Objects/Objects010.md)
 * [Objects011](https://github.com/injuk/TIL/blob/master/Code/Objects/Objects011.md)
+* [Objects012](https://github.com/injuk/TIL/blob/master/Code/Objects/Objects012.md)
