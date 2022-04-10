@@ -50,3 +50,7 @@
 * [Objects016](https://github.com/injuk/TIL/blob/master/Code/Objects/Objects016.md)
 * [Objects017](https://github.com/injuk/TIL/blob/master/Code/Objects/Objects017.md)
 * [Objects018](https://github.com/injuk/TIL/blob/master/Code/Objects/Objects018.md)
+
+## Refactoring
+### 2022.04.11 ~ 2022.00.00
+* [Refactoring001](https://github.com/injuk/TIL/blob/master/Code/Refactoring/Refactoring001.md)
