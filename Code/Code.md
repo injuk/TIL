@@ -55,3 +55,4 @@
 ### 2022.04.11 ~ 2022.00.00
 * [Refactoring001](https://github.com/injuk/TIL/blob/master/Code/Refactoring/Refactoring001.md)
 * [Refactoring002](https://github.com/injuk/TIL/blob/master/Code/Refactoring/Refactoring002.md)
+* [Refactoring003](https://github.com/injuk/TIL/blob/master/Code/Refactoring/Refactoring003.md)
