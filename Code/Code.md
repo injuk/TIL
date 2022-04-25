@@ -63,3 +63,4 @@
 * [Refactoring008](https://github.com/injuk/TIL/blob/master/Code/Refactoring/Refactoring008.md)
 * [Refactoring009](https://github.com/injuk/TIL/blob/master/Code/Refactoring/Refactoring009.md)
 * [Refactoring010](https://github.com/injuk/TIL/blob/master/Code/Refactoring/Refactoring010.md)
+* [Refactoring011](https://github.com/injuk/TIL/blob/master/Code/Refactoring/Refactoring011.md)
