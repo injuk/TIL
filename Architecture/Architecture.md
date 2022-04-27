@@ -28,3 +28,4 @@
 ## DomainDrivenDesign
 ### 2022.04.26 ~ 2022.00.00
 * [DomainDrivenDesign001](https://github.com/injuk/TIL/blob/master/Architecture/DomainDrivenDesign/DomainDrivenDesign001.md)
+* [DomainDrivenDesign002](https://github.com/injuk/TIL/blob/master/Architecture/DomainDrivenDesign/DomainDrivenDesign002.md)
