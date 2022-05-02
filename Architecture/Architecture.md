@@ -37,3 +37,4 @@
 * [DomainDrivenDesign008](https://github.com/injuk/TIL/blob/master/Architecture/DomainDrivenDesign/DomainDrivenDesign008.md)
 * [DomainDrivenDesign009](https://github.com/injuk/TIL/blob/master/Architecture/DomainDrivenDesign/DomainDrivenDesign009.md)
 * [DomainDrivenDesign010](https://github.com/injuk/TIL/blob/master/Architecture/DomainDrivenDesign/DomainDrivenDesign010.md)
+* [DomainDrivenDesign011](https://github.com/injuk/TIL/blob/master/Architecture/DomainDrivenDesign/DomainDrivenDesign011.md)
