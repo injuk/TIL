@@ -4,6 +4,9 @@ Today I learned :)
 ## Java
 * [Java](https://github.com/injuk/TIL/blob/master/Java/Java.md)
 
+## JavaScript
+* [JavaScript](https://github.com/injuk/TIL/blob/master/JavaScript/JavaScript.md)
+
 ## Kotlin
 * [Kotlin](https://github.com/injuk/TIL/blob/master/Kotlin/Kotlin.md)
 
