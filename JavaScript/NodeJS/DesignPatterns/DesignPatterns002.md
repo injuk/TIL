@@ -96,3 +96,104 @@ console.log(revealingModule.publicName, revealingModule.publicSayHello);
 * CommonJS 명세 중 주요한 개념은 크게 다음과 같이 요약할 수 있다.
   1. require 구문은 로컬 파일 시스템으로부터 모듈을 임포트하는 데에 사용된다.
   2. exports와 module.exports는 특별한 변수로서 현재 모듈에서 공개된 기능들을 내보내기 위해 사용된다.
+
+### CommonJS 모듈 로더 구현하기
+```
+const fs = require('fs');
+
+function loadModule(filename, module, require) {
+  const wrappedSrc =
+    `(function (module, exports, require) {
+        ${fs.readFileSync(filename, 'utf8')}
+      })(module, module.exports, require)`
+  ;
+  eval(wrappedSrc);
+}
+```
+* 상술한 코드는 다음과 같은 특징을 갖는다.
+  1. 모듈의 내용을 읽어들인 후 private 범위로 감싸 평가한다.
+  2. 이 때, module, exports, require 변수들은 모듈에 전달된다.
+  3. 래핑 함수의 exports 인자는 module.exports의 내용으로 초기화된다.
+* 모듈의 내용을 읽어들일 때 비동기 방식이 아닌 동기 방식의 readFileSync가 사용되었다.
+  * 파일 시스템의 동기 방식을 사용하는 것은 일반적으로 권장되지 않지만, **CommonJS의 모듈을 로드하는 것은 동기 방식에 해당**한다.
+  * 때문에 **CommonJS에서는 여러 모듈의 임포트에 적절한 순서를 지키는 것이 중요**하다.
+
+### require 함수 구현하기
+```
+function require(moduleName) {
+  console.log(`Require invoked for module: ${moduleName}`);
+  // 1.
+  const id = require.resolve(moduleName);
+  
+  // 2.
+  if(require.cache[id])
+    return require.cache[id].exports;
+  
+  // 3.
+  const module = {
+    exports: {},
+    id,
+  };
+  
+  // 4.
+  require.cache[id] = module;
+  
+  // 5.
+  loadModule(id, module, require);
+  
+  // 6.
+  return module.exports;
+}
+require.cache = {};
+require.resolve = (moduleName) => {
+  // 모듈 이름을 기반으로 id로 사용될 모듈의 전체 경로를 찾아낸다.
+}
+```
+* 상술한 코드는 다음과 같은 특징을 갖는다.
+  1. 우선 모듈의 전체 경로를 resolve 하고, 이를 id 변수로 초기화한다.
+     * 모듈의 전체 경로 해석은 실제 알고리즘을 구현하는 require.resolve에 위임된다.
+  2. 모듈이 이미 로드되어 있는 경우, 캐시된 모듈을 즉시 반환한다.
+  3. 모듈이 아직 로드되어 있지 않은 경우, 최초 로드를 위한 환경인 모듈 메타데이터를 설정한다.
+     * exports 속성은 빈 객체 리터럴로 정의된다.
+     * **module 객체는 불러올 모듈의 코드에서 public API를 익스포트하는 데에 사용**된다.
+  4. **최초 로드 과정을 마친 후에는 모듈 객체를 캐시**한다.
+  5. **모듈 소스 코드는 파일에서 직접 읽어들이며, 이를 위해 앞서 생성한 module 객체와 require 함수의 참조를 전달**한다. 
+     * 이렇게 **전달된 module 객체는 모듈의 코드가 실행되는 과정에서 module.exports 객체를 조작하기 위해 사용**된다.
+     * module.exports 객체를 조작하거나 대체하는 과정을 통해 모듈은 public API를 내보낼 수 있다.
+  6. 모듈이 내보낸 public API를 의미하는 module.exports의 내용은 클라이언트에게 반환된다.
+
+### 모듈 정의 해보기
+```
+// 각 모듈은 또 다른 모듈 종속성을 로드할 수도 있다.
+const anotherDependency = require('./anotherModule');
+
+// private 멤버
+function log() { console.log('helloooo'); }
+
+// 공개적으로 사용되기 위해 익스포트되는 API
+module.exports.run = () => { log(); };
+```
+* **module.exports 변수에 할당되지 않는 이상 모듈 내부의 모든 내용은 비공개**된다.
+* **앞선 require 함수의 동작 방식에 따라, 모듈을 로드할 때 변수의 내용은 캐시된 후에 리턴**된다.
+
+### module.exports와 exports
+* **변수 exports는 module.exports의 초기 값에 대한 참조에 불과**하다.
+  * 상술한 require 함수의 내용을 토대로, exports는 본질적으로 빈 객체 리터럴이다.
+* 때문에 exports가 참조하는 객체에는 새로운 속성을 추가할 수 있다.
+```
+// exports = { hello: 'world' } 를 반환
+exports.hello = 'world';
+```
+* exports 변수 자체에 대한 재할당은 지역 변수인 exports의 내용을 변경하므로, 실제 module.exports 객체에는 영향을 주지 못한다.
+  * 즉, 실제로는 module.exports의 내용을 변경하지 않고 exports라는 지역 변수 자체만을 재할당한다.
+  * 때문에 다음과 같은 exports의 재할당은 잘못된 사용 예시에 속한다.
+```
+exports = 'world';
+```
+* 이로 미루어 **exports는 모듈로부터 익스포트된 속성을 포함하는 객체를 반환하기 위해 사용하는 것으로 이해**할 수 있다.
+* 반면 객체가 아닌 함수나 인스턴스, 또는 문자열을 익스포트하고자 하는 경우 전달된 module.exports 자체를 재할당해야 한다.
+```
+// exports = 'hello world' 를 반환
+module.exports = 'hello world';
+```
+* 결국 **모듈 내에서 사용되는 module.exports 키워드는 module이 갖는 exports 객체의 실체인 반면, exports 키워드는 실제로는 지역 변수**다.
