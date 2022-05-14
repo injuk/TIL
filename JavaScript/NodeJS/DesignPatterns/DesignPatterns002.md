@@ -60,3 +60,39 @@
   * 그 결과, **Node.js는 13.2 버전부터 ESM을 안정적으로 지원**할 수 있게 되었다.
 * **현재로서는 브라우저와 서버 환경 모두에서 ESM이 JS 모듈을 관리하는 실질적인 방법으로 사용된다**.
   * 그러나 **여전히 많은 Node.js 프로젝트들이 CommonJS에 의존하고 있으므로, ESM이 완전히 지배적인 표준이 되기까지는 더 많은 시간이 필요**하다.
+
+## 2022-05-14 Sat
+## 모듈 시스템과 패턴
+* JS의 주요 문제점 중 하나는 네임스페이스가 없다는 점이며, 모든 스크립트는 전역 범위에서 실행된다.
+* 이로 인해 내부 애플리케이션 코드 또는 종속성 라이브러리가 기능을 노출할 때마다 스코프를 오염시킬 가능성이 발생한다.
+  * 예를 들어, 종속성 라이브러리가 선언한 변수의 이름이 외부에 선언된 변수의 이름과 같은 경우 애플리케이션은 오동작할 수 있다.
+* 이는 매우 위험한 상황이므로, 전역 범위에 의존하는 것은 언제나 위험한 작업이다.
+* 이러한 문제를 해결하기 위한 보편적인 기법에는 노출식 모듈 패턴이 있다.
+
+### 노출식 모듈 패턴
+```
+const revealingModule = (() => {
+    const name = 'injuk';
+    const sayHello = () => { console.log('Hello!'); };
+    
+    return {
+        publicName: name, 
+        publicSayHello: sayHello,
+    };
+})();
+
+console.log(revealingModule);
+console.log(revealingModule.name, revealingModule.sayHello);
+console.log(revealingModule.publicName, revealingModule.publicSayHello);
+```
+* 해당 패턴은 즉시 실행 함수를 사용하며, 함수 내부에 private한 범위를 만든 후 공개할 부분만 반환한다.
+* **JS는 함수 내부에서 선언한 변수를 외부 범위에서 접근할 수 없으므로, 노출식 모듈 패턴은 외부에 공개할 정보만을 return 구문으로 명시**한다.
+  * 상술한 코드의 경우, return 구문을 통해 외부로 반환된 객체의 속성만을 사용할 수 있게 된다.
+* **노출식 모듈 패턴은 비공개 정보는 은닉하고 공개될 API만을 내보낼 수 있으며, CommonJS 모듈 시스템은 이 패턴을 기반으로 한 아이디어에서 시작**한다.
+
+### CommonJS 명세
+* CommonJS는 Node.js의 첫 번째 내장 모듈 시스템이다. 
+* Node.js의 CommonJS는 실제 CommonJS의 명세를 고려하며 덧붙인 추가적인 자체 확장 기능과 함께 구현되었다.
+* CommonJS 명세 중 주요한 개념은 크게 다음과 같이 요약할 수 있다.
+  1. require 구문은 로컬 파일 시스템으로부터 모듈을 임포트하는 데에 사용된다.
+  2. exports와 module.exports는 특별한 변수로서 현재 모듈에서 공개된 기능들을 내보내기 위해 사용된다.
