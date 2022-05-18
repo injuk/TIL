@@ -276,6 +276,3 @@ bad.hello('injuk');
 * **ESM에서는 표준 import 문법 또는 module.createRequire 함수를 통해 CommonJS 모듈을 임포트할 수 있다**.
   * 반면, CommonJS 모듈에서 ESM을 임포트하는 것은 불가능하다.
 * CommonJS에서는 JSON 파일을 명시하여 직접 임포트할 수 있지만, ESM에서는 이러한 임포트가 불가능하다.
-
-### 결론
-* 
