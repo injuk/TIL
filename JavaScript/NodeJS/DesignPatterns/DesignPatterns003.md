@@ -259,3 +259,23 @@ bad.hello('injuk');
   5. a.js의 loaded 속성이 true로 평가되는 것으로 a.js의 익스포트 상태는 완전히 평가된다.
 * **모든 단계를 거친 후에 main.js의 코드가 실행되며, 이 때 필요한 모든 익스포트된 속성은 완전히 평가된 상태**이다.
   * **임포트되는 모든 모듈은 참조의 형태로 추적되므로, 순환 종속성이 존재하는 상황에서도 모든 모듈은 다른 모듈의 최신 상태를 갖는 것이 보장**된다.
+
+### 모듈의 수정
+* ESM은 읽기 전용 라이브 바인딩이므로 외부 모듈에서 개체를 재할당할 수 없다.
+  * 즉, 다른 모듈에서 내보내는 바인딩 자체는 바꿀 수 없다.
+* 그러나 **다른 모듈에서 내보내는 것이 객체라면, 객체 내부의 속성은 재할당을 통해 변경이 가능**하다.
+
+### CommonJS와 ESM의 차이
+* CommonJS의 require 함수에서 파일의 확장자 표시는 선택적이지만, ESM에서는 필수적이다.
+* **ESM은 암시적인 strict mode에서 실행되므로, use strict를 명시할 필요가 없다**.
+* CommonJS의 몇몇 중요한 참조는 ESM에서 정의되지 않으므로, 호출시 Reference Error가 발생한다.
+  * **예를 들어 require, export, module.exports, __filename, __dirname 등은 ESM에서 사용할 수 없다**.
+* **CommonJS의 this는 exports와 같은 참조를 갖지만, ESM의 전역 범위에서 this는 undefined로 정의**된다.
+
+### CommonJS와 ESM의 상호 운용
+* **ESM에서는 표준 import 문법 또는 module.createRequire 함수를 통해 CommonJS 모듈을 임포트할 수 있다**.
+  * 반면, CommonJS 모듈에서 ESM을 임포트하는 것은 불가능하다.
+* CommonJS에서는 JSON 파일을 명시하여 직접 임포트할 수 있지만, ESM에서는 이러한 임포트가 불가능하다.
+
+### 결론
+* 
