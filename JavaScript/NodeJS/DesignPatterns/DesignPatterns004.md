@@ -235,3 +235,127 @@ const emitter = new EventEmitter();
 * 이렇듯 리스너 함수와 전통적인 Node.js 콜백 사이에는 다음과 같은 큰 차이점이 존재한다.
   1. 첫 번째 인자가 반드시 error일 필요가 없다.
   2. **emit() 메소드가 호출될 때 어떠한 값이든 전달이 가능**하다.
+
+### EventEmitter의 생성과 사용
+* EventEmitter를 실제로 사용하는 가장 쉬운 방법은 인스턴스를 만들어 사용하는 것이다.
+```
+import { EventEmitter } from 'events';
+import { readFile } from 'fs';
+
+function findRegex( files = [], regex ) {
+  const emitter = new EventEmitter(); // 함수 실행시 EventEmitter를 신규 생성한다.
+  for(const file of files) {
+    readFile(file, 'utf8', (err, content) => {
+      if(err) // readFile에서 발생한 에러는 error 이벤트로 반환한다.
+        return emitter.emit('error', err);
+
+      emitter.emit('fileread', file); // 파일을 읽기 시작할 때 fileread 이벤트를 발생시킨다.
+      const match = content.match(regex);
+      if(match)
+        match.forEach(elem => emitter.emit('found', file, elem)); // 정규표현식 결과에 따라 found 이벤트를 발생시킨다.
+    });
+  }
+
+  return emitter;
+}
+```
+* findRegex 함수는 다음과 같은 세 가지 이벤트를 발생시키는 EventEmitter 인스턴스를 반환한다.
+  1. fileread: 파일을 읽기 시작할 때 발생
+  2. found: 일치하는 항목이 발견되었을 때 발생
+  3. error: 파일을 읽는 과정에서 에러가 발생했을 때
+* **findRegex 함수를 사용하는 경우, 다음과 같이 반환된 EventEmitter 인스턴스에 이벤트 타입 별 리스너를 등록**한다.
+```
+findRegex([ './input/fileA.txt', './input/fileB.txt' ], /hello \w+/) // EventEmitter 인스턴스를 반환한다.
+  .on('fileread', file => console.log(`${file} was read`)) // 반환된 EventEmitter 인스턴스에 리스너를 등록한다.
+  .on('found', (file, match) => console.log(`Matched ${match} in ${file}`))
+  .on('error', err => console.error(`Error emitted ${err.message}`));
+```
+
+### EventEmitter 오류 전파
+* EventEmitter는 콜백과 마찬가지로 에러가 발생하였을 때 예외를 throw할 수는 없다.
+* 상술한 코드에서, return emitter.emit('error', err)가 아닌 throw new Error()를 작성할 경우 애플리케이션은 비정상 종료된다.
+* **예외를 throw하는 대신 error 이벤트를 발생시키고, Error 객체를 error 이벤트의 인자로 전달하는 규약을 따르는 것이 바람직**하다.
+  * 상술한 findRegex 함수에서도 이러한 방식이 적용되었다.
+* EventEmitter에서 **error 이벤트가 발생했지만 적절한 리스너가 없을 경우, 예외는 throw 되어 애플리케이션이 종료**된다.
+  * 이러한 이유에서 **error 이벤트에 대한 리스너는 반드시 등록해주는 것이 권장**된다.
+
+### 관찰 가능한 객체 만들기
+* 상술한 방식으로 EventEmitter 인스턴스를 직접 사용하는 것은 Node.js에서는 드문 방식이다.
+* **대신 EventEmitter를 확장하는 별도의 클래스를 사용하는 것이 일반적이며, 이로 인해 어떠한 클래스라도 관찰 가능한 객체가 될 수 있다**.
+* 상술한 findRegex 함수를 EventEmitter 클래스를 확장하는 신규 클래스로 수정한 결과는 다음과 같다.
+  * 이는 Node.js 세계에서는 일반적인 패턴이다.
+```
+import { EventEmitter } from 'events';
+import { readFile } from 'fs';
+
+export default class FindRegex extends EventEmitter {
+  #regex
+  #files = [];
+  #encoding = 'utf8';
+  #EVENT = {
+    ERROR: 'error',
+    FOUND: 'found',
+    FILE_READ: 'fileread',
+  };
+
+  constructor(regex) {
+    super();
+    this.#regex = regex;
+  }
+
+  addFile(file) {
+    this.#files.push(file);
+    return this;
+  }
+
+  find() {
+    for(const file of this.#files) {
+      readFile(file, this.#encoding, (error, content) => {
+        if(error)
+          return this.emit(this.#EVENT.ERROR, error);
+
+        this.emit(this.#EVENT.FILE_READ, file);
+
+        const match = content.match(this.#regex);
+        if(match)
+          match.forEach(elem => this.emit(this.#EVENT.FOUND, file, elem));
+      });
+    }
+
+    return this;
+  }
+}
+```
+* 해당 클래스는 다음과 같은 형태로 사용할 수 있다.
+```
+import FindRegex from './FindRegex.js';
+
+new FindRegex(/hello \w+/)
+  .addFile('./input/fileA.txt')
+  .addFile('./input/fileB.txt')
+  .find()
+  .on('fileread', file => console.log(`${file} was read`))
+  .on('found', (file, match) => console.log(`Matched ${match} in ${file}`))
+  .on('error', err => console.error(`Error emitted ${err.message}`));
+```
+
+### EventEmitter와 메모리 누수
+* 메모리 누수는 메모리가 더 이상 필요하지 않음에도 해제되지 않아 애플리케이션의 메모리 사용량을 점진적으로 증가시키는 소프트웨어 결함이다.
+* **관찰 가능한 대상에 대해 오랜 시간에 걸쳐 구독하는 경우, 더 이상 관찰이 필요하지 않는 시점에 구독을 해지하는 것은 매우 중요**하다.
+  * 구독 해지는 메모리 누수를 예방하고, 리스너의 스코프에 있는 객체로부터 더 이상 사용되지 않는 메모리 점유를 풀어준다.
+  * **Node.js와, 심지어 JS에서도 EventEmitter 리스너의 등록을 해지하지 않는 습관은 메모리 누수의 주된 원인**이다.
+```
+const thisTakesMemory = 'Big Big ...';
+emitter.on('an_event', () => {
+  console.log(thisTakesMemory);
+});
+```
+* 상술한 코드는 변수 thisTakesMemory가 리스너에서 참조되며, 리스너가 해제되기 전까지 메모리에 유지된다.
+  * 또는 emitter 자체에 대한 참조가 유실되어 도달 불가능한 상태가 되는 것으로 GC되기 전까지 유지된다.
+* 이는 즉 **애플리케이션의 전체 주기 동안 EventEmitter는 모든 리스너가 참조하는 메모리와 함께 도달 가능한 상태를 유지함을 의미**한다.
+* 이러한 방식은 애플리케이션에 의해 사용되는 메모리를 무한정 증가시키며, 종국에는 애플리케이션을 망가트리게 된다.
+* **EventEmitter로 인한 메모리 누수를 미연에 방지하기 위해 EventEmitter가 제공하는 removeListener()로 리스너를 명시적으로 해제**할 수 있다.
+  * 또는 첫 번째 이벤트를 수신한 후 자동으로 리스너를 해지하는 once()를 사용할 수도 있다.
+  * 그러나 발생하지 않는 이벤트를 명시하는 경우 리스너는 절대로 해지되지 않으며, 이 역시 메모리 누수의 원인이 될 수 있다.
+* **EventEmitter는 메모리 누수의 가능성을 경고하기 위해 리스너의 수가 10개를 초과하면 메시지를 발생시키는 내장 메커니즘을 갖고 있다**.
+  * 때로는 10개 이상을 등록하더라도 문제가 없는 경우가 있으므로, setMaxListeners() 메소드를 통해 제한을 풀어줄 수 있다.
