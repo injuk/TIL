@@ -7,3 +7,4 @@
 * [DesignPatterns003](https://github.com/injuk/TIL/blob/master/JavaScript/NodeJS/DesignPatterns/DesignPatterns003.md)
 * [DesignPatterns004](https://github.com/injuk/TIL/blob/master/JavaScript/NodeJS/DesignPatterns/DesignPatterns004.md)
 * [DesignPatterns005](https://github.com/injuk/TIL/blob/master/JavaScript/NodeJS/DesignPatterns/DesignPatterns005.md)
+* [DesignPatterns006](https://github.com/injuk/TIL/blob/master/JavaScript/NodeJS/DesignPatterns/DesignPatterns006.md)
