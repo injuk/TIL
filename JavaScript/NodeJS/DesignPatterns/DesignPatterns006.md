@@ -92,3 +92,61 @@ new Promise((resolve, reject) => {}));
   3. promise.finally(onFinally): **프로미스가 결정될 때 호출될 onFinally 콜백을 설정하는 함수**이다.
      * onFinally 콜백은 onFulfilled, onRejected 콜백과 달리 입력으로 인자를 수신하지 않으며, 반환된 값은 무시된다.
      * **finally에서 반환하는 프로미스는 현재 프로미스 인스턴스의 이행 값 또는 거부 사유로 결정**된다.
+
+### 프로미스 만들기
+* 프로미스를 처음부터 생성하는 것은 저수준의 작업이며, 콜백 기반과 같은 다른 비동기 형식을 사용하는 API를 변환하는 경우에 필요한 작업이다.
+  * 대부분의 경우에 개발자는 다른 라이브러리의 then 함수를 통해 생성한 프로미스를 사용한다.
+* 일부 시나리오에서는 생성자를 활용하여 수동으로 프로미스를 생성할 필요가 있으며, 다음과 같은 형식을 따를 수 있다.
+```
+function delay(milliseconds) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve(new Date());
+    }, milliseconds);
+  });
+}
+
+console.log(`Delay... ${new Date().getSeconds()}s`);
+delay(1000)
+  .then(date => console.log(`Done... ${date.getSeconds()}s`));
+```
+* Promise / A+ 명세에서, then 함수의 onFulfilled와 onRejected 콜백은 단 한 번만 배타적으로 호출된다.
+  * 때문에 **해당 명세에 따르는 프로미스의 경우, resolve 또는 reject를 수 회 호출하더라도 결과적으로 한 번만 이행되거나 거부**된다.
+* 콜백 기반 함수의 다음과 같은 특징을 알고 있는 경우, 콜백 기반 함수를 프로미스로 변환하는 프로미스화 함수를 작성할 수 있다.
+  1. 콜백은 함수의 마지막 인자이다.
+  2. 에러가 있는 경우, 콜백의 첫 번째 인자로 전달된다.
+  3. 모든 반환 값은 콜백 함수의 에러 인자 다음에 전달된다.
+* 이러한 규칙에 의거한 Node.js 방식의 콜백 기반 함수를 프로미스화하는 함수는 다음과 같다.
+```
+function promisify(cb) {
+  return function promisified(...args) {
+    return new Promise((resolve, reject) => {
+      const newArgs = [
+        ...args,
+        (err, result) => {
+          if(err) 
+            return reject(err);
+          resolve(result);
+        }
+      ];
+      cb(...newArgs);
+    });
+  }
+}
+```
+* **promisify 함수는 또 다른 함수인 promisified를 반환하며, 반환되는 함수는 promisify에 인자로 전달된 cb의 프로미스 버전**이다.
+* 이를 활용하여 Node.js의 기반 함수인 readFile을 프로미스화하는 예시는 다음과 같다.
+```
+import { readFile } from 'fs';
+
+promisify(readFile)('./package.json', 'utf8')
+  .then(content => console.log(content));
+```
+* 상술한 코드는 예시에 불과하며, **실무에서는 Node.js의 콜백 기반 함수를 프로미스화하기 위해 코어 모듈인 util의 promisify() 함수를 사용**한다.
+```
+import { readFile } from 'fs';
+import { promisify } from 'util';
+
+promisify(readFile)('./package.json', 'utf8')
+.then(content => console.log(content));
+```
