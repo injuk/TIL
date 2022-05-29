@@ -13,3 +13,4 @@
 ### Basics
 ### 2022.05.28 ~ 2022.00.00
 * [Basics001](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/Basics/Basics001.md)
+* [Basics002](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/Basics/Basics002.md)
