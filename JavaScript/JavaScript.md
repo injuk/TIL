@@ -15,3 +15,4 @@
 * [Basics001](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/Basics/Basics001.md)
 * [Basics002](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/Basics/Basics002.md)
 * [Basics003](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/Basics/Basics003.md)
+* [Basics004](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/Basics/Basics004.md)
