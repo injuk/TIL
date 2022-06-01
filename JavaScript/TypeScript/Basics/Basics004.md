@@ -155,3 +155,21 @@ export enum CRUD {
 
 console.log(CRUD.READ); // read가 출력된다.
 ```
+
+### enum 활용하기
+* 함수의 인자로 이넘 타입을 정의한 경우, 문자형 이넘의 경우에도 함수의 인자로 문자열을 넘겨줄 수는 없다.
+```
+export enum CRUD {
+    CREATE = 'create',
+    READ = 'read',
+    UPDATE = 'update',
+    DELETE = 'delete',
+}
+
+function call(method: CRUD): void {
+    console.log(method);
+}
+
+call(CRUD.READ);
+// call('read'); // 오로지 이넘을 활용한 호출만 가능하다.
+```
