@@ -117,3 +117,63 @@ const temp: Temp<string> = {
     selected: false,
 }
 ```
+
+### 제네릭과 타입 제한하기
+* 제네릭을 사용하고 있는 경우, 제네릭을 더 엄격하게 사용하거나 더 많은 옵션을 주고싶을 수 있다.
+  * 타입 제한은 이러한 경우에 가장 쉽고도 유용하게 사용할 수 있는 이론이다.
+* 또한 제네릭은 타입에 대한 힌트를 줌으로써 추론에 사용될 힌트를 더 많이 제공할 수 있다.
+  * 또는, **타입 추론에 사용될 힌트를 더 주기 위해 제네릭을 활용할 수도 있다는 뜻으로 이해해도 무방**하다.
+  * **아래의 코드를 예시로 들어, 제네릭 타입이 배열임을 함수 내부에서 알 수 있으므로 배열의 속성과 API를 활용해도 컴파일이 가능**하게 된다.
+  * 이는 즉 제네릭의 타입 힌트가 컴파일러의 타입 추론에 도움을 주고 있는 셈이 된다.
+```
+function log<T>(text: T[]): T[] { // 2. 이러한 문제를 해결하기 위해, 타입 변수 T의 배열 타입을 사용함으로써 인자가 배열이라는 힌트를 줄 수 있다.
+    console.log(text.length); // 1. 타입 변수를 T로만 사용하는 경우, T는 무슨 타입이든지 될 수 있으므로 length를 사용할 수 없다.
+    return text;
+}
+```
+
+## 2022-06-03 Fri
+### 정의된 타입으로 타입을 제한하기
+* 상술한 방식은 함수 내부에서 length 속성을 사용하기 위해 제네릭을 배열로 처리하였다.
+* 그러나 실제로는 별도의 인터페이스를 정의하고, 이를 활용하는 다음과 같은 방식으로 문제를 해결할 수도 있다.
+```
+interface LengthType {
+    length: number;
+}
+function logLength<T extends LengthType>(text: T): T {
+    console.log(text.length);
+    return text;
+}
+
+logLength('hello');
+logLength([]);
+// logLength(123); // number 타입은 length 속성을 갖지 않으므로, 인자로 전달할 수 없다.
+```
+* <T extends LengthType>의 경우, **logLength 함수에서 사용하는 타입의 범위를 제한하는 효과**를 갖는다.
+  * 이를 통해 **T는 LengthType을 확장하는 하위 타입이 되므로, 언제나 length 속성을 갖는 타입으로 한정**된다.
+  * 이렇듯 새로이 정의된 타입을 통해 제네릭에 포함될 수 있는 속성, 또는 타입들을 구분할 수 있게 된다.
+* **해당 방식은 기본적으로 모든 타입을 전달받을 수 있는 타입 변수가 반드시 특정한 속성을 갖도록 제한하는 역할을 수행**한다.
+* 이렇듯 **extends 키워드는 클래스와 인터페이스를 다룰 때, 이미 정의되어 있는 상위 타입을 확장하기 위해 사용**한다.
+
+### keyof를 활용한 타입 제한
+* keyof를 활용하는 타입 제한 방식은 <T extends keyof 인터페이스명>의 형식을 띈다.
+  * 이는 **명시된 인터페이스의 키들 중에 하나가 타입 변수 T가 된다는 의미**를 갖는다.
+  * 결과, 해당 제네릭을 활용하는 함수의 인자로는 명시된 인터페이스의 속성 중 단 하나만 포함될 수 있다.
+  * 마치 extends 키워드를 활용하여 제네릭에 타입을 제한한 것처럼, 해당 방식은 타입의 범위를 더더욱 좁혀준다.
+```
+interface ShoppingItem {
+    name: string;
+    price: number;
+    stock: number;
+}
+
+function getShoppingItemOption<T extends keyof ShoppingItem>(item: T): T {
+
+    return item;
+}
+getShoppingItemOption('name'); // 정말 인터페이스의 '키 값'들 중 하나만 들어갈 수 있다.
+getShoppingItemOption('price');
+getShoppingItemOption('stock');
+```
+* 이렇듯 **keyof 예약어는 인터페이스 등 이미 정의되어 있는 타입의 키 값들만 포함할 수 있도록 타입을 제한하는 역할을 수행**한다.
+* **extends와 keyof 등의 예약어는 타입 변수에 전달될 수 있는 타입을 제한하는 것으로 더 안전하게 제네릭을 사용할 수 있도록 지원**한다.
