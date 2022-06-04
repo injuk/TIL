@@ -76,3 +76,97 @@ let complicatedHello: ComplicatedHello<string> = {
 let arr = [1, '2', true]; // (number | string | boolean)[] 타입으로 추론된다.
 ```
 * 결국 **모든 타입을 아우를 수 있는 가장 쉬운 방식을 택하며, 이는 곧 모든 타입에 대한 유니온 타입으로 추론하는 것**이다.
+
+### 타입 단언이란?
+* 타입 추론에 의해 `let temp`는 any, `let num = 10`은 number로 추론된다.
+  * 당연히 `let num = temp`의 경우, num은 any로 추론될 것이다.
+* 그러나 다음과 같은 코드에서, TS는 b를 any로 추론하지만 개발자가 보는 관점에서는 number로 추론되기를 원할 수 있다.
+```
+let a;
+a = true;
+a = 'a';
+a = 10;
+let b = a; // any로 추론된다.
+```
+* 이러한 경우를 위해 **TS는 `let b = a as number`의 형식과 같이 타입을 단언할 수 있는 기능을 제공**한다.
+  * 이 경우 a는 타입 단언에 의해 number로 추론되므로, 자연스럽게 b 역시 number로 추론된다.
+  * 반면, a의 타입은 여전히 any를 유지한다.
+* 결국 **타입 단언이란, 타입 추론에 있어 TS보다 개발자가 더 잘 알고 있다고 가정하고 타이핑을 강제**하는 것이다.
+* 다음과 같이 DOM API에 접근하는 경우, div element가 항상 존재하리라는 보장이 없으므로 컴파일리 불가능하다.
+  * 때문에 일반적으로는 if 분기를 통해 div의 존재성을 확인한다.
+```
+let div = document.querySelector('div');
+// console.log(div.innerText); // div가 존재하지 않을 수도 있으므로, div는 null일 수도 있다. 
+if(div) 
+  console.log(div.innerText);
+```
+* 반면, **해당 DOM 요소가 반드시 존재한다는 것을 보장받을 수 있는 경우에 한해 타입 단언을 사용**할 수 있다.
+```
+let div = document.querySelector('div') as HTMLDivElement;
+console.log(div.innerText);
+```
+
+### 타입 단언만으로는 아쉬운 경우
+* 아래와 같이  유니온 타입의 모든 조건을 충족하는 값을 반환하는 함수를 작성한다.
+  * 이 경우, choco 변수는 유니온 타입인 `Person | Dog`로 추론된다. 
+  * 이렇듯 유니온 타입을 반환하는 함수를 작성하는 것은 실무에서도 자주 사용되는 방식이다.
+```
+interface Person {
+    name: string;
+    age: number;
+}
+
+interface Dog {
+    name: string;
+    alias: string;
+}
+
+function whoAreU(): Person | Dog {
+    return {
+        name: 'ingnoh',
+        alias: 's',
+        age: 3,
+    }
+}
+
+let choco = whoAreU();
+// console.log(choco.age); // 컴파일 에러!
+```
+* 그러나 **함수의 반환형이 유니온 타입이므로, 실제로는 age 속성을 포함하도록 하드코딩된 객체를 반환함에도 이에 접근할 수 없는 문제가 발생**한다.
+  * **이러한 이슈는 명시된 각 타입의 공통 속성에만 접근이 가능한 유니온 타입의 특징에서 기인**한다.
+* 이 경우, 원하는 age 속성에 접근하기 위해 상술했던 타입 단언을 응용할 수 있다.
+  * `choco as Person`의 반환형은 Person으로 단언된 객체이다.
+  * 이 경우, **원본 객체와 반환된 객체는 `===` 연산자를 통해 확인해볼 경우 동일한 객체로 취급**된다.
+```
+let choco = whoAreU();
+if((choco as Person).age) {
+    console.log((choco as Person).age);
+} else {
+    console.log((choco as Dog).alias);
+}
+```
+* 그러나 **이러한 방식은 유니온 타입의 객체를 사용할 때마다 타입 `as` 키워드를 활용하는 타입 단언문을 반복적으로 작성해주어야하는 단점이 존재**한다.
+  * 이러한 방식은 당연히 유지보수성과 가독성을 떨어트릴 수 밖에 없다.
+
+### 타입 가드란?
+* **타입 가드는 `is` 키워드를 활용하며, 일반적으로 `is`라는 접두사로 시작되는 함수의 형태로 작성**된다.
+```
+function isPerson(param: Person | Dog): param is Person {
+    return (param as Person).age !== undefined;
+}
+```
+* 상술한 코드의 경우, return 구문에 작성된 표현식이 true인 경우에 Person 타입으로 취급하겠다는 의미를 갖는다.
+* 이렇듯 **타입 가드를 구현한 함수를 통과한 경우, 인자로 전달된 객체는 반환형에 명시된 Person 타입이 맞는지 검증**된다.
+* 아래의 코드에서, isPerson 함수를 통해 choco의 타입이 적절하게 추론된다.
+  * **if 또는 else 문 내부에서, choco 변수의 타입은 이미 추론된 상태이므로 유니온 타입의 공통 속성 외에도 필요한 속성에만 접근이 가능**해진다.
+```
+let choco = whoAreU();
+if(isPerson(choco)) {
+    console.log(choco.age);
+    // console.log(choco.alias); // if 블록에서 choco는 Person 타입이므로, Dog 타입의 속성에 접근할 수 없다.
+} else {
+    // console.log(choco.age); // else 블록에서 choco는 Dog 타입이므로, Person 타입의 속성에 접근할 수 없다.
+    console.log(choco.alias);
+}
+```
+* 이렇듯 **타입 가드는 유니온 타입의 공통된 속성에만 접근을 허용하는 TS의 타입 추론이 더 정확해지도록 도울 수 있다**.
