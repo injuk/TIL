@@ -71,3 +71,38 @@ let somethingNumber: Something<number>;
 // somethingString = somethingNumber; // 둘 중 어느 주석을 해제해도 컴파일이 불가능하다.
 // somethingNumber = somethingString; // 둘 중 어느 주석을 해제해도 컴파일이 불가능하다.
 ```
+## 2022-06-05 Sun
+### TS의 모듈 시스템
+* TS의 모듈 개념은 ES6 이후의 모듈 개념과 유사하다.
+  * 즉, **TS는 JS 진영의 ES 모듈과 완전히 동일한 개념을 사용**한다!
+* **각각의 모듈은 전역 변수와는 구분되는 자체적인 유효 범위를 갖고, export나 import 키워드를 활용**한다.
+
+### JS의 모듈 시스템
+* JS의 경우, <script>를 통해 다른 파일로부터 JS 파일을 로드했다고 하더라도 유효 범위는 전역으로 적용된다.
+  * 즉, 파일마다 고유한 스코프를 갖는 것이 아니다.
+  * 이러한 JS의 한계 때문에 웹 개발자들은 네임스페이스 모듈화 패턴 등을 활용하여 개발을 진행해왔다.
+* 이러한 한계를 극복하기 위해 ES6 이후의 최신 JS 문법은 ES 모듈이라는 모듈 시스템을 갖게 되었으며, 이에 import와 export 키워드를 활용한다.
+* 일반적으로 **타입은 별도의 파일에 정의하며, 해당 파일이 여러 객체를 export하는 경우에는 파일의 최 하단에 모아서 작성하는 관례**가 있다.
+```
+interface PhoneNumberDictionary {
+  [phone: string]: {
+    num: number;
+  };
+}
+
+interface Contact {
+  name: string;
+  address: string;
+  phones: PhoneNumberDictionary;
+}
+
+type Contacts = Contact[];
+
+enum PhoneType {
+  OFFICE = 'office',
+  HOME = 'home',
+  STUDIO = 'studio',
+}
+
+export { Contact, Contacts, PhoneType, PhoneNumberDictionary }; // 관례상 파일의 최하단에 모아 작성한다.
+```

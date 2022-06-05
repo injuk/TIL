@@ -1,7 +1,8 @@
 # JavaScript
+
 ## NodeJS
 ### DesignPatterns
-### 2022.05.05 ~ 2022.05.28
+### 2022.05.05 ~ 2022.05.28 (잠정 중단)
 * [DesignPatterns001](https://github.com/injuk/TIL/blob/master/JavaScript/NodeJS/DesignPatterns/DesignPatterns001.md)
 * [DesignPatterns002](https://github.com/injuk/TIL/blob/master/JavaScript/NodeJS/DesignPatterns/DesignPatterns002.md)
 * [DesignPatterns003](https://github.com/injuk/TIL/blob/master/JavaScript/NodeJS/DesignPatterns/DesignPatterns003.md)
@@ -15,7 +16,7 @@
 
 ## TypeScript
 ### Basics
-### 2022.05.28 ~ 2022.00.00
+### 2022.05.28 ~ 2022.06.05
 * [Basics001](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/Basics/Basics001.md)
 * [Basics002](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/Basics/Basics002.md)
 * [Basics003](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/Basics/Basics003.md)

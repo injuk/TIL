@@ -1,6 +1,6 @@
 # Kotlin
 ## Basics
-### 2022.02.05 ~ 
+### 2022.02.05 ~ 2022-02-21 (잠정중단)
 * [Basics001](https://github.com/injuk/TIL/blob/master/Kotlin/Basics/Basics001.md)
 * [Basics002](https://github.com/injuk/TIL/blob/master/Kotlin/Basics/Basics002.md)
 * [Basics003](https://github.com/injuk/TIL/blob/master/Kotlin/Basics/Basics003.md)
