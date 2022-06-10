@@ -63,3 +63,46 @@ public class HelloSpringApplication {
      * `mockito`는 테스트 모킹을 위한 라이브러리이다.
      * `assertj`는 테스트 코드를 더 편리하게 작성할 수 있도록 보조하는 라이브러리이다.
      * `spring-test`는 스프링의 통합 테스트를 지원하는 라이브러리이다.
+
+### 웰컴 페이지 추가하기
+* 스프링 부트의 경우, `resources/static/index.html`이 존재하는 경우 이를 진입 페이지로 설정한다.
+  * 즉, 도메인으로 진입한 경우 해당 페이지를 바로 띄워준다.
+* 스프링은 오래된 프레임워크이며, 그 동안 수 많은 기능이 추가되어 거대화되었다.
+  * 단적인 예로, 스프링은 엔터프라이즈급 웹 어플리케이션에 필요한 대부분의 기능을 제공한다.
+  * 스프링 부트는 이를 한 층 더 감싸 스프링을 편리하게 사용할 수 있도록 지원한다.
+* 때문에 **스프링의 모든 개념을 이해하고 기억할 수는 없으며, 대신 `docs.spring.io`와 같은 공식 문서를 활용**할 수 있다.
+
+### 타임리프 템플릿 엔진
+* 기본적인 HTML 파일만을 사용하는 것은 정적 웹사이트이며, 이는 프로그래밍적인 요소가 들어가지 않는다.
+  * 사실상 HTTP 요청에 명시된 HTML 파일을 반환하는 것에 지나지 않는다.
+* 템플릿 엔진은 정적 문서에 프로그래밍 요소를 도입하여 동적인 웹 사이트를 만들 수 있도록 지원한다.
+
+### 컨트롤러 구현하기
+* **컨트롤러란, 웹 어플리케이션의 첫 번째 진입점 역할을 수행하는 요소**이다.
+```
+@Controller
+public class HelloController {
+
+    @GetMapping("hello")
+    public String hello(Model model) { // 모델은 GetMapping 성공시 스프링이 만들어 넣어준다.
+
+        model.addAttribute("data", "Hello");
+
+        return "hello";
+    }
+}
+```
+* 상술한 코드와 같이, **컨트롤러에서 String을 반환할 경우 `ViewResolver`는 templates 디렉토리에서 동명의 파일을 찾아 처리**한다.
+  * 정확히는 **스프링 부트에서의 템플릿 엔진 기본 viewName 매핑 방식이 `resources:templates/${viewName}.html`로 적용**된다.
+
+### 빌드하고 실행하기
+* 다음의 그래들 명령어를 통해 빌드를 진행하고, java 명령어를 통해 애플리케이션을 실행할 수 있다.
+```
+./gradlew build
+# 또는 ./gradlew clean build 명령어를 활용할 수도 있다.
+# ./gradlew clean 명령어는 생성된 build 디렉토리를 제거해주는 역할을 수행한다.
+cd build/libs
+java -jar hello-spring-0.0.1-SNAPSHOT.jar
+```
+* 서버에서 애플리케이션을 실행하고자 하는 경우, `hello-spring-0.0.1-SNAPSHOT.jar` 파일을 서버에 옮긴 후 `java -jar` 명령어를 통해 실행시켜준다.
+  * **이전에는 톰캣 세팅부터 시작해서 war 생성, 설정, 등 해야할 일이 많았으나, 오늘 날에는 jar 파일 하나로 애플리케이션을 실행**할 수 있다.
