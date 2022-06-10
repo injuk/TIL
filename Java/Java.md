@@ -40,3 +40,4 @@
 ### Basics
 ### 2022.06.10 ~ 2022.00.00
 * [Basics001](https://github.com/injuk/TIL/blob/master/Java/Spring/Basics/Basics001.md)
+* [Basics002](https://github.com/injuk/TIL/blob/master/Java/Spring/Basics/Basics002.md)
