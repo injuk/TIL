@@ -39,3 +39,70 @@
   5. **viewResolver는 templates 디렉토리에서 적절한 View를 찾아내고, 템플릿 엔진에게 해당 View에 대한 처리를 요청**한다.
   6. **템플릿 엔진은 해당 View에 대한 렌더링을 수행하고, 처리가 완료된 HTML을 웹 브라우저에 반환**한다.
      * 정적 컨텐츠 제공의 경우, 변환 과정 없이 그대로 파일을 반환했다는 점과 차이가 있다.
+* 즉, **템플릿 엔진은 프로그래밍적인 요소에 의해 View를 렌더링하고, 렌더링된 HTML을 클라이언트에 반환하는 방식**이다.
+
+### API
+* **사실상 웹 서버의 기능은 정적 컨텐츠를 반환하는 것이 아니라면 HTML을 반환할지, 데이터를 그대로 내릴지가 전부**이다.
+* API 기능을 수행하는 컨트롤러는 다음과 같이 작성할 수 있다.
+```
+@GetMapping("hello-world")
+@ResponseBody
+public String helloWorld(@RequestParam("name") String name) {
+    return "Hello, " + name;
+}
+```
+* **@ResponseBody 어노테이션은 해당 메소드를 통해 HTTP 응답 메시지의 본문을 직접 지정하곘다는 의미**를 갖는다.
+  * 이 경우, 해당 컨트롤러로 인해 반환될 HTTP 응답에는 `Hello, ${name}`이 메시지 본문에 포함되게 된다.
+* **템플릿 엔진 방식과의 차이는 API 컨트롤러가 문자열 데이터를 그대로 반환하며, View와 관련된 처리를 수행하지 않는다는 점**이다.
+  * 때문에 브라우저의 페이지 소스 보기 기능을 활용할 경우, HTML 태그 없이 문자열만 명시되는 것을 확인할 수 있다.
+* 단순 문자열을 반환하는 상술한 방식과 달리, 임의의 JSON 객체를 반환하는 API는 다음과 같이 작성할 수 있다.
+  * 기존에는 XML을 반환하는 방식도 자주 사용되었으나, 너무 무겁고 가독성이 떨어지는 XML의 한계로 인해 최근에는 JSON 방식이 사실 상 표준이 되었다.
+  * **스프링 역시 컨트롤러 메소드가 객체를 반환하고 @ResponseBody가 명시된 경우, 기본적으로 JSON 객체를 반환하도록 동작**한다.
+```
+@GetMapping("hello-api")
+@ResponseBody
+public User helloApi(@RequestParam("name") String name) {
+    User user = new User();
+    user.setAge(3);
+    user.setName(name);
+
+    return user;
+}
+
+// User.java
+@Getter
+@Setter
+public class User {
+    private String name;
+    private int age;
+}
+```
+* 클라이언트가 웹 브라우저를 통해 API를 호출하는 경우, 스프링은 다음과 같은 흐름으로 동작한다.
+  1. 내장 톰캣 서버가 요청을 수신한다.
+  2. 내장 톰캣 서버는 스프링 컨테이너에 해당 요청을 포워딩한다.
+      * 이 때, 내장 톰캣 서버는 어떠한 경로로 요청이 수신되었는지를 분류해주는 역할을 수행한다.
+  3. 스프링 컨테이너는 컨트롤러에서 해당 요청을 처리할 수 있는 메소드를 찾는다.
+  4. **해당 메소드에 @ResponseBody 어노테이션이 명시되어 있으므로, 스프링은 반환 값을 HTTP 응답의 메시지 본문에 그대로 명시**한다.
+     * 해당 어노테이션이 없는 경우, 스프링은 viewResolver에게 적절한 템플릿을 찾도록 요청한다.
+  5. **단순 문자를 반환한다면 그대로 HTTP 요청에 삽입해도 무방하나, 객체의 경우 스프링에 설정된 기본 정책에 의해 JSON 객체로 변환하여 반환**한다.
+  6. 이러한 동작은 `HttpMessageConverter`에 의해 처리된다.
+     * 템플릿 엔진의 경우, viewResolver가 요청을 처리하던 것과 대비된다.
+     * 단순 문자열을 반환하는 경우 `StringConverter`가 동작하며, 객체를 반환하는 경우 `JsonConverter`가 동작한다.
+  7. 컨트롤러에서 선택된 API가 객체를 반환하는 경우 `JsonConverter`가 해당 객체를 JSON 형태로 변환한다.
+  8. 변환된 객체는 요청한 클라이언트인 브라우저 또는 서버에게 반환된다.
+* 즉, **API 방식은 클라이언트의 요청을 처리한 결과 객체를 HttpMessageConverter를 통해 JSON 형태로 변환하고 View 없이 그대로 반환하는 방식**이다.
+
+### @ResponseBody의 사용
+* @ResponseBody 어노테이션을 명시한 메소드는 다음과 같은 동작을 수행할 수 있다.
+  1. HTTP 응답 메시지 본문에 반환값을 그대로 명시한다.
+  2. 해당 메소드의 처리를 위해 viewResolver 대신 HttpMessageConverter가 동작한다.
+     * HttpMessageConverter는 스프링 부트 차원에서 기본적으로 포함되어 지원되는 클래스이다.
+     * 기본 문자열을 반환하는 경우, StringHttpMessageConverter가 동작한다.
+     * 객체를 반환하는 경우, MappingJackson2HttpMessageConverter가 동작한다.
+     * **이외에도 스프링은 byte 처리 등등에 대응할 수 있는 HttpMessageConverter를 기본으로 지원**한다.
+  3. **실제로 동작하는 HttpMessageConverter는 메소드의 반환형 뿐만 아니라 HTTP Accept 헤더 등의 정보를 조합하여 결정**된다.
+* 덧붙여 Java 진영에서 **객체를 JSON 형식으로 변환하는 라이브러리는 크게 다음의 두 가지가 대표적**이다.
+  1. **Jackson: 실무에서 가장 자주 보게 되는 범용적인 라이브러리이며, 스프링이 기본적으로 탑재하는 라이브러리**이다. 
+  2. Gson: 구글에서 작성한 라이브러리이다.
+* HttpMessageConverter의 기능을 직접 정의한 클래스로 대체할 수도 있으나, 실무에서는 기본적으로 지원되는 라이브러리를 활용하는 것으로 충분하다.
+  * 즉, 바퀴를 재발명할 필요가 없다.
