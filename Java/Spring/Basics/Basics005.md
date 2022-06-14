@@ -31,14 +31,6 @@ public class MemberController {
 
         return "redirect:/";
     }
-
-    @GetMapping("/members")
-    public String listMembers(Model model) {
-        List<Member> members = memberService.findMembers();
-        model.addAttribute("members", members);
-
-        return "members/memberList";
-    }
 }
 ```
 * 사용자가 브라우저에 `/members/new`를 입력하면 스프링은 다음과 같이 동작한다.
@@ -52,3 +44,24 @@ public class MemberController {
   * 상술한 코드의 경우, `String name` 멤버 변수를 갖는 `MemberForm` 인스턴스에 값이 전달된다.
   * HTML의 form에서 전달한 데이터의 키 역시 name이므로, memberForm의 name 멤버 변수에 해당 값이 설정된다.
   * **즉, 스프링은 form에 포함된 input의 name 속성에 명시된 값을 토대로 memberForm의 멤버 변수를 설정**한다.
+
+## 2022-06-15 Wed
+### 모델에 데이터 넘기기
+* 다음과 같이 컨트롤러 메소드를 작성한 경우, members라는 키에 List<Member> 변수의 값을 설정한다.
+```
+@GetMapping("/members")
+public String listMembers(Model model) {
+    List<Member> members = memberService.findMembers();
+    model.addAttribute("members", members);
+
+    return "members/memberList";
+}
+```
+* 이렇게 모델에 전달된 데이터는 타임리프를 통해 다음과 같이 활용할 수 있다.
+  * 이렇듯 타임리프는 모델에 전달된 데이터를 활용하여 화면을 렌더링한다.
+```
+<tr th:each="member : ${members}">
+    <td th:text="${member.id}"></td>
+    <td th:text="${member.name}"></td>
+</tr>
+```
