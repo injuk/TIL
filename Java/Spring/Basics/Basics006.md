@@ -22,3 +22,52 @@ create table member
   * `insert into member(name) values ('ingnoh');` 등의 쿼리를 통해 H2 데이터베이스에 값을 삽입할 수 있다.
   * 삽입된 정보는 `select * from member;` 등의 쿼리를 통해 확인할 수 있다.
 * **실무에서는 상술한 내용과 같은 DDL의 경우 별도의 `.sql` 확장자 파일에 저장하여 버전 관리 시스템을 통해 관리하는 것이 이상적**이다. 
+
+### pure JDBC
+* **Java의 경우, 데이터베이스와의 상호작용을 위해 기본적으로 반드시 JDBC를 사용**해야 한다.
+  * 아래의 코드는 JDBC를 활용하여 H2 데이터베이스와 상호작용하기 위해 build.gradle에 명시해야 할 의존성 목록이다.
+  * 특히, **데이터베이스에 연결하기 위해 데이터베이스가 제공하는 클라이언트가 필요하며 이는 `com.h2database:h2` 의존성에 포함**된다.
+```
+dependencies {
+	// for JDBC
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+	runtimeOnly 'com.h2database:h2'
+}
+```
+* 또한, **데이터베이스에 연결하기 위해 필요한 접속정보는 `resources/application.proerties`에 쉽게 작성**할 수 있다.
+
+### 설정 파일을 통한 DataSource 관리
+* @Configuration 어노테이션이 명시된 클래스에 아래와 같이 작성하는 것으로 리포지토리 구현체를 손쉽게 교체할 수 있다.
+* 특히, DataSource 역시 스프링이 관리하는 의존성 주입 대상이 될 수 있다.
+  * 이 때, **스프링은 `application-properties`에 명시된 연결 정보를 토대로 해당 객체를 자동으로 빈으로 등록하여 주입**한다.
+```
+@Configuration
+public class SpringConfig {
+
+    private DataSource dataSource;
+
+    public SpringConfig(DataSource dataSource) {
+        this.dataSource = dataSource;
+        System.out.println(dataSource);
+    }
+
+    @Bean
+    public MemberService memberService() {
+        return new MemberService(
+                memberRepository()
+        );
+    }
+
+    @Bean
+    public MemberRepository memberRepository() {
+
+        return new JdbcMemberRepository(dataSource);
+//        return new MemoryMemberRepository();
+    }
+}
+```
+* **이러한 방식을 적용할 경우 다른 코드를 수정할 필요가 전혀 없으며, 신규 추가된 클래스를 사용하도록 설정 파일만을 수정**하면 된다.
+  * 이는 **객체 지향적인 설계를 손쉽게 도입할 수 있는 스프링의 주요한 장점**이기도 하다.
+  * 스프링을 사용하지 않는 pure Java 코드의 경우, 의존성이 수정되는 경우 연관된 모든 부분을 반드시 수정해야 한다.
+  * 이는 **개방 폐쇄 원칙을 준수하기 쉽도록 하며, 애플리케이션을 조립하는 코드 외의 비즈니스 로직을 수정할 필요가 없게 만들어준다**.
+  * 즉, **별도의 동작 코드를 전혀 수정하지 않고 오로지 애플리케이션을 조립하기 위해 사용하는 설정 파일을 수정하는 것만으로도 실제 동작을 수정**할 수 있다.
