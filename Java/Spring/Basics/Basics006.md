@@ -103,6 +103,28 @@ public class SpringConfig {
   2. 테스트 케이스에 명시된 경우, 쿼리를 모두 실행한 후 반드시 롤백하도록 동작한다.
 * **테스트 케이스에 @SpringBootTest 어노테이션을 명시한 경우, 스프링 컨테이너와 테스트는 함께 실행**된다.
   * 결과적으로 실제 스프링 컨테이너를 실행한 후 테스트를 진행하므로, 실제 환경과 유사한 테스트가 가능해진다.
+* 아래는 두 어노테이션을 적용한 클래스의 예시이다.
+```
+// 통합 테스트에 필요한 두 어노테이션을 명시한다.
+@SpringBootTest
+@Transactional
+public class MemberServiceIntegrationTest {
+    // 생성자를 활용한 의존성 주입 대신 더 쉬운 방식을 택하였다.
+    @Autowired MemberService service;
+    @Autowired MemberRepository repository;
+
+    @Test
+    void 가입() {
+        Member member = new Member();
+        member.setName("ingnoh_test");
+        // 아래 메소드를 실행하더라도, @Transactional 어노테이션에 의해 실제 데이터베이스에는 커밋되지 않는다.
+        Long memberId = service.join(member);
+
+        Member findMember = service.findMember(memberId).get();
+        assertThat(member.getName()).isEqualTo(findMember.getName());
+    }
+}
+```
 
 ### @SpringBootTest 어노테이션의 한계?
 * 테스트 케이스는 그 성격에 따라 크게 다음과 같이 분류할 수 있다.
@@ -115,3 +137,86 @@ public class SpringConfig {
   * 예를 들어 **반드시 스프링 컨테이너와 데이터베이스가 필요한 테스트 케이스의 경우, 근본적인 테스트 설계가 잘못되었을 가능성**이 크다.
   * 언제나 단위 테스트가 통합 테스트보다 좋다고 단언할 수 없으나, 그러할 확률이 높다.
 * **실무에서는 언젠가 통합 테스트를 작성해야하는 상황이 발생하기 마련이지만, 중요한 것은 좋은 단위 테스트를 작성할 수 있는 능력을 기르는 것**이다.
+
+### @Autowired 어노테이션의 생략
+* **빈으로 등록되는 클래스의 생성자가 하나만 존재하는 경우, 생성자 주입 방식에서 @Autowired 어노테이션을 생략할 수 있다**.
+  * 당연히 생성자가 둘 이상 존재하는 클래스는 반드시 @Autowired 어노테이션을 명시해주어야 한다.
+
+### JDBC Template
+* **스프링의 JDBC 템플릿은 MyBatis와 유사한 라이브러리이며, 순수 JDBC 코드에서 필요한 반복적인 코드를 대부분 제거**해준다.
+  * 그러나 SQL 쿼리 자체는 직접 작성해야만 한다.
+  * **JDBC 템플릿은 실무에서도 자주 사용되는 라이브러리**이다.
+* JDBC 템플릿을 사용하는 리포지토리는 다음과 같이 작성하며, 이 때 `JdbcTemplate` 객체를 반드시 멤버로 갖도록 해야한다.
+  * **그러나 `JdbcTemplate` 객체는 자동으로 의존성 주입을 받을 수 없으므로, `DataSource`를 활용하여 생성**해야 한다.
+```
+public class JdbcTemplateMemberRepository implements MemberRepository {
+    
+    private final JdbcTemplate jdbcTemplate;
+
+    // 생성자를 통해 DataSource 객체를 전달받는다.
+    public JdbcTemplateMemberRepository(DataSource dataSource) {
+        // 전달받은 DataSource 객체를 활용하여 JdbcTemplate 객체를 생성한다.
+        jdbcTemplate = new JdbcTemplate(dataSource);
+    }
+}
+```
+* **JDBC 템플릿은 매우 복잡한 순수 JDBC 코드에 템플릿 메소드 패턴 등을 적용하여 압축한 라이브러리**이다.
+  * 예를 들어, 조회 쿼리는 다음과 같이 간단하게 작성할 수 있다.
+  * **조회 쿼리의 경우, 결과는 RowMapper 클래스를 통해 적절한 타입으로 매핑되어 반환되므로 RowMapper의 사용이 필수적**이다.
+```
+public class JdbcTemplateMemberRepository implements MemberRepository {
+
+    private final JdbcTemplate jdbcTemplate;
+
+    public JdbcTemplateMemberRepository(DataSource dataSource) {
+        jdbcTemplate = new JdbcTemplate(dataSource);
+    }
+
+    // 기타 메소드 생략
+
+    @Override
+    public Optional<Member> findById(Long id) {
+         List<Member> result = jdbcTemplate.query("select * from member where id = ?", memberRowMapper(), id);
+         return result.stream().findAny();
+    }
+    
+    private RowMapper<Member> memberRowMapper() {
+        return (rs, rowNum) -> {
+            Member member = new Member();
+            member.setId(rs.getLong("id"));
+            member.setName(rs.getString("name"));
+            
+            return member;
+        };
+    }
+}
+```
+
+### JDBC 템플릿을 활용한 삽입
+* JDBC 템플릿을 활용하는 생성 메소드는 다음과 같이 작성할 수 있다.
+```
+@Override
+public Member save(Member member) {
+    SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
+    jdbcInsert.withTableName("member").usingGeneratedKeyColumns("id");
+
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("name", member.getName());
+    
+    Number key = jdbcInsert.executeAndReturnKey(new MapSqlParameterSource(parameters));
+    member.setId(key.longValue());
+    
+    return member;
+}
+```
+* **`SimpleJdbcInsert`를 적절히 활용할 경우, 메소드 내부에 쿼리를 직접 작성할 필요가 없다**.
+* `SimpleJdbcInsert` 객체의 `executeAndReturnKey` 메소드를 활용할 경우, 자동 생성된 데이터베이스 키를 반환받아 사용할 수 있다.
+
+### 통합 테스트 진행하기
+* 이렇게 새로운 리포지토리를 작성한 경우, 기존에 작성해둔 통합 테스트를 돌리는 것으로 동작을 쉽게 검증할 수 있다.
+  * 기존 통합 테스트를 재활용하므로 실제로 스프링을 띄울 필요조차 없으며, 접근 가능한 데이터베이스만 있으면 테스트가 가능하다.
+  * 테스트를 통해 오류를 미연에 방지하고, 애플리케이션을 더욱 견고하게 만들 수 있게 된다.
+* **개발자의 작업 중 많은 부분이 사소한 이유로 인해 실패하므로, 사전에 잘 작성해둔 테스트 코드는 실무에서 특히 그 위력을 발휘**한다.
+  * **더 좋은 테스트를 작성하고자 항상 노력해야하며, 테스트 코드 역시 운영 코드와 마찬가지로 양질의 퀄리티를 보장할 수 있도록 유지보수해**나가야 한다.
+  * **이상적으로는 실제 운영 코드 작성에 비해 테스트 코드에 들이는 시간의 비중이 6할**을 넘어야한다.
+  * B2C의 경우, 작은 버그 하나가 수 억 대의 손실로 돌아오므로 서비스의 규모가 커질수록 테스트 코드의 작성을 아까워하지 말아야 한다.
