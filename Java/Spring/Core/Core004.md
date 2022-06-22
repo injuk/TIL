@@ -69,3 +69,56 @@ void findApplicationBean() {
     }
 }
 ```
+
+### getBean
+* **getBean 메소드를 사용하는 것은 스프링 컨테이너로부터 스프링 빈 객체를 찾는 가장 기본적인 방법**이다.
+  * **해당 메소드는 `(빈 이름, 타입)` 또는 `(타입)` 형태로 사용하며, 대상 빈 객체가 존재하지 않는 경우 예외가 발생**한다.
+* getBean 메소드를 활용하여 조회하는 경우, 인터페이스 또는 구체 클래스 중 어느 것을 매개 변수로 전달하더라도 정상 동작한다.
+  * 그러나 **역할에 집중하고 유연성을 높이기 위해 구체 클래스보다는 인터페이스를 명시하는 것이 바람직**하다. 
+```
+@Test
+@DisplayName("빈 이름으로 조회하기.")
+void findBeanByName() {
+    MemberService memberService = ac.getBean("memberService", MemberService.class);
+    // 아래와 같은 방식도 가능하지만, 권장되지는 않는다.
+    // MemberService memberService = ac.getBean("memberService", MemberServiceImpl.class);
+
+    assertThat(memberService).isInstanceOf(MemberServiceImpl.class);
+}
+```
+
+### 예외 테스트 케이스 작성하기
+* 상술한 코드는 getBean 메소드의 동작성을 테스트 코드로 이해하고 있으나, 예외 발생에 대한 테스트가 부족하다.
+* 이러한 **예외 발생 케이스의 테스트는 다음과 같이 `org.junit.jupiter.api.Assertions` API를 통해 테스트가 가능**하다.
+  * assertThrows 메소드는 두 개의 매개변수를 받아 동작하며, 각각 예외 클래스와 람다식을 전달받는다.
+  * 이 때, 아래의 **테스트 케이스는 두 번째 람다식이 실패했을 때 첫 번째 매개변수에 명시된 예외가 발생해야 함을 의미**한다.
+```
+@Test
+@DisplayName("빈 이름으로 조회 실패.")
+void cannotFindBeanByName() {
+    assertThrows(
+            NoSuchBeanDefinitionException.class,
+            () -> ac.getBean("ingnohService", MemberService.class)
+    );
+}
+```
+
+### Spring 컨테이너에 동일한 타입이 둘 이상 등록된 경우
+* getBean 메소드를 통해 타입으로 조회하는 경우, 같은 타입의 빈 객체가 둘 이상이면 `NoUniqueBeanDefinitionException` 예외가 발생한다.
+  * 이 경우, 빈 이름을 명시하는 것으로 오류를 해결할 수 있다.
+  * 또는 getBeansOfType 메소드를 통해 해당 타입의 모든 빈 목록을 조회할 수도 있다.
+* getBeansOfType 메소드는 다음과 같이 코드를 작성하여 테스트해볼 수 있다.
+  * 이 때, 해당 메소드는 Map을 반환한다.
+```
+@Test
+@DisplayName("임의의 타입을 모두 조회하기.")
+void findAllBeanByType() {
+    Map<String, MemberRepository> beansOfType = ac.getBeansOfType(MemberRepository.class);
+    for (String key : beansOfType.keySet()) {
+        System.out.println("key = " + key + " value = " + beansOfType.get(key));
+    }
+    System.out.println("beansOfType = " + beansOfType);
+    assertThat(beansOfType.size()).isEqualTo(2);
+}
+```
+* 추후 다뤄볼 @Autowired 등은 모두 내부적으로는 이러한 기술을 기반으로 동작한다.
