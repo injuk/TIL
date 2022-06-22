@@ -171,3 +171,90 @@ public class AppConfig {
   * 애플리케이션은 사용 영역과 구성 영역으로 분리할 수 있으며, 이 과정에서 AppConfig 클래스를 도입한다.
   * **AppConfig가 도입됨으로써 설정 영역을 수정하는 것을 통해 애플리케이션의 기능을 손쉽게 확장시킬 수 있으며, 기존 클라이언트는 수정할 필요가 없다**.
   * 즉, **소프트웨어 요소를 추가하는 등의 방법을 통해 기능을 확장하더라도 사용 영역에 대한 변경은 닫혀 있는 상태를 유지**할 수 있다.
+
+### IoC - 제어의 역전
+* **제어의 역전은 프레임워크가 개발자의 코드를 호출하는 기법을 의미하며, 이는 스프링에만 국한된 개념은 아니다**.
+  * 일반적으로는 개발자가 모든 것을 생성하고, 연결하고, 사용하는 흐름이 자연스럽다.
+  * 그러나 제어의 역전을 적용할 경우 개발자가 작성한 코드를 생성하고 연결하는 것은 프레임워크 등이 수행하기 때문에 코드에 대한 제어권이 역전된다.
+* 상술한 코드에서도 AppConfig의 도입으로 인해 다음과 같은 이유에서 제어의 역전이 적용된 것으로 이해할 수 있다.
+  1. 모든 구현 객체는 실행만을 담당하며, 객체의 생성과 연결 등의 제어 흐름은 AppConfig가 관리한다.
+  2. 의존성이 필요한 객체들은 인터페이스를 호출하지만, 실제로 어떠한 구현체를 호출할지는 알 수 없다. 알 필요 없다.
+* 이렇듯 **애플리케이션의 제어 흐름을 직접 관리하는 것이 아닌, 외부에서 관리하는 것을 제어의 역전**이라고 한다.
+* 제어의 역전 관점에서는 프레임워크와 라이브러리를 쉽게 구분할 수도 있다.
+  1. **프레임워크는 개발자가 작성한 코드를 제어하고, 대신 실행**한다.
+     * 이러한 이유에서 junit은 개발자가 테스트 케이스를 작성만 하면 대신 실행해주므로, 프레임워크가 맞다.
+  2. **라이브러리는 개발자가 작성한 코드가 제어의 흐름을 관리**한다.
+
+### DI - 의존 관계 주입
+* **모든 의존 관계는 정적인 클래스 의존 관계와, 런타임에 결정되는 동적인 객체 의존 관계를 구분**해야 한다.
+* **정적인 클래스 의존 관계의 경우, 클래스 상단에 명시되는 import 문을 통해 쉽게 확인**할 수 있다.
+  * 때문에 정적인 의존 관계는 애플리케이션을 실행하지 않더라도 알 수 있다.
+  * **그러나 정적인 클래스 의존 관계만으로는 런타임에 실제로 어떠한 객체가 주입될지는 알 수 없다**.
+* 반면 **동적인 객체 인스턴스 의존 관계는 애플리케이션의 런타임에 생성된 객체 인스턴스의 참조가 연결되는 의존 관계**이다.
+* 이렇듯 **애플리케이션의 런타임에 외부에서 실제 구현체를 생성하고, 클라이언트에 전달하여 의존 관계를 연결시키는 것이 의존 관계 주입**이다.
+  * 의존 관계 주입은 내부적으로는 객체 인스턴스를 생성하고, 참조값을 전달하는 식으로 동작한다.
+  * **의존 관계 주입을 통해 클라이언트 코드를 변경하지 않고서도 클라이언트의 의존성을 쉽게 변경**할 수 있다.
+  * 또한, **의존 관계 주입을 활용하면 정적인 클래스 의존 관계를 변경하지 않고서도 동적인 객체 인스턴스의 의존 관계를 쉽게 변경**할 수 있다.
+
+### IoC 컨테이너 - 또는 DI 컨테이너
+* 상술한 코드에서 구현한 **AppConfig처럼, 객체를 생성하여 관리하고 의존 관계를 연결해주는 것을 IoC 컨테이너 또는 DI 컨테이너라고 지칭**한다.
+  * 이 중, **의존 관계를 주입하는 기능에 초점을 맞추어 최근에는 아주 범용적인 용어인 IoC보다는 DI 컨테이너라는 표현을 선호**한다.
+  * 같은 의미로 어셈블러, 또는 오브젝트 팩토리라는 용어를 사용할 수도 있다.
+* 상술한 이유에서 AppConfig 역시 DI 컨테이너이며, 스프링 또한 DI 컨테이너 기능을 제공한다.
+
+### Spring 기반의 AppConfig
+* AppConfig에 @Configuration과 @Bean 어노테이션을 적절히 명시할 경우, AppConfig는 Spring에 의해 관리되는 설정 객체가 된다.
+* 스프링이 관리하는 AppConfig를 사용하고자 하는 경우에는 다음과 같이 코드를 작성해볼 수 있다.
+  * ApplicationContext는 사실상 스프링 컨테이너이며, 모든 빈 객체를 관리해준다.
+  * AnnotationConfigApplicationContext는 ApplicationContext를 생성하기 위해 사용할 수 있다.
+    * 해당 객체는 어노테이션을 기반으로 설정된 AppConfig를 기반으로 ApplicationContext를 구성하기 위해 사용한다.
+    * **이를 통해 AppConfig에 명시된 설정 정보를 토대로 스프링은 스프링 컨테이너를 통해 모든 빈 객체를 관리**한다.
+```
+public class MemberApplication {
+    public static void main(String[] args) {
+        ApplicationContext applicationContext = new AnnotationConfigApplicationContext(AppConfig.class);
+        MemberService memberService = applicationContext.getBean("memberService", MemberService.class);
+
+        Member member = new Member(1L, "member", Grade.VIP);
+        memberService.join(member);
+
+        Member findMember = memberService.find(1L);
+        System.out.println("member: " + member.getName());
+        System.out.println("found: " + findMember.getName());
+    }
+}
+```
+* ApplicationContext로부터 필요한 의존성을 가져오기 위해 getBean 메소드를 사용한다.
+  * 이 때, **스프링 컨테이너에는 기본적으로 @Bean 어노테이션이 명시된 메소드의 이름으로 객체가 등록**된다.
+  * 때문에 getBean의 첫 번째 매개변수로는 가져올 빈 객체를 생성하는 메소드 이름을 전달하며, 반환 객체의 타입을 두 번째 매개변수에 명시한다.
+* 이제 MemberApplication을 실행할 경우, 다음과 같은 로그를 확인할 수 있다.
+  * 위에서부터 다섯 개의 Bean은 스프링 자체적인 필요에 의해 항상 생성하는 객체이다.
+  * 아래에서부터 다섯 개의 Bean은 AppConfig를 포함하여 스프링 컨테이너에서 관리하고자 등록한 빈 객체들이다.
+  * **해당 로그를 통해 각 객체가 AppConfig의 메소드 명과 같은 이름으로 빈 객체를 등록하는 것을 확인**할 수 있다.
+  * 때문에 스프링 컨테이너에게 해당 이름을 전달하여 필요한 빈 객체를 가져와 활용할 수 있게 된다.
+```
+17:06:47.751 [main] DEBUG org.springframework.context.annotation.AnnotationConfigApplicationContext - Refreshing org.springframework.context.annotation.AnnotationConfigApplicationContext@569cfc36
+17:06:47.763 [main] DEBUG org.springframework.beans.factory.support.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.context.annotation.internalConfigurationAnnotationProcessor'
+17:06:47.851 [main] DEBUG org.springframework.beans.factory.support.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.context.event.internalEventListenerProcessor'
+17:06:47.852 [main] DEBUG org.springframework.beans.factory.support.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.context.event.internalEventListenerFactory'
+17:06:47.854 [main] DEBUG org.springframework.beans.factory.support.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.context.annotation.internalAutowiredAnnotationProcessor'
+17:06:47.854 [main] DEBUG org.springframework.beans.factory.support.DefaultListableBeanFactory - Creating shared instance of singleton bean 'org.springframework.context.annotation.internalCommonAnnotationProcessor'
+17:06:47.859 [main] DEBUG org.springframework.beans.factory.support.DefaultListableBeanFactory - Creating shared instance of singleton bean 'appConfig'
+17:06:47.863 [main] DEBUG org.springframework.beans.factory.support.DefaultListableBeanFactory - Creating shared instance of singleton bean 'memberService'
+17:06:47.877 [main] DEBUG org.springframework.beans.factory.support.DefaultListableBeanFactory - Creating shared instance of singleton bean 'memberRepository'
+17:06:47.879 [main] DEBUG org.springframework.beans.factory.support.DefaultListableBeanFactory - Creating shared instance of singleton bean 'orderService'
+17:06:47.879 [main] DEBUG org.springframework.beans.factory.support.DefaultListableBeanFactory - Creating shared instance of singleton bean 'discountPolicy'
+```
+
+### Spring 컨테이너
+* **`ApplicationContext`가 스프링 컨테이너**이다.
+* 기존 코드의 경우 AppConfig를 통해 직접 객체를 생성하여 DI를 수행하였으나, 스프링을 활용할 경우 스프링 컨테이너를 통해 사용할 수 있다.
+* 상술한 코드에서, 스프링 컨테이너는 @Configuration 어노테이션이 명시된 AppConfig를 구성 정보로 사용한다.
+  * 이 때, **@Bean 어노테이션이 명시된 모든 메소드를 호출하여 반환된 객체를 스프링 컨테이너에 등록**한다.
+  * 이러한 과정을 통해 **스프링 컨테이너에 등록된 모든 객체를 스프링 빈**이라고 한다.
+  * 스프링 빈은 @Bean 어노테이션이 명시된 메소드 명을 빈의 이름으로 하여 등록된다.
+* 해당 방식의 경우 AppConfig 객체에서 직접 필요한 의존성을 주입받을 필요 없이 스프링 컨테이너를 통해 필요한 빈 객체를 조회해야 한다.
+  * 반면 기존 방식의 경우, Java 코드를 통해 객체를 생성하고 관리해야 했다면 해당 방식은 스프링 컨테이너에 빈을 등록하여 조회해야한다는 차이점이 존재한다.
+* 이는 즉 **스프링에게 환경 정보가 명시된 @Configuration 클래스를 넘겨주고, 스프링은 해당 클래스를 토대로 필요한 빈 객체를 생성하여 관리하는 방식**이다.
+  * 이후, 필요한 객체는 스프링 컨테이너에게 요청하여 조회한 후에야 사용할 수 있게 된다.
+  * 추후 알아볼 **@Autowired 역시 유사한 원리로 스프링 컨테이너에게 필요한 빈 객체를 요청하여 주입받는 방식**이다.
