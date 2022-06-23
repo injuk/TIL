@@ -121,4 +121,76 @@ void findAllBeanByType() {
     assertThat(beansOfType.size()).isEqualTo(2);
 }
 ```
-* 추후 다뤄볼 @Autowired 등은 모두 내부적으로는 이러한 기술을 기반으로 동작한다.
+* 추후 다뤄볼 @Autowired 등의 기술 역시 모두 내부적으로는 이를 기반으로 동작한다.
+
+## 2022-06-24 Fri
+### 상속 관계의 Spring 빈 조회하기
+* **임의의 빈을 조회하는 경우, 자식 타입의 빈이 존재한다면 이마저도 모두 조회**한다.
+  * 따라서 Java 언어의 최고 조상인 Object.class로 조회할 경우, 모든 스프링 빈을 조회할 수 있다.
+
+### 실무에서의 ApplicationContext
+* 사실 **실무에서는 `ac.getBean()`과 같은 작업을 하는 일이 드물다**.
+  * 대부분의 경우 스프링 컨테이너에 의한 자동 의존 관계 주입만을 활용한다.
+* 종종 순수 Java 코드로 쓰여진 레거시 애플리케이션에서 스프링 컨테이너를 직접 생성해야하는 경우가 있으며, 그 때 상술한 내용을 활용할 수 있다.
+
+### BeanFactory란?
+* **스프링 컨테이너의 최상위 인터페이스이며, 스프링 빈을 관리하고 조회하는 역할을 수행**한다.
+* getBean 메소드를 제공하며, 이 외에도 여태까지 활용한 대부분의 기능을 빈 팩토리가 제공한다.
+
+### ApplicationContext란?
+* 상속 계층상 BeanFactory 인터페이스를 상속받는 또 다른 인터페이스이다.
+* **애플리케이션 컨텍스트는 빈을 관리하고 조회하는 기능은 모두 BeanFactory로부터 상속받아 제공**한다.
+* 또한 **애플리케이션의 개발 과정에서는 빈 관리 기능 이외에도 많은 부가기능이 필요하며, 애플리케이션 컨텍스트가 이 부분을 담당**한다.
+  1. MessageSource를 활용한 i18n 기능
+  2. 환경 변수 처리 기능
+  3. 애플리케이션 이벤트 기능
+  4. 파일 등의 조회시 사용할 수 있는 편리한 리소스 조회 기능
+* 이러한 **부가 기능들은 일반적인 애플리케이션에서 자주 사용되는 공통 기능이므로, 애플리케이션 컨텍스트는 이들 인터페이스를 함께 상속하여 기능을 제공**한다.
+
+### BeanFactory와 ApplicationContext의 관계
+* 애플리케이션 컨텍스트 인터페이스는 빈 팩토리 인터페이스를 상속 받아 빈 관리 기능을 제공한다.
+* 이에 덧붙여 **애플리케이션 컨텍스트는 여러 부가 기능 인터페이스를 다중 상속하므로 애플리케이션 개발에 필요한 여러 공통 기능을 함께 제공**한다.
+  * 때문에 빈 팩토리를 직접 사용하는 일은 거의 없으며, 대신 여러 편리한 기능을 제공하는 애플리케이션 컨텍스트를 사용한다.
+* **빈 팩토리 또는 애플리케이션 컨텍스트 자체를 스프링 컨테이너라고 지칭**한다.
+
+### Spring 컨테이너가 지원하는 다양한 설정 형식
+* 스프링 컨테이너는 Java 코드 이외에도 XML 등 다양한 설정 형식을 유연하게 지원할 수 있도록 설계되어 있다.
+  * 어노테이션 기반의 Java 설정 파일을 지원하는 `AnnotationConfigApplicationContext` 클래스처럼, 설정 형식 별로 대응되는 클래스를 제공한다.
+  * 예를 들어 `GenericXmlApplicationContext` 클래스는 Java 파일에 명시된 어노테이션 정보가 아닌 xml 확장자 파일을 설정 정보로 사용한다.
+  * 또한, 이들 구현체는 모두 `ApplicationContext` 인터페이스를 구현한다.
+* 필요한 경우, 개발자는 `AnnotationConfigApplicationContext` 클래스를 구현하여 자신이 원하는 방식을 정의할 수도 있다.
+
+### XML 설정 형식 사용해보기
+* **스프링 부트가 주류로 자리잡은 현재에는 XML 기반의 설정 방식이 자주 사용되지 않지만, 레거시 애플리케이션의 유지보수를 위해 이를 사용**해야할 수 있다.
+  * 덧붙여 XML 기반의 설정은 컴파일 없이 빈 설정 정보를 변경할 수 있다는 장점 또한 존재한다.
+* 해당 방식은 `GenericXmlApplicationContext` 클래스를 사용하며, xml 확장자로 작성된 설정 파일을 생성자에 전달하여 스프링 컨테이너를 생성한다.
+* 상술한 AppConfig.class를 그대로 appConfig.xml로 옮기려면, `resources/appConfig.xml`을 생성하고 다음과 같이 작성한다.
+  * IDE의 지원을 받아 Spring Configuration 파일을 생성하면 더욱 쉽게 진행할 수 있다.
+  * bean 항목은 스프링 컨테이너가 관리할 개별 빈 객체를 의미한다.
+  * constructor-arg 항목의 경우 생성자를 활용한 의존성 주입이 필요한 경우를 의미하며, ref 속성을 통해 의존성 대상 id를 명시한다.
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="memberService" class="hello.core.member.service.MemberServiceImpl" >
+        <constructor-arg name="memberRepository" ref="memberRepository" />
+    </bean>
+
+    <bean id="memberRepository" class="hello.core.member.repository.InMemoryMemberRepository" />
+
+    <bean id="orderService" class="hello.core.order.service.OrderServiceImpl" >
+        <constructor-arg name="discountPolicy" ref="discountPolicy" />
+        <constructor-arg name="memberRepository" ref="memberRepository" />
+    </bean>
+
+    <bean id="discountPolicy" class="hello.core.discount.domain.RateDiscountPolicy" />
+</beans>
+```
+* 상술한 appConfig.xml의 경우 다음과 같은 코드를 작성하여 애플리케이션 컨텍스트를 생성할 수 있다.
+  * 이 때, `GenericXmlApplicationContext` 클래스는 자동으로 `resources` 폴더 하위에 위치한 appConfig.xml을 읽어들여 동작한다.
+  * 해당 방식은 설정 정보를 불러들이는 방식이 어노테이션 기반에서 xml 파일 기반으로 바뀐 것을 제외하고는 사용성 측면에서 달라지는 것이 전혀 없다.
+```
+ApplicationContext ac = new GenericXmlApplicationContext("appConfig.xml");
+```
