@@ -194,3 +194,33 @@ void findAllBeanByType() {
 ```
 ApplicationContext ac = new GenericXmlApplicationContext("appConfig.xml");
 ```
+
+### Spring BeanDefinition
+* **BeanDefinition은 스프링의 빈 설정 메타데이터**이며, 해당 클래스는 스프링의 유연한 설정 형식을 지원하는 기반이 되는 인터페이스이다.
+  * **해당 클래스 역시 역할과 구현을 적절히 분리한 추상화에 해당하며, 스프링은 상세한 구현을 알지못하더라도 BeanDefinition만 이해할 수 있으면 된다**.
+  * 내부적으로는 XML로 작성된 설정 파일이든, 어노테이션 기반의 Java 설정 파일이든지 간에 읽어들인 후 BeanDefinition을 생성하는 식으로 동작한다.
+* **@Bean 또는 XML의 `<bean>` 항목 하나 당 하나의 메타데이터가 생성**된다.
+  * 이렇듯 BeanDefinition은 애플리케이션 전역에 하나만 존재하는 것이 아닌, 빈 객체 당 하나 존재한다.
+  * 스프링 컨테이너는 이렇게 생성된 메타데이터를 기반으로 스프링 빈 객체를 생성한다.
+  * 즉, 스프링은 상세한 설정 파일 없이도 오직 BeanDefinition에만 의존하면 된다.
+* 필요시 별도의 설정 파일을 사용하지 않고 BeanDefinition 객체를 직접 정의하여 스프링 컨테이너에 등록할 수도 있으나, 이는 잘 사용되지 않는 방법이다.
+  * 실무에서도 BeanDefinition을 직접 생성하거나 관리할 일은 거의 없다.
+* **중요한 것은 BeanDefinition 자체의 사용법이 아닌, 스프링이 다양한 형식의 설정 정보를 읽어들일 때 BeanDefinition으로 추상화한다는 사실**이다.
+* 간혹 스프링 프레임워크 자체나, 스프링과 상호작용하는 라이브러리 상에서 BeanDefinition을 확인할 수 있다.
+  * 이 때, 이러한 객체들은 외부 설정 정보가 아닌 프로그래밍적으로 빈 설정 메타데이터를 스프링에 직접 등록하는 것으로 이해하면 된다. 
+
+### ApplicationContext와 BeanDefinition
+* `AnnotationConfigApplicationContext`의 예로 들어, 해당 스프링 컨테이너 구현체는 다음과 같이 동작한다.
+  * `AnnotationConfigApplicationContext`는 `AnnotatedBeanDefinitionReader`를 멤버로 갖는다.
+  * `AnnotatedBeanDefinitionReader`는 AppConfig.java를 읽어들여 BeanDefinition 객체를 생성한다.
+* 이는 `GenericXmlApplicationContext` 객체 역시 마찬가지이며, 멤버 변수로 갖는 `XmlBeanDefinitionReader`를 사용하여 동작한다.
+* 때문에 **새로운 ApplicationContext 구현체를 추가한 경우, 적절한 BeanDefinitionReader를 함께 정의하여 BeanDefinition을 생성**해야 한다.
+* ApplicationContext 인터페이스들의 구현체들은 getBeanDefinition 메소드를 지원하지만, 인터페이스 자체는 이를 지원하지 않는다.
+  * 이는 **결국 스프링 애플리케이션을 사용하는 입장에서, 일반적인 용도로는 BeanDefinition을 직접 활용할 일이 없다는 것으로 이해**할 수 있다.
+
+### Spring에 빈을 등록하는 방식
+* 스프링에 빈을 등록하는 방식은 크게 다음과 같이 분류된다.
+  1. 직접 등록하기: XML 기반의 방식을 의미한다.
+  2. 팩토리 빈을 활용하기: 어노테이션 기반의 Java 설정 파일인 팩토리 빈으로부터 등록하는 방식을 의미한다.
+* **AppConfig를 활용하는 방식은 팩토리 빈 방식에 해당하며, XML 기반의 방식과는 빈 등록 방식이 다르다**.
+  * 이 때, AppConfig 클래스 자체가 팩토리 빈의 역할을 수행하며 @Bean 어노테이션이 할당된 메소드들이 팩토리 메소드가 된다.
