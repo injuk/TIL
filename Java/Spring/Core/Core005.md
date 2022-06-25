@@ -134,3 +134,38 @@ public class StatefulService {
     }
 }
 ```
+
+## 2022-06-26 Sun
+### @Configuration 어노테이션과 싱글톤
+* 그러나 기존에 작성한 AppConfig만 봐서는 마치 싱글톤이 깨지는 것처럼 보일 수 있다.
+  * 예를 들어, 아래의 코드에서는 memberService 메소드와 orderService 메소드 각각이 memberRepository 메소드를 호출한다.
+  * 때문에 memberRepository는 호출 시마다 리포지토리 객체를 반환하여 마치 두 개의 리포지토리 인스턴스가 존재할 것처럼 보인다.
+  * **개발 과정에서 발생하는 이러한 석연치 않은 부분들은 테스트 코드를 통해 확인하는 것이 바람직**하다.
+```
+@Configuration
+public class AppConfig {
+
+    @Bean
+    public MemberService memberService() {
+        return new MemberServiceImpl(memberRepository());
+    }
+
+    @Bean
+    public MemberRepository memberRepository() {
+        return new InMemoryMemberRepository();
+    }
+
+    @Bean
+    public OrderService orderService() {
+        return new OrderServiceImpl(discountPolicy(), memberRepository());
+    }
+
+    @Bean
+    public DiscountPolicy discountPolicy() {
+        return new RateDiscountPolicy();
+    }
+}
+```
+* 그러나 이를 테스트해볼 경우, 모든 memberRepository는 동일한 객체임을 알 수 있다.
+  * **생성자 또는 `{}` 문법에 `System.out.prinln`을 작성하더라도 최초 생성 1회만 로그가 출력되는 것을 확인**할 수 있다.
+* 결국 **스프링은 어떠한 방식으로든 항상 빈 객체의 싱글톤을 보장하고자 내부적으로 무언가를 수행할 것이지만, 이는 Java 코드 상에서는 잘 보이지 않는다**.
