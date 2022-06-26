@@ -133,3 +133,25 @@ void componentScan() {
 * **대부분의 경우 @Component 어노테이션만으로도 충분하므로 필터는 자주 사용되지 않는다**.
   * 간혹 excludeFilters는 사용해야만 하는 경우가 발생하지만, includeFilters는 사실상 사용할 필요가 없다.
 * **최근 스프링 부트에서는 컴포넌트 스캔을 기본으로 제공하며, 이 때 옵션을 수정하기보다는 최대한 스프링의 기본 설정에 맞추어 사용하는 것이 권장**된다.
+
+## 2022-06-27 Mon
+### 빈 중복 등록과 충돌
+* 컴포넌트 스캔 과정에서 동일한 빈 이름이 등록된 경우가 발생할 수 있으며, 이는 크게 다음과 같은 상황으로 분류된다.
+  1. 중복된 이름을 갖는 컴포넌트들이 모두 자동으로 등록되려는 경우
+  2. 자동으로 등록되는 컴포넌트와 수동으로 등록한 컴포넌트가 충돌하는 경우
+* **자동 컴포넌트 스캔 과정에서 동일한 이름을 갖는 스프링 빈이 충돌하는 경우, 스프링은 `ConfilictingBeanDefinitionException`을 발생**시킨다.
+
+### 수동으로 등록한 빈과 자동으로 등록한 빈이 충돌하는 경우
+* **컴포넌트 스캔 대상 클래스와 @Bean 어노테이션을 통해 수동으로 명시한 빈 객체의 이름이 충돌하는 경우, 수동으로 등록한 빈 객체가 우선권**을 갖는다.
+  * **정확히는 수동으로 등록한 빈이 자동으로 컴포넌트 스캔된 빈 객체를 아래와 같이 오버라이딩**한다.
+```
+22:10:22.297 [main] DEBUG org.springframework.beans.factory.support.DefaultListableBeanFactory - Overriding bean definition for bean 'inMemoryMemberRepository' with a different definition: replacing [Generic bean: class [hello.core.member.repository.InMemoryMemberRepository]; scope=singleton; abstract=false; lazyInit=null; autowireMode=0; dependencyCheck=0; autowireCandidate=true; primary=false; factoryBeanName=null; factoryMethodName=null; initMethodName=null; destroyMethodName=null; defined in file [/spring/core/out/production/classes/hello/core/member/repository/InMemoryMemberRepository.class]] with [Root bean: class [null]; scope=; abstract=false; lazyInit=null; autowireMode=3; dependencyCheck=0; autowireCandidate=true; primary=false; factoryBeanName=autoAppConfig; factoryMethodName=memberRepository; initMethodName=null; destroyMethodName=(inferred); defined in hello.core.AutoAppConfig]
+```
+* 개발자가 의도적으로 이러한 설정 구조를 정의하였다면, 당연히 수동으로 정의한 설정이 우선권을 갖는 것이 맞다.
+  * 그러나 **대부분의 경우, 실무에서는 개발자가 미처 생각지 못한 설정 정보들이 꼬여 이러한 결과를 만드는 경우가 많다**.
+  * 더군다나 이렇듯 애매한 버그는 디버깅하기 매우 까다로운 유형에 속한다.
+* 이로 인해 **최근의 스프링 부트에서는 수동으로 등록한 빈이 자동으로 등록된 빈과 충돌하였더라도 오류를 발생시키는 방향으로 기본 동작이 변경**되었다.
+  * 스프링의 코어 모듈은 이러한 오버라이딩 동작을 허용하지만, 스프링 부트는 별도의 설정을 통해 오버라이딩을 활성화해주어야 한다.
+  * 스프링 부트가 굳이 스프링 기본 동작을 허용하지 않도록 결정했다는 점을 미루어보았을 때, 이러한 유형의 버그가 매우 해결하기 어려운 것을 짐작할 수 있다.
+* 나아가 **좋은 개발자라면 비단 컴포넌트 스캔 뿐만 아니라 협업하는 모든 상황에서 이러한 애매한 상황을 만들지 않는 것이 가장 바람직**하다.
+  * **어설픈 추상화를 적용하거나, 코드 라인 수만을 줄이기 위해 축약하여 애매해진 코드보다는 조금 더 길더라도 명확한 코드가 더 좋다**.
