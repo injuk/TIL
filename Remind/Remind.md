@@ -26,6 +26,7 @@
 23. static 객체는 언제, 어디에 생성되는가? (Perm Gen, Metaspace에 대해서)
 24. == 비교와 equals() 비교의 차이는 무엇인가?
 25. ThreadLocal이란 무엇인가?
+26. classpath란 무엇인가?
 
 ## Spring
 1. 스프링과 스프링 부트의 차이는 무엇인가?
