@@ -169,3 +169,58 @@ public class AppConfig {
 * 그러나 이를 테스트해볼 경우, 모든 memberRepository는 동일한 객체임을 알 수 있다.
   * **생성자 또는 `{}` 문법에 `System.out.prinln`을 작성하더라도 최초 생성 1회만 로그가 출력되는 것을 확인**할 수 있다.
 * 결국 **스프링은 어떠한 방식으로든 항상 빈 객체의 싱글톤을 보장하고자 내부적으로 무언가를 수행할 것이지만, 이는 Java 코드 상에서는 잘 보이지 않는다**.
+
+### @Configuration과 바이트 코드 조작
+* 스프링 컨테이너는 싱글톤 레지스트리이므로 빈 객체가 싱글톤이 되도록 유지해야한다.
+  * 그러나 스프링은 개발자에 의해 작성된 Java 코드까지 수정할 능력은 없다.
+  * **때문에 스프링은 내부적으로 바이트 코드를 조작하는 라이브러리를 사용**한다.
+* 스프링이 내부적으로 바이트 코드를 조작하는 라이브러리를 사용한다는 증거는 다음과 같은 테스트 코드로 확인할 수 있다.
+  * 스프링은 @Configuration 어노테이션이 명시된 클래스 역시 빈으로 등록하므로 아래와 같은 동작이 가능하다.
+```
+@Test
+void configurationDeepDive() {
+    ApplicationContext ac = new AnnotationConfigApplicationContext(AppConfig.class);
+
+    AppConfig appConfig = ac.getBean(AppConfig.class);
+    System.out.println("appConfig = " + appConfig.getClass());
+}
+```
+* 상술한 테스트 코드를 실행할 경우, 다음과 같은 출력을 확인할 수 있다.
+  * 정상적이라면 `appConfig = class hello.core.AppConfig` 처럼 보여져야하지만, 아래의 출력은 더 복잡한 결과를 반환한다.
+```
+appConfig = class hello.core.AppConfig$$EnhancerBySpringCGLIB$$9c1df86
+```
+* 이는 스프링이 내부적으로 `CGLIB`이라는 바이트 코드 조작 라이브러리를 사용한 것을 의미한다.
+  * 이를 통해 **스프링은 AppConfig를 상속하는 임의의 클래스를 만들고 스프링 빈 객체로 등록하여 관리**한다.
+  * 때문에 스프링 컨테이너가 관리하는 빈 객체의 이름은 `appConfig`가 되지만, 실제 객체는 `AppConfig@CGLIB` 형태의 인스턴스가 할당된다.
+  * 이렇게 **생성된 `AppConfig@CGLIB` 객체는 `AppConfig`의 자식 타입이므로, `AppConfig` 타입으로 조회가 가능**하다. 
+* **결과적으로 개발자가 작성한 `AppConfig` 클래스의 객체가 아닌, 내부적으로 생성된 별도의 객체가 빈 객체들의 싱글톤을 보장**하게 된다.
+
+### AppConfig@CGLIB의 동작 예상
+* 실제 CGLIB 라이브러리는 매우 복잡하게 동작하지만, 간략화할 경우 다음과 같은 동작을 수행한다.
+  1. @Bean 어노테이션이 할당된 메소드들을 확인한다.
+  2. 해당 메소드가 반환하는 객체를 빈으로 등록하기 전에, 우선 스프링 컨테이너에 해당 객체가 이미 빈으로 등록되어 있는지 확인한다.
+  3. **이미 등록되어 있다면 해당 빈 객체를 반환**한다.
+  4. **아직 등록되어 있지 않다면, 우선 `AppConfig`의 기존 로직을 호출하여 새로운 객체를 생성하고 스프링 컨테이너에 빈 객체로 등록한 후에 반환**한다.
+* 결국 **내부적으로는 @Bean이 명시된 메소드마다 빈 객체가 이미 등록되어 있으면 반환하고, 없으면 등록한 후에 반환하는 코드가 동적으로 생성**된다.
+  * 이를 통해 @Configuration 어노테이션이 명시된 객체는 싱글톤을 보장할 수 있다.
+
+### @Configuration을 제거하면?
+* @Configuration 어노테이션을 제거하더라도 @Bean이 명시된 메소드들이 정상적으로 호출되어 빈 객체가 등록된다.
+* 그러나 이 경우에는 빈 객체들의 싱글톤을 보장하는 `AppConfig@CGLIB`이 아닌 순수 Java 코드인 `AppConfig`가 그대로 사용된다.
+  * 즉, **여러 클라이언트로부터 의존되는 객체를 중복해서 생성되는 기존 방식의 문제점이 발생**한다.
+  * 기존에 작성해두었던 테스트 코드를 통해 모두 다른 객체가 생성된 것을 확인할 수 있다.
+```
+memberRepository = hello.core.member.repository.InMemoryMemberRepository@561868a0
+repositoryByMemberService = hello.core.member.repository.InMemoryMemberRepository@2ea6e30c
+repositoryByOrderService = hello.core.member.repository.InMemoryMemberRepository@6138e79a
+```
+* 또한, **이러한 방식으로 서비스 클래스를 빈 객체로 등록하는 과정에서 생성되어 주입되는 리포지토리 클래스는 스프링 빈이 아니다**.
+  * 즉, 스프링 컨테이너가 관리하지 않는 리포지토리 객체가 생성되게 된다.
+
+### 설정 정보 클래스에는 항상 @Configuration 어노테이션을 명시하기
+* @Configuration 어노테이션 없이 @Bean 어노테이션만 명시하더라도 각 메소드에서 반환하는 객체를 스프링 빈으로 등록할 수 있다.
+* 그러나 이러한 방식으로 생성된 객체들은 싱글톤이 보장되지 않는다.
+  * 예를 들어, 서비스 객체에 의존성을 주입하기 위해 호출되는 경우에는 이미 등록된 빈 객체를 반환하는 것이 아닌 새로운 객체를 생성한다. 
+* 때문에 **고민할 것 없이 설정 정보 용도로 작성한 클래스에는 반드시 @Configuration 어노테이션을 명시하는 것이 바람직**하다.
+  * 이를 통해 스프링은 자연스럽게 빈 객체들의 싱글톤을 보장해준다.
