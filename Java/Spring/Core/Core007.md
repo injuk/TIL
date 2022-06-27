@@ -111,3 +111,57 @@ public void setDiscountPolicy(DiscountPolicy discountPolicy) {
   * 또는 두 방식을 동시에 사용할 수도 있다.
 * 가능한 한 **항상 생성자 주입을 선택하되, 간혹 추가적인 옵션이 필요한 경우에만 setter 주입을 사용**한다.
   * **필드 주입 방식은 고려조차 않는게 바람직**하다.
+
+## 2022-06-28 Tue
+### 롬복 적용해보기
+* 실무에서는 빈 객체를 등록하는 과정이 대부분 비슷하며, 중복되는 코드도 많이 발생할 수 밖에 없다.
+  * 특히 생성자 주입 방식은 다른 의존 관계 주입에 비해 코드가 길어진다.
+* 롬복은 이러한 반복되는 코드의 작성을 크게 줄여주는 라이브러리이며, `build.gradle`에 다음과 같이 추가하여 사용할 수 있다.
+```
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+dependencies {
+    // ...생략
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	testCompileOnly 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+}
+```
+* **롬복 라이브러리는 어노테이션을 명시하는 것만으로 getter, setter 등의 보일러 플레이트 코드를 줄여주는 역할을 수행**한다. 
+  * 롬복은 실무에서는 빼놓을 수 없는 라이브러리라고 생각해도 무방하다.
+* 롬복이 제공하는 편리한 기능 중 하나인 @RequiredArgsConstructor를 사용하는 경우, final로 정의된 의존성을 위한 생성자를 제거할 수 있다.
+  * 해당 어노테이션은 final로 정의된 필드를 전달받는 생성자를 자동으로 생성해준다.
+  * 아래의 코드를 예로 들어, final로 정의된 DiscountPolicy와 MemberRepository 필드를 전달받는 생성자가 자동으로 생성된다.
+  * **롬복은 Java의 어노테이션 프로세서를 활용하여 컴파일 시점에 생성자 코드를 자동으로 생성**해준다.
+```
+@Component
+@RequiredArgsConstructor
+public class OrderServiceImpl implements OrderService {
+    private final DiscountPolicy discountPolicy;
+    private final MemberRepository memberRepository;
+
+    @Override
+    public Order create(Long memberId, String productName, Long price) {
+        Member member = memberRepository.findById(memberId);
+        Long discountPrice = discountPolicy.discount(member, price);
+
+        return new Order(memberId, productName, price, discountPrice);
+    }
+}
+```
+* 실무에서는 빈 객체로 등록할 대상의 생성자를 하나만 두고, @Autowired를 생략하는 방법을 활용한다.
+  * 이 때, **롬복의 @RequiredArgsConstructor 어노테이션을 함께 사용하면 필요한 기능은 다 제공하면서도 코드를 깔끔하게 유지**할 수 있다.
+
+### 조회 대상 빈 객체가 둘 이상인 경우
+* **@Autowired 어노테이션은 의존성 주입을 위해 기본적으로 타입을 기반으로 조회**한다.
+  * **타입으로 조회하므로, 마치 `ac.getBean(Type.class)`와 유사하게 동작**한다.
+  * **스프링이 빈 객체를 조회할 때, 동일한 타입의 빈이 둘 이상 존재하는 경우에는 `NoUniqueBeanDefinitionException` 오류가 발생**한다.
+* 이 경우 다시 하위 타입을 활용할 수도 있지만, 이는 DIP를 위배하면서 유연성을 떨어트리는 방식이다.
+  * 무엇보다 이름만 다르고 완전히 같은 타입의 빈이 둘 이상 존재하거나 자식이 여럿인 경우에는 문제를 해결할 수 없다.
+  * 즉, **하위 타입만으로는 이러한 문제를 완전히 해결할 수 없다**.
+* **스프링 빈을 수동으로 등록하여 문제를 해결할 수도 있으나, 의존 관계를 자동 주입하는 과정 자체에서 해결하는 방법도 여럿 존재**한다.
