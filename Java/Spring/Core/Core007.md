@@ -165,3 +165,96 @@ public class OrderServiceImpl implements OrderService {
   * 무엇보다 이름만 다르고 완전히 같은 타입의 빈이 둘 이상 존재하거나 자식이 여럿인 경우에는 문제를 해결할 수 없다.
   * 즉, **하위 타입만으로는 이러한 문제를 완전히 해결할 수 없다**.
 * **스프링 빈을 수동으로 등록하여 문제를 해결할 수도 있으나, 의존 관계를 자동 주입하는 과정 자체에서 해결하는 방법도 여럿 존재**한다.
+
+### @Autowired, @Qualifier, @Primary
+* 여러 빈이 선택된 경우, 해결 방법은 크게 세 가지로 분류할 수 있다.
+  1. @Autowired의 필드 명을 매칭시킨다.
+  2. @Qualifier 끼리 빈 이름을 매칭시킨다.
+  3. @Primary 어노테이션을 사용한다.
+
+### @Autowired에 필드 명을 매칭시키기
+* **@Autowired 어노테이션은 우선 타입 매칭을 시도하고, 만약 여러 빈이 존재한다면 필드 이름 또는 파라미터 이름으로 빈 이름을 추가 매칭**한다.
+  * 우선 타입으로 조회한 후에 필드명을 토대로 비교하고, 이름이 같은 빈을 찾아오므로, 동일한 타입이 있는 경우 같은 빈 이름의 객체를 가져오는 식으로 동작한다.
+  * 당연히 조회 타입에 대해 유일한 빈 객체만이 존재하는 경우라면 이러한 추가 매칭 없이 바로 가져온다.
+
+### @Qualifier 어노테이션 사용하기
+* **해당 어노테이션은 추가적인 구분자를 명시하는 방법이며, 의존 관계 주입을 위한 추가적인 방법을 제공**한다.
+  * 즉, 빈 이름 자체를 변경하지는 않는다.
+* 해당 어노테이션을 통해 가져올 빈 객체의 구분자를 다음과 같이 명시할 수 있다.
+```
+@Component
+@Qualifier("fixDiscountPolicy")
+public class FixDiscountPolicy implements DiscountPolicy {
+}
+```
+* 해당 의존성을 주입받는 생성자에는 다음과 같이 작성한다.
+  * 물론, setter를 활용하여 의존성을 주입하더라도 작성이 가능하다.
+```
+@Autowired
+public void showDependencies(@Qualifier("fixDiscountPolicy") DiscountPolicy discountPolicy, MemberRepository memberRepository) {
+    System.out.println("OrderServiceImpl.showDependencies");
+    System.out.println("discountPolicy = " + discountPolicy);
+    System.out.println("memberRepository = " + memberRepository);
+}
+```
+* 상술한 `@Qualifier("fixDiscountPolicy")`에서, fixDiscountPolicy 빈 객체를 찾지 못하는 경우아는 해당 이름의 스프링 빈을 추가로 조회한다.
+  * 대부분의 경우, @Qualifier 어노테이션은 @Qualifier를 찾아내는 용도로만 사용하는 것이 바람직하다.
+* @Qualifier는 직접 Java 코드를 작성하여 빈을 등록하는 경우에도 동일하게 사용이 가능하다.
+* @Qualifier의 동작을 정리하면 크게 다음과 같다.
+  1. @Qualifier끼리 우선 매칭해본다.
+  2. 찾고자 하는 빈 객체가 없어 매칭에 실패했을 경우, 빈 이름을 기준으로 매칭한다.
+  3. 2.의 과정까지 실패한 경우, NoSuchBeanDefinitionException이 발생한다
+
+### @Primary 어노테이션 사용하기
+* 해당 어노테이션은 우선 순위를 결정하는 방법이며, @Autowired 과정에서 여러 빈이 매칭된 경우에는 @Primary 어노테이션이 명시된 클래스가 우선권을 갖는다.
+  * 해당 방법은 편리하고 빠르기에 실무에서도 자주 사용되는 방법이다.
+  * @Qualifier는는 코드가 지저분해지므로 권장되지 않는 방식이다.
+* 해당 어노테이션이 명시된 클래스가 존재하는 경우, 다른 코드는 전부 무시하고 @Primary가 명시된 클래스만이 우선 순위 최상위로 결정된다.
+
+### @Qualifier와 @Primary 어노테이션
+* @Qualifier의 경우, 주입이 필요한 모든 코드에 @Qualifier가 명시되어야 한다는 한계가 존재한다.
+  * 반면, **@Primary를 활용할 경우 매 번 @Qualifier와 같은 형태의 어노테이션을 명시할 필요가 없다**.
+* 예를 들어 코드에서 자주 사용되는 메인 데이터베이스의 커넥션을 획득하기 위한 빈이 있고, 코드 상 특별한 기능을 위해 간혹 사용되는 데이터베이스가 있다고 하자.
+  * 이 경우, 자주 접근하는 메인 데이터베이스와 관련된 스프링 빈은 @Primary를 적용하여 깔끔하게 유지한다.
+  * 반면, 서브 데이터베이스의 커넥션을 획득하기 위한 빈의 경우 @Qualifier를 적용하여 명시적으로 획득하는 것으로 코드를 깔끔하게 한다.
+* **두 어노테이션 간의 우선 순위는 다음과 같은 이유에서 Qualifier가 더 높다**.
+  1. @Primary는 마치 기본값처럼 동작하고, @Qualifier는 매우 상세하게 동작한다.
+  2. 스프링은 자동 방식보다는 수동 방식이, 넓은 선택 범위보다는 좁은 범위의 선택권에 적용되는 우선 순위가 크가.
+* **따라서, 이 경우에도 @Qualifier의 우선 순위가 더 높다**.
+
+### 어노테이션 직접 작성하기
+* @Qualifier의 형태로 명시한 경우, 컴파일시 타입 체크가 불가능한 단점이 존재한다.
+  * 즉, **@Qualifier("mainDiscountPolicy")와 같은 형태로 명시한 경우 괄호 안의 값은 문자열이므로 컴파일시 타입 체크가 불가능**하다.
+  * 때문에 `mainnDiscountPolicy` 와 같은 오타가 발생하더라도 컴파일 시에는 문제를 확인할 수 없다.
+* 이러한 단점을 해소하기 위해, 다음과 같은 어노테이션을 직접 작성하여 활용할 수 있다.
+```
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.TYPE, ElementType.ANNOTATION_TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Inherited
+@Documented
+@Qualifier("mainDiscountPolicy")
+public @interface MainDiscountPolicy {
+}
+```
+* **상술한 어노테이션은 기존의 @Qualifier와 완전히 동일한 동작을 수행하지만, 어노테이션 명을 잘못 입력한 등의 상황에 대해서 컴파일 에러를 발생**시킨다.
+  * 어노테이션을 기존 코드에 적용하는 경우, 다음과 같이 작성한다. 
+```
+@Component
+@MainDiscountPolicy
+public class RateDiscountPolicy implements DiscountPolicy {
+}
+```
+* 이 때, 해당 빈 객체를 주입받아 사용하는 서비스의 생성자는 다음과 같이 작성한다.
+  * **@MainDiscountPolicy 어노테이션 내부적으로 @Qualifier가 존재하므로, 기존 방식과 동일하게 동작**할 수 있다.
+```
+public OrderServiceImpl(@MainDiscountPolicy DiscountPolicy discountPolicy, MemberRepository memberRepository) {
+    this.discountPolicy = discountPolicy;
+    this.memberRepository = memberRepository;
+}
+```
+
+### 어노테이션에 대해서
+* **어노테이션에는 상속 개념이 존재하지 않는 대신, 여러 어노테이션을 모아 활용할 수 있도록 하는 것은 스프링이 지원해주는 기능**이다.
+  * 당연히 @Qualifier 뿐만 아니라 다른 어노테이션들도 함께 조합하여 활용할 수 있다.
+* 심지어 **@Autowired 어노테이션도 재정의할 수 있으나, 스프링이 자체적으로 제공하는 기능을 명확한 목적 없이 무분별하게 재정의하는 것은 지양**해야 한다.
+  * 이러한 방식은 오히려 다가올 수정과 유지보수를 방해하는 요인이 되기 쉽다.
