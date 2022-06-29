@@ -57,3 +57,9 @@
 * [Core005](https://github.com/injuk/TIL/blob/master/Java/Spring/Core/Core005.md)
 * [Core006](https://github.com/injuk/TIL/blob/master/Java/Spring/Core/Core006.md)
 * [Core007](https://github.com/injuk/TIL/blob/master/Java/Spring/Core/Core007.md)
+* [Core008](https://github.com/injuk/TIL/blob/master/Java/Spring/Core/Core008.md)
+
+## Spring Batch
+### Basics
+### 2022.06.29 ~ 2022.00.00
+* [Basics001](https://github.com/injuk/TIL/blob/master/Java/Spring/Batch/Basics/Basics001.md)
