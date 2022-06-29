@@ -58,6 +58,7 @@
 * [Core006](https://github.com/injuk/TIL/blob/master/Java/Spring/Core/Core006.md)
 * [Core007](https://github.com/injuk/TIL/blob/master/Java/Spring/Core/Core007.md)
 * [Core008](https://github.com/injuk/TIL/blob/master/Java/Spring/Core/Core008.md)
+* [Core009](https://github.com/injuk/TIL/blob/master/Java/Spring/Core/Core009.md)
 
 ## Spring Batch
 ### Basics
