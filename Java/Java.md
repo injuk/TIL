@@ -36,6 +36,11 @@
 * [EffectiveCodes010](https://github.com/injuk/TIL/blob/master/Java/EffectiveCodes/EffectiveCodes010.md)
 * [EffectiveCodes011](https://github.com/injuk/TIL/blob/master/Java/EffectiveCodes/EffectiveCodes011.md)
 
+## JPA
+### Basics
+### 2022.07.01 ~ 2022.00.00
+* [HandsOn001](https://github.com/injuk/TIL/blob/master/Java/JPA/HandsOn/HandsOn001.md)
+
 ## Spring
 ### Basics
 ### 2022.06.10 ~ 2022.06.18
