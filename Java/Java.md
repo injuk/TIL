@@ -49,7 +49,7 @@
 * [Basics008](https://github.com/injuk/TIL/blob/master/Java/Spring/Basics/Basics008.md)
 
 ### Core
-### 2022.06.18 ~ 2022.00.00
+### 2022.06.18 ~ 2022.06.30
 * [Core001](https://github.com/injuk/TIL/blob/master/Java/Spring/Core/Core001.md)
 * [Core002](https://github.com/injuk/TIL/blob/master/Java/Spring/Core/Core002.md)
 * [Core003](https://github.com/injuk/TIL/blob/master/Java/Spring/Core/Core003.md)
