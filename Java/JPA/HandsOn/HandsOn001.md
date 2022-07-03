@@ -179,3 +179,41 @@ implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.8.0'
   3. 사용자는 상품을 주문할 수 있으며, 주문 내역을 확인하거나 취소할 수도 있다.
      1. 이 때, 상품 주문시 배송 정보를 입력할 수 있다.
   4. 상품은 재고 관리가 가능하며, 카테고리 별로 구분할 수 있다.
+
+### 엔티티 클래스 개발하기
+* **양방향 연관관계의 경우 연관관계의 주인을 설정해줄 필요가 있으며, 일반적으로는 FK와 가까운 엔티티를 주인으로 설정**한다.
+  * 예를 들어 주문과 회원의 관계에서 주문 테이블은 member_id를 FK로 가지므로, 연관관계의 주인은 주문 테이블이 되는 것이 바람직하다.
+```
+// Order.class
+@ManyToOne
+@JoinColumn(name = "member_id")
+private Member member;
+
+// Member.class
+@OneToMany(mappedBy = "member")
+private List<Order> orders = new ArrayList<>();
+```
+* 엔티티 클래스에 **enum 타입을 사용하는 경우, 반드시 다음과 같이 `@Enumerated(EnumType.STRING)` 어노테이션을 명시**한다.
+  * 작성하지 않는 경우, 기본 EnumType은 ORDINAL로 적용된다.
+  * 이는 0부터 정수로 매핑하는 방식이며, 이후 새로운 enum 값이 READY와 COMP 사이에 추가되었을 때 오작동을 일으킬 가능성이 매우 높다. 
+```
+@Enumerated(EnumType.STRING)
+private DeliveryStatus status; // READY, COMP
+```
+* 일대 일 관계인 경우, FK는 두 테이블 중 어디에 두어도 상관이 없다.
+  * **실무의 경우, 편의성을 위해 더 자주 접근되는 테이블에 두는 것이 일반적**이다. 
+  * 예를 들어 **주문은 배송을 참조할 일이 많지만 배송으로 주문을 조회하는 경우는 없다고 한다면, 주문 테이블에 FK를 두는 것이 바람직**하다. 
+```
+// Order.class
+@OneToOne
+@JoinColumn(name = "delivery_id") // Order 테이블은 Delivery 테이블의 delivery_id 컬럼을 기준으로 매핑한다.
+private Delivery delivery;
+
+// Delivery.class
+@Id @GeneratedValue
+@Column(name = "delivery_id")
+private Long id;
+
+@OneToOne(mappedBy = "delivery")  // Delivery 테이블은 Order 테이블의 delivery 필드를 기준으로 매핑된다.
+private Order order;
+```
