@@ -40,6 +40,7 @@
 ### Basics
 ### 2022.07.01 ~ 2022.00.00
 * [HandsOn001](https://github.com/injuk/TIL/blob/master/Java/JPA/HandsOn/HandsOn001.md)
+* [HandsOn002](https://github.com/injuk/TIL/blob/master/Java/JPA/HandsOn/HandsOn002.md)
 
 ## Spring
 ### Basics
