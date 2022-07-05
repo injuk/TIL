@@ -32,6 +32,7 @@
 29. AutoClosable 인터페이스란 무엇인가? 
 30. DAO, DTO란 무엇인가?
 31. 사용되지 않는 import문은 제거되어야 하는가?
+32. Throwable과 RuntimeException의 차이는 무엇인가?
 
 ## Spring
 1. 스프링과 스프링 부트의 차이는 무엇인가?
