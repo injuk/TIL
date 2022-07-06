@@ -40,3 +40,21 @@ public abstract class Item {
     }
 }
 ```
+
+### 주문 엔티티 개발하기
+* **객체의 생성 과정이 충분히 복잡한 경우, 객체 외부에서 new 연산자와 세터를 통해 객체를 구성하는 방식보다는 static 메소드를 제공하는 것이 바람직**하다.
+  * 이를 통해 객체의 세터의 사용을 지양하고, 객체의 내부 구현을 가능한 한 외부로부터 격리시킬 수 있다.
+```
+public static Order createOrder(Member member, Delivery delivery, OrderItem... orderItems) {
+    Order order = new Order();
+    order.setMember(member);
+    order.setDelivery(delivery);
+    for (OrderItem orderItem : orderItems) {
+        order.addOrderItem(orderItem);
+    }
+    order.setStatus(OrderStatus.ORDER);
+    order.setOrderDate(LocalDateTime.now());
+
+    return order;
+}
+```
