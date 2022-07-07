@@ -144,3 +144,28 @@ public void cancelOrder(Long orderId) {
 * 덧붙여 **도메인 모델 패턴의 엄청난 장점 중 하나는 리포지토리 등의 의존성 없이도 각 엔티티가 갖는 비즈니스 로직 자체만을 테스트할 수 있다는 점**이다.
   * 이는 도메인 모델 패턴에서의 엔티티가 자체적으로 핵심 비즈니스 로직을 갖기 때문에 가능한 특징이다.
 * 이렇듯 **이상적인 단위 테스트는 데이터베이스, 리포지토리 등 외부 요인 없이 메소드의 동작성만을 검증할 수 있어야 한다**.
+
+### JPA와 동적 쿼리
+* 예를 들어 회원의 이름과 주문의 상태로 주문을 검색하는 경우, OrderSearch 클래스를 추가하여 다음과 같이 작성할 수 있다.
+```
+// OrderRepository.java
+
+public List<Order> findAll(OrderSearch orderSearch) {
+    return em.createQuery("select o from Order o join o.member m" +
+            " where o.status = :status" +
+            " and m.name like :name", Order.class)
+            .setParameter("status", orderSearch.getOrderStatus())
+            .setParameter("name", orderSearch.getMemberName())
+            .setFirstResult(0) // offset
+            .setMaxResults(20) // limit
+            .getResultList();
+}
+```
+* 그러나 **위의 코드는 orderSearch 객체에 항상 모든 파라미터가 존재하는 경우를 가정하며, 동적인 쿼리라고 볼 수는 없다**.
+* 동적인 쿼리를 작성하기 위해서는 크게 다음과 같은 방법을 고려해볼 수 있다.
+  1. 문자열 처리하기
+  2. JPA Criteria 사용하기
+* 그러나 상술한 두 방법 모두 동적 쿼리를 위해서 유지보수성이 낮은 코드를 만들게되는 단점이 수반된다.
+  * 극단적으로 말해서, 두 방식 모두 실무에서는 사용할 수 없을 정도로 복잡성이 높다.
+* 이에 대한 **대안으로 설계된 queryDSL 라이브러리를 사용할 수 있으며, 해당 라이브러리를 통해 동적 쿼리 문제를 간단하게 해결**할 수 있다.
+  * 나아가, 정적 쿼리 역시 복잡해지는 경우 queryDSL을 통해 복잡도를 낮추고 장기적인 유지보수성을 높일 수 있다.
