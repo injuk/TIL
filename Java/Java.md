@@ -42,6 +42,7 @@
 * [HandsOn001](https://github.com/injuk/TIL/blob/master/Java/JPA/HandsOn/HandsOn001.md)
 * [HandsOn002](https://github.com/injuk/TIL/blob/master/Java/JPA/HandsOn/HandsOn002.md)
 * [HandsOn003](https://github.com/injuk/TIL/blob/master/Java/JPA/HandsOn/HandsOn003.md)
+* [HandsOn004](https://github.com/injuk/TIL/blob/master/Java/JPA/HandsOn/HandsOn004.md)
 
 ## Spring
 ### Basics
