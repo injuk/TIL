@@ -95,3 +95,36 @@ public String memberList(Model model) {
 * 그러나 **API를 작성하는 경우, 절대 엔티티 객체를 그대로 반환하지 않아야 한다**.
   * **API는 기본적으로 스펙이지만, 엔티티를 그대로 반환하게 되면 엔티티의 구조가 수정된 경우에 API의 스펙이 덩달아 변경되버리는 문제가 발생**한다.
   * 엔티티의 로직 변경 등 수정 작업이 API의 스펙을 변경하게 되면 API는 그만큼 불안정해지며, 협업 관점에서도 큰 불편을 초래할 수 있다.
+
+## 2022-07-09 Sat
+### path variable 받아들이기
+* path variable 정보는 컨트롤러에서 다음과 같이 @PathVariable 어노테이션을 통해 받아들일 수 있다. 
+```
+@GetMapping("/items/{itemId}/edit")
+public String updateItem(@PathVariable(value = "itemId") Long id, Model model) {
+
+    return "items/updateItemForm";
+}
+```
+
+### JPA로 update하기
+* JPA에서의 update는 merge 메소드를 활용한다.
+  * 아래의 코드에서, save는 서비스 내부적으로 merge 메소드를 활용하는 리포지토리를 호출하도록 동작한다.
+```
+@PostMapping("/items/{itemId}/edit")
+public String updateItem(@PathVariable("itemId") Long id, @ModelAttribute("form") BookForm bookForm) {
+    Book book = new Book();
+    book.setId(bookForm.getId());
+    book.setName(bookForm.getName());
+    book.setPrice(bookForm.getPrice());
+    book.setStockQuantity(bookForm.getStockQuantity());
+    book.setAuthor(bookForm.getAuthor());
+    book.setIsbn(bookForm.getIsbn());
+
+    itemService.saveItem(book);
+
+    return "redirect:/items";
+}
+```
+* 상술한 코드의 경우, itemId 정보가 path variable을 통해 그대로 드러나는 취약점이 존재한다.
+  * 따라서 실무에서는 요청한 사용자가 해당 item에 대한 권한이 있는지 없는지를 체크하는 로직이 반드시 추가되어야 한다.
