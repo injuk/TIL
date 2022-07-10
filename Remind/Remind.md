@@ -80,6 +80,7 @@
 ## Persistence
 1. 트랜잭션과 락이란 무엇인가?
 2. 결과 무결성과 트랜잭션 무결성의 차이는 무엇인가?
+3. DB Isolation level이란 무엇인가?
 
 ## Web
 1. Web storage란 무엇인가?
