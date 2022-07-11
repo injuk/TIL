@@ -92,3 +92,25 @@
 ### JPA 사용시의 마음가짐
 * JPA와 같은 ORM 기술은 객체지향과 관계형 데이터베이스라는 두 기둥을 근간으로 구성되는 기술이다.
 * 때문에 **JPA를 효율적으로 사용하기 위해서는 OOP와 RDB 두 기술 모두에 대한 이해가 반드시 선행되어야 한다**.
+
+### JPA 프로젝트 시작하기
+* JPA는 가장 간단한 기본 동작을 위해서도 몇 가지의 설정 파일을 작성할 필요가 있다.
+  * 예를 들어, `/META-INF/persistence.xml` 과 같은 설정 파일이 있다.
+* JPA에 연결하기 위해 persistence.xml에는 다음과 같은 내용을 입력할 수 있다.
+  * 이는 **JPA가 데이터베이스에 연결하기 위한 접근 정보와 관련된 설정**이다.
+```
+<property name="javax.persistence.jdbc.driver" value="org.h2.Driver"/>
+<property name="javax.persistence.jdbc.user" value="sa"/>
+<property name="javax.persistence.jdbc.password" value=""/>
+<property name="javax.persistence.jdbc.url" value="jdbc:h2:tcp://localhost/~/workspace/study/h2/test"/>
+<property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+```
+
+### JPA 방언
+* 상술한 코드 중, `hibernate.dialect`는 데이터베이스 방언이라고도 한다.
+* JPA는 임의의 데이터베이스에 종속되지 않도록 설정되었으므로, 극단적으로는 MySQL을 사용하다가 OracleDB를 사용하더라도 아무런 문제가 없어야 한다.
+  * **그러나 각 데이터베이스마다 제공하는 SQL 문법과 함수의 형태는 조금씩 다른 문제점**이 있다.
+  * 이 때, **데이터베이스 방언이란 이렇듯 SQL 표준을 준수하지 않는 특정 데이터베이스만의 고유 기능을 의미**한다.
+  * 구조적으로는 JPA에 Dialect 클래스가 포함되며, 데이터베이스 별로 Dialect 클래스를 상속받는 방언 클래스가 존재한다.
+* 이러한 방언 설정은 `org.hibernate.dialect.${DB_VENDOR}` 형태로 persistence.xml에 작성할 수 있다.
+* 또한 하이버네이트는 40가지 이상의 데이터베이스 방언을 제공하며, 이는 사실상 실무에서 사용 가능한 거의 모든 데이터베이스를 의미한다.
