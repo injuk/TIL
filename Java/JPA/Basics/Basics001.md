@@ -114,3 +114,140 @@
   * 구조적으로는 JPA에 Dialect 클래스가 포함되며, 데이터베이스 별로 Dialect 클래스를 상속받는 방언 클래스가 존재한다.
 * 이러한 방언 설정은 `org.hibernate.dialect.${DB_VENDOR}` 형태로 persistence.xml에 작성할 수 있다.
 * 또한 하이버네이트는 40가지 이상의 데이터베이스 방언을 제공하며, 이는 사실상 실무에서 사용 가능한 거의 모든 데이터베이스를 의미한다.
+
+## 2022-07-12 Tue
+### JPA 동작 방식
+* JPA는 일반적으로 다음과 같은 흐름으로 동작한다.
+  1. Persistence 클래스에서 시작한다.
+  2. Persistence 클래스는 META-INF/persistence.xml 파일로부터 설정 정보를 조회하여 EntityManagerFactory를 생성한다.
+  3. EntityManagerFactory는 EntityManager 객체들을 필요에 따라 생성한다.
+* 이 때, EntityManager가 완성된 시점부터는 데이터베이스와 연결과 그 이후의 작업을 수행할 수 있는 것으로 이해할 수 있다.
+* 상술한 동작 순서를 코드로 묘사하면 다음과 같다.
+  * 아래의 코드에서, Persistence.createEntityManagerFactory에 전달하는 PersistenceUnitName은 persistence.xml의 내용이다.
+```
+public static void main(String[] args) {
+    EntityManagerFactory emf = Persistence.createEntityManagerFactory("hello");
+    EntityManager em = emf.createEntityManager();
+
+    // em을 가져온 상태에서 실제 데이터베이스와 상호작용하는 코드를 작성할 수 있게 된다.
+    // 저장, 조회, 등...
+    
+    em.close();
+    emf.close(); // 모든 동작이 완료되어 애플리케이션이 종료되면 emf를 닫아줘야 한다. 
+}
+```
+* **EntityManagerFactory는 애플리케이션 로딩 시점에 단 하나만 만들어져 유지**되어야 한다.
+* 반면, 데이터베이스와 상호작용하기 위한 트랜잭션 단위마다 EntityManger를 만들어주어야 한다.
+  * 여기서 데이터베이스와의 상호작용은 **데이터베이스 커넥션을 얻어 쿼리를 요청한 후에 종료되는 단위 동작을 의미**한다.
+
+### Entity 작성핟기
+* 간단한 엔티티는 다음과 같이 추가할 수 있다.
+  * 이 때, **@Entity 어노테이션은 반드시 명시홰야 해당 클래스를 JPA가 로딩되는 시점에 인식하고 관리**할 수 있다.
+```
+@Entity
+@Getter @Setter
+public class Member {
+    
+    @Id
+    private Long id;
+    private String name;
+}
+```
+* 이를 활용하여 다음과 같이 영속화를 시도하는 경우, 에러가 발생하며 진행되지 않는다.
+```
+public static void main(String[] args) {
+    EntityManagerFactory emf = Persistence.createEntityManagerFactory("hello");
+    EntityManager em = emf.createEntityManager();
+
+    // em을 가져온 상태에서 실제 동작하는 코드를 작성할 수 있게 된다.
+    // 저장, 조회, 등...
+    Member member = new Member();
+    member.setId(1L);
+    member.setName("ingnoh");
+    em.persist(member);
+
+    em.close();
+    emf.close(); // 모든 동작이 완료되어 애플리케이션이 종료되면 emf를 닫아줘야 한다.
+}
+```
+* **JPA에서는 트랜잭션이 매우 중요하며, JPA를 통해 발생하는 모든 데이터의 변경 작업은 반드시 트랜잭션 안에서 처리되어야 한다**.
+  * 상술한 코드 역시 이로 인해 실행되지 않는 것으로 이해할 수 있다.
+* JPA에서는 엔티티매니저의 getTransaction 메소드를 호출하여 새로운 트랜잭션을 요청할 수 있으며, begin과 commit을 다음과 같이 수행할 수 있다.
+```
+public static void main(String[] args) {
+    EntityManagerFactory emf = Persistence.createEntityManagerFactory("hello");
+    EntityManager em = emf.createEntityManager(); // 데이터베이스 커넥션을 하나 받아온 것으로 간단히 이해할 수도 있다.
+
+    // 새로운 트랜잭션을 요청한 후 이를 시작한다.
+    EntityTransaction tx = em.getTransaction();
+    tx.begin();
+
+    Member member = new Member();
+    member.setId(1L);
+    member.setName("ingnoh");
+    em.persist(member);
+
+    // 모든 요청이 완료된 후에 커밋한다.
+    tx.commit();
+
+    em.close();
+    emf.close(); // 모든 동작이 완료되어 애플리케이션이 종료되면 emf를 닫아줘야 한다.
+}
+```
+* 해당 코드는 정상 동작하며, 코드 상에서 어떠한 SQL 구문을 작성하지 않았음에도 데이터베이스에 영속화된 것을 확인할 수 있다.
+  * 즉, **JPA는 매핑 정보를 분석하여 적절한 쿼리를 생성한 후에 데이터를 영속화**한다.
+  * 이 경우, 데이터가 영속화될 테이블 정보를 명시하지 않았음에도 JPA의 관례에 따라 MEMBER 테이블에 데이터를 저장한다.
+  * 반면 데이터가 영속화될 테이블명과 클래스의 이름이 상이한 경우에는 반드시 클래스에 @Table(name = "TABLE_NAME") 어노테이션을 명시해야 한다.
+* 상술한 코드는 에러 발생시의 롤백 처리가 전혀 안되어 있으며, 엔티티 매니저를 잘 닫는다는 보장도 없다.
+  * 때문에 다음과 같은 try - catch - finally 구문을 활용하여 코드를 수정하는 것이 바람직하다.
+```
+public static void main(String[] args) {
+    EntityManagerFactory emf = Persistence.createEntityManagerFactory("hello");
+    EntityManager em = emf.createEntityManager(); // 데이터베이스 커넥션을 하나 받아온 것으로 간단히 이해할 수도 있다.
+
+    EntityTransaction tx = em.getTransaction();
+    tx.begin();
+
+    try {
+        Member member = new Member();
+        member.setId(1L);
+        member.setName("ingnoh");
+        em.persist(member);
+
+        tx.commit();    
+    } catch (Exception e) {
+        tx.rollback();
+    } finally {
+        em.close();
+    }
+    emf.close(); // 모든 동작이 완료되어 애플리케이션이 종료되면 emf를 닫아줘야 한다.
+}
+```
+* 특히 **엔티티 매니저는 내부적으로 데이터베이스 커넥션을 갖고 동작하므로, 유사시에도 항상 close될 수 있도록 코드를 작성하는 것이 매우 중요**하다.
+
+### 정말 이렇게 해야할까?
+* **상술한 방식은 이미 스프링에 의해 대부분 자동화되므로, 개발자는 em.persist 정도만 호출해도 데이터를 영속화하는 데에는 아무런 어려움을 겪지 않는다**.
+
+### 중간 정리
+* **엔티티 매니저 팩토리는 애플리케이션의 로딩 시점에 단 하나만 생성되고, 애플리케이션과 같은 생명 주기를 가져야 한다**.
+  * 웹 서비스의 경우, 웹 서버가 동작을 시작하는 과정에서 단 하나만 생성되어야 한다.
+  * 또한 웹 서버가 종료될 때 엔티티 매니저 팩토리가 닫혀야 커넥션 등의 리소스가 릴리즈될 수 있다.
+* 반면, **엔티티 매니저는 고객의 요청마다 생성하여 사용한 후에 close하는 식으로 코드를 작성**해야 한다.
+  * **엔티티 매니저는 절대로 스레드 간에 공유되지 않아야 하며, 반드시 사용하고 버리는 식으로 구현**해야 한다.
+  * 이는 마치 데이터베이스 커넥션을 최대한 빠르게 사용하고 반환해야하는 것과 같다.
+* **JPA의 모든 데이터 변경은 반드시 트랜잭션 안에서 실행**되어야 한다.
+  * 반면, 단순 조회는 상관이 없다.
+  * **이는 JPA의 한계가 아니며, RDB 자체가 데이터의 변경을 반드시 트랜잭션 안에서 실행하도록 설계되었기 때문**이다.
+
+### JPQL이란?
+```
+> JPQL은 객체를 대상으로 하는 객체 지향 쿼리이다.
+> JPQL의 목적은 SQL을 추상화하여 데이터베이스 별 방언에 의존하지 않는 것에 있다.
+```
+* JPA를 사용하면 자연스레 엔티티 객체를 중심으로 개발을 진행하게 되지만, 검색 요구사항은 처리가 어려울 수 있다.
+* **쿼리 역시 JPA의 사상에 따라 테이블보다는 엔티티를 대상으로 검색해야 했으며, JPQL은 객체지향과 RDB 사이의 불일치성을 해결하기 위해 도입**되었다.
+* 이 때, 데이터베이스의 모든 데이터를 객체로 변환하여 검색하는 것은 현실적으로 불가능하다.
+  * 때문에 애플리케이션이 필요로하는 데이터만 데이터베이스로부터 추려서 가져오기 위해서는 결국 검색 조건을 작성할 수 있는 SQL의 도입이 필요할 수 밖에 없다.
+* 그러나 **실제 SQL을 사용하게 되면 결국 각 데이터베이스의 방언에 종속되는 설계로 이어지므로, JPA는 엔티티를 대상으로 쿼리하는 JPQL을 도입**하였다.
+* **JPQL은 실제 SQL과 유사한 문법을 지원하며, 테이블을 대상으로 쿼리하는 SQL과 달리 엔티티 객체를 대상으로 쿼리한다는 차이점이 존재**한다.
+  * 이러한 JPQL의 도입으로 인해 애플리케이션이 사용하는 데이터베이스가 바뀌어 방언이 변경되더라도 JPQL을 변경할 필요가 없어진다.
