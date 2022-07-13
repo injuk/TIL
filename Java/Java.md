@@ -41,6 +41,7 @@
 ### 2022.07.10 ~ 2022.00.00
 * [Basics001](https://github.com/injuk/TIL/blob/master/Java/JPA/Basics/Basics001.md)
 * [Basics002](https://github.com/injuk/TIL/blob/master/Java/JPA/Basics/Basics002.md)
+* [Basics003](https://github.com/injuk/TIL/blob/master/Java/JPA/Basics/Basics003.md)
 
 ### HandsOn
 ### 2022.07.01 ~ 2022.07.10
