@@ -51,6 +51,7 @@
 
 ## JavaScript
 1. AJAX란 무엇인가?
+2. typeof와 instanceof의 차이는 무엇인가?
 
 ## Node.js
 1. 이벤트 루프는 어떻게 동작하는가?
@@ -58,6 +59,7 @@
 
 ## TypeScript
 1. type과 interface의 차이는 무엇인가?
+2. any와 unknown의 차이는 무엇인가?
 
 ## Architecture
 1. 설계는 왜 필요하고, 무엇을 목적으로 해야하는가?
