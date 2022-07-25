@@ -46,3 +46,31 @@ List<Member> result = em.createQuery(query, Member.class)
 * **Criteria는 이렇듯 JPA 표준 스펙에서 제공하는 개념이지만, 유지보수성이 낮다는 이유로 인해 실무에서는 잘 사용되지 않는다**.
   * 그러나 여전히 **실무에서는 동적 쿼리가 자주 사용되며, Criteria와 같은 컴파일 시점의 SQL 문법 확인 기능 역시 제공받을 필요**가 있다.
   * 이러한 이유에서, 실무에서는 일반적으로 QueryDSL의 사용이 권장된다.
+
+### QueryDSL이란?
+* QueryDSL은 JPA Criteria와 마찬가지로 Java 코드를 기반으로 한 JPQL 빌더 역할을 수행하며, 컴파일 시점에 문법 오류를 찾을 수 있도록 한다.
+* 그러나 **JPA Criteria와 달리 동적쿼리 작성이 편리하고, 단순하고 쉬워 유지보수성도 높으므로 실무에서 사용이 권장**된다.
+  * QueryDSL은 사실상 JPQL과 일대 일 매칭되므로, JPQL을 정확히 이해한 경우 QueryDSL은 공식 문서만으로도 사용이 가능할 수 있다.
+  * 이는 그만큼 QueryDSL의 공식 문서가 잘 작성되어 있기 때문이기도 하다.
+* **실무에서는 95% 이상의 쿼리가 JPQL과 QueryDSL 조합으로 해결이 가능**하다.
+
+### 네이티브 SQL이란?
+* **JPA는 SQL을 직접 사용하는 기능을 네이티브 SQL 형태로 제공하며, 이는 JPQL만으로는 해결할 수 없는 데이터베이스 의존적인 기능에 활용**된다.
+  * 예를 들어, Oracle의 `CONNECT BY` 등의 기능이 포함된다.
+* **네이티브 SQL은 실제 SQL을 문자열 형태로 작성하고, 엔티티 매니저의 createNativeQuery 메소드를 호출하여 사용**할 수 있다.
+```
+String query = "SELECT * FROM MEMBER WHERE NAME = 'ingnoh'";
+List<Member> results = em.createNativeQuery(query, Member.class)
+  .getResultList();
+```
+* 그러나 **실무에서는 일반적으로 네이티브 SQL보다는 Spring JDBC Template을 사용하는 편**이다.
+
+### JDBC 직접 사용, 또는 Spring JDBC Template 사용하기
+* JPA를 사용하는 과정에서 JDBC 커넥션을 직접 사용하거나, Spring의 JDBC Template 또는 SQL 매퍼인 MyBatis를 함께 사용할 수 있다.
+* 단, 반드시 영속성 컨텍스트를 적시에 강제로 flush 해 줄 필요가 있다.
+  * 예를 들어, JPA를 우회하여 SQL을 실행하기 전에 영속성 컨텍스트를 직접 flush 한다.
+* **기본적으로 트랜잭션이 커밋되는 시점이나 createQuery 또는 createNativeQuery 메소드가 호출되는 경우, JPA는 자동으로 flush를 호출**한다.
+  * 이렇듯 JPA는 쿼리를 직접 요청하는 경우 암시적으로 flush를 호출하여 쿼리 결과를 그 때 그 때 데이터베이스에 반영한다.
+  * 때문에 **이러한 동작을 JPA의 기본 동작으로 혼동하여 flush를 호출하지 않는 실수를 범하지 않아야 한다**.
+* 실무에서 JPQL과 QueryDSL로 해결이 안되는 약 5%의 복잡한 통계성 쿼리는 Spring JDBC Template 등을 활용하여 쿼리를 직접 요청할 수 있다.
+  * 그러나 이마저도 대부분의 경우에는 JPQL과 QueryDSL로 풀어낼 수 있다.
