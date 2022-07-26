@@ -96,5 +96,47 @@ select m from Member as m where m.age > 13
 * JPQL 역시 SQL과 마찬가지로 SUM, COUNT, AVG 등을 호출할 수 있다.
   * 집합과 정렬을 위한 기능인 ORDER BY, GROUP BY, HAVING 역시 기존 SQL과 같은 방식으로 사용할 수 있다.
 
+## 2022-07-27 Wed
 ### Type Query와 Query
 * **Type query는 반환 타입이 명확할 때에만 사용할 수 있으나, Query는 반환 타입이 명확하지 않아도 좋다.**
+* 예를 들어 쿼리 특성상 타입 정보를 명확히 전달할 수 있는 경우, createQuery 메소드의 반환 타입은 제네릭을 갖는 TypeQuery가 된다.
+  * 아래 코드의 경우, createQuery 메소드의 두번째 인자로 Member.class라는 타입 정보를 명확히 전달한다.
+```
+TypedQuery<Member> query = em.createQuery("select m from Member m", Member.class);
+```
+* 그러나 타입 정보를 다음과 같이 명확히 명시할 수 없는 경우도 발생하며, 이 경우 createQuery 메소드의 반환 타입은 Query이다.
+  * **문제는 select 절에서 가져오려는 정보가 String과 Integer가 혼합되었다는 점**에 있다.
+  * 만일 m.name만 가져오는 쿼리의 경우, createQuery 메소드의 두 번째 인자로 String.class를 전달하여 TypedQuery를 반환받을 수 있다.
+```
+Query query = em.createQuery("select m.name, m.age from Member m");
+```
+
+### 쿼리를 활용한 결과 조회 API
+* JPA에서 JPQL을 통해 쿼리하는 경우, 결과를 조회할 수 있는 메소드는 다음과 같이 분류된다.
+  1. `query.getResultList()`: 결과가 하나 이상인 경우에 사용하며, List가 반환된다.
+  2. `query.getSingleResult()`: 결과가 정확히 하나인 경우에 해당하며, 단일 객체를 반환한다.
+* **getResultList 메소드의 경우, 결과를 발견하지 못했다면 빈 List가 반환**된다.
+  * 때문에 **getResultList는 NPE로부터 안전**할 수 있다.
+* 반면, **getSingleResult 메소드의 경우 결과가 없거나 둘 이상인 경우에 예외가 발생**한다.
+  * 결과가 없는 경우, NoResultException 예외가 발생한다.
+  * 결과가 둘 이상인 경우, NonUniqueResultException 예외가 발생한다.
+* 덧붙여 getSingleResult 메소드에서, 결과가 없는 경우에 예외를 발생시키는 스펙은 굉장히 논란이 많은 부분이기도 하다.
+  * 때문에 Spring Data JPA에서는 이를 한 번 감싸 추상화하는 과정에서 결과가 없는 경우 null 또는 Optional을 반환한다.
+
+### 쿼리 파라미터 바인딩
+* JPQL에서는 쿼리에 파라미터를 작성할 수 있으며, 다음과 같이 파라미터 정보를 바인딩할 수 있다.
+  * 이는 파라미터 명을 기준으로 한 바인딩에 해당한다.
+```
+List<Member> member = em.createQuery("select m from Member m where m.name = :name", Member.class)
+  .setParameter("name", "memberName")
+  .getResultList();
+```
+* 또는 다음과 같이 파라미터 위치를 기준으로 바인딩할 수도 있다.
+  * 그러나 **위치를 숫자로 명기하는 해당 방식은 쿼리의 처음 또는 중간에 새로운 파라미터가 추가된 경우 에러가 발생하기 쉬우므로 유지보수성이 떨어진다**.
+  * 이러한 이유에서 **위치 기반으로 파라미터를 바인딩하는 해당 방식은 실무에서 권장되지 않는다**.
+  * 반면, 파라미터 명 기반 바인딩은 문자열을 사용하므로 위치 기반의 바인딩에서 발생할 수 있는 문제와는 관계가 없다.
+```
+List<Member> member = em.createQuery("select m from Member m where m.name = ?1", Member.class)
+  .setParameter(1, "memberName")
+  .getResultList();
+```
