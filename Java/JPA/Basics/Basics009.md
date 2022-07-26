@@ -74,3 +74,27 @@ List<Member> results = em.createNativeQuery(query, Member.class)
   * 때문에 **이러한 동작을 JPA의 기본 동작으로 혼동하여 flush를 호출하지 않는 실수를 범하지 않아야 한다**.
 * 실무에서 JPQL과 QueryDSL로 해결이 안되는 약 5%의 복잡한 통계성 쿼리는 Spring JDBC Template 등을 활용하여 쿼리를 직접 요청할 수 있다.
   * 그러나 이마저도 대부분의 경우에는 JPQL과 QueryDSL로 풀어낼 수 있다.
+
+### Java Persistence Query Language
+* **JPQL은 객체 지향 쿼리 언어이며, 테이블을 대상으로 하지 않고 객체를 대상으로 쿼리를 수행**한다.
+* JPQL은 SQL을 한 단계 더 추상화하므로, 특정한 데이터베이스에 의존하지 않는다.
+  * 그러나 **JPQL은 매핑 정보와 방언을 조합하여 결국 SQL로 변환**된다.
+
+### JPQL의 기본 문법
+* **JPQL의 문법은 기본적으로 SQL과 같은 형태**를 띈다.
+  * 예를 들어, select절과 from절에 이어 where절이나 groupBy, having, order by 절 등을 작성할 수 있다.
+```
+select m from Member as m where m.age > 13
+```
+* **엔티티와 속성은 모두 대소문자를 구분하지만, JPQL 키워드인 select나 from 절 등은 대소문자를 구분하지 않는다**.
+* **JPQL은 엔티티를 대상으로 쿼리하는 객체 지향 쿼리 언어이므로, 테이블의 이름이 아닌 엔티티의 이름을 사용**한다.
+  * 예를 들어, 상술한 쿼리의 요청 대상은 Member 엔티티이다.
+* **쿼리에서 엔티티의 별칭은 필수이나, as 키워드를 생략이 가능**하다. 
+  * JPA 표준 스펙에서는 as 키워드를 명시하지만, 하이버네이트에서는 이를 생략 가능하다.
+
+### JPQL의 집합 및 정렬 연산
+* JPQL 역시 SQL과 마찬가지로 SUM, COUNT, AVG 등을 호출할 수 있다.
+  * 집합과 정렬을 위한 기능인 ORDER BY, GROUP BY, HAVING 역시 기존 SQL과 같은 방식으로 사용할 수 있다.
+
+### Type Query와 Query
+* **Type query는 반환 타입이 명확할 때에만 사용할 수 있으나, Query는 반환 타입이 명확하지 않아도 좋다.**
