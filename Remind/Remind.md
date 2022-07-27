@@ -85,6 +85,7 @@
 3. DB Isolation level이란 무엇인가?
 4. clob, blob이란 무엇인가?
 5. 논리 모델과 물리 모델이란 무엇인가?
+6. inner join, outer join이란 무엇인가?
 
 ## Web
 1. Web storage란 무엇인가?

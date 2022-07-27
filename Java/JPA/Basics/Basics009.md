@@ -186,3 +186,16 @@ System.out.println(result[1]);
 List<MemberDto> results = em.createQuery("select new jpql.MemberDto(m.name, m.age) from Member m", MemberDto.class)
   .getResultList();
 ```
+
+## 2022-07-28 Thu
+### 페이징 API란?
+* JPA는 다음과 같이 페이징을 추상화하는 API를 제공한다.
+  1. setFirstResult(): int를 인수로 전달하여 조회 시작 위치를 지정할 수 있으며, 기본값으로는 0이 설정된다.
+  2. setMaxResults(): int를 인수로 전달하여 조회할 데이터의 수를 지정한다.
+```
+List<Member> results = em.createQuery("select m from Member m order by m.age desc", Member.class)
+  .setFirstResult(10)
+  .setMaxResults(50)
+  .getResultList();
+```
+* 이렇듯 **JPA는 페이징 API를 매우 적절하게 추상화하고 있으므로, 이게 전부**이다!
