@@ -140,3 +140,49 @@ List<Member> member = em.createQuery("select m from Member m where m.name = ?1",
   .setParameter(1, "memberName")
   .getResultList();
 ```
+
+### 프로젝션이란?
+* **프로젝션이란 단순히 SELECT 절에서 조회할 대상을 지정하는 개념**이다.
+* 이 때, JPA에서 지원하는 프로젝션 대상은 크게 다음과 같다.
+  1. 엔티티
+  2. 임베디드 타입: 개발자가 직접 정의한 복합 값 타입을 의미한다.
+  3. 스칼라 타입: 숫자, 문자 등 기본 데이터 형을 의미한다.
+* 반면, **관계형 데이터베이스의 경우 스칼라 타입만 선택이 가능**하다.
+```
+SELECT m FROM Member m // Member 엔티티를 조회한다.
+SELECT m.team FROM Member m // Member 엔티티와 연관 관계를 맺는 Team 엔티티를 조회한다.
+SELECT m.address FROM Member m // Member 엔티티가 갖는 복합 값 타입인 address를 조회한다.
+SELECT m.name, m.age FROM Member m // Member 엔티티가 갖는 기본 값 타입을 조회한다.
+```
+* 또한, JPQL 역시 SELECT 절에 DISTINCT 지시어를 작성하여 데이터의 중복을 제거할 수도 있다.
+
+### 엔티티 프로젝션과 영속성 컨텍스트
+* **엔티티 프로젝션과 getResultList 메소드에 의해 조회된 대상은 다수일 수 있으며, 이는 모두 조회 시점부터 영속성 컨텍스트에 의해 관리**된다.
+
+### 프로젝션에서 여러 값을 조회하는 경우
+* 예를 들어 `SELECT m.name, m.age FROM Member m`과 같은 JPQL의 경우, 각각 String과 int 타입이 조회됨을 예측할 수 있다.
+* 이러한 경우, 다음과 같은 방법 중 하나로 값을 조회할 수 있다.
+  1. Query 타입으로 조회하기
+  2. Object[] 타입으로 조회하기
+  3. new 명령어와 Dto를 활용하여 바로 조회하기
+* Query 타입으로 조회하는 경우, 반환 형은 Object를 포함하는 원시 List가 된다.
+  * 이 때, 각각의 요소는 Object[] 형으로 적용된다.
+  * **이러한 특징을 활용하면 List<Object[]> 형태로 제네릭을 적용할 수도 있다**.
+```
+List results = em.createQuery("select m.name, m.age from Member m")
+  .getResultList();
+Object obj = resultList.get(0);
+Object[] result = (Object[]) obj;
+System.out.println(result[0]);
+System.out.println(result[1]);
+```
+* 특히, **Dto를 사용하는 경우 `SELECT new jpastudy.jpql.MemberDto(m.name, m.age) FROM Member m`과 같은 형태로 작성**할 수 있다.
+  * 이 때, Dto 클래스는 반드시 패키지 명을 포함하는 full path로 작성해야 한다.
+  * 또한, **해당 클래스에는 반드시 순서와 타입이 일치하는 생성자가 정의되어 있어야 한다**.
+* 세 방식 중 가장 깔끔한 방식은 Dto를 활용하는 것이며, 이 경우의 코드는 다음과 같이 작성할 수 있다.
+  * 그러나 해당 방식은 쿼리가 문자열이므로, 반드시 패키지 명을 모두 작성해야한다는 단점이 역시 존재한다. 
+  * 이는 QueryDSL과 같은 라이브러리를 통해 상당 부분 해결할 수 있다.
+```
+List<MemberDto> results = em.createQuery("select new jpql.MemberDto(m.name, m.age) from Member m", MemberDto.class)
+  .getResultList();
+```
