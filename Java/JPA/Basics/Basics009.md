@@ -290,3 +290,36 @@ em.createQuery("select i from Item i where type(i) = Book", Item.class)
   3. AND, OR, NOT
   4. =, >, <, >=, <=, <>
   5. BETWEEN, LIKE, IS NULL
+
+## 2022-07-30 Sat
+### 조건식 - CASE 식
+* JPQL의 조건식은 다음과 같이 작성해볼 수 있다.
+```
+select
+  case when m.age <= 10 then '학생'
+       when m.age >= 60 then '경로'
+       else '일반'
+  end
+from Member m
+```
+* 또는 이를 다음과 같이 단순화하여 작성할 수도 있다.
+```
+select
+  case m.name
+       when 'A' then '학생'
+       when 'B' then '경로'
+       else '일반'
+  end
+from Member m
+```
+* COALESCE 키워드는 값을 하나씩 조회하여 null이 아닌 경우에만 반환한다.
+  * 예를 들어, 아래의 쿼리는 사용자의 이름이 없는 경우에 anonymous를 반환한다.
+```
+select coalesce(m.name, 'anonymous') from Member m
+```
+* NULLIF 키워드는 두 값이 같으면 null을 반환하고, 다른 경우에는 첫 값을 반환한다.
+  * 예를 들어, 아래의 쿼리는 사용자의 이름이 admin인 경우에만 null을 반환한다.
+```
+select NULLIF(m.name, 'admin') from Member m
+```
+* 상술한 함수는 모두 표준 함수이므로, JPA가 지원하는 모든 데이터베이스에서 활용이 가능하다.
