@@ -231,3 +231,62 @@ select m from member m, team t where m.name = t.name
 * 무엇보다, **해당 방식을 통해 연관 관계가 전혀 없는 엔티티 간의 외부 조인이 가능**해진다.
   * 말이 안되는 시나리오이나, 회원의 이름과 팀의 이름이 같은 대상만을 외부 조인하기 위해 ON 절을 사용할 수 있다.
   * 이렇듯 요구 사항에 맞추어 전혀 연관 관계가 없는 두 엔티티를 LEFT JOIN하고자 하는 경우에 ON 절을 사용할 수 있다.
+
+## 2022-07-29 Fri
+### 서브 쿼리란?
+* JPA의 서브 쿼리는 일반적인 SQL에서 말하는 서브 쿼리와 다르지 않다.
+  * 예를 들어, 쿼리 내부에서 쿼리를 또 만들어낼 수 있다.
+```
+select m from Member m where m.age > (select avg(m2.age) from Member m2)
+```
+* 상술한 예제의 경우, 같은 엔티티인 Member에 대해 쿼리하지만 서브 쿼리에서 m이 아닌 m2를 대상으로 명시한다.
+  * 이를 통해 **메인 쿼리와 서브 쿼리 사이의 연관성을 끊어내며, 서브 쿼리는 이러한 방식으로 설계되어야 성능이 좋다**. 
+```
+select m from Member b where (select count(o) from Order o where m = o.member) > 0
+```
+* 반면, 상술한 쿼리는 서브 쿼리에서 메인 쿼리의 m을 사용하므로 상대적으로 성능은 뒤떨어진다.
+
+### 서브 쿼리 지원 함수
+* EXISTS 키워드는 서브 쿼리에 결과가 존재하는 경우에 참으로 판정된다.
+* ALL 키워드는 조건을 모두 만족하는 경우에 참으로 판정된다.
+* ANY, SOME 키워드는 조건을 하나라도 만족하는 경우에 참으로 판정된다.
+* IN 키워드는 서브 쿼리의 결과 중 하나라도 같은 것이 있는 경우에 참으로 판정된다.
+* 상술한 함수 키워드들은 모두 다음과 같이 키워드(서브 쿼리) 형태로 사용한다.
+```
+select m from Member m where m.team ANY (select t from Team t)
+```
+
+### JPA 서브 쿼리의 한계점
+* JPA 표준 스펙에서는 where와 having 절에서만 서브 쿼리를 사용할 수 있으나, 하이버네이트의 경우 select 절에서도 가능하다.
+* 반면, **from 절의 서브 쿼리는 현재 JPQL에서는 사용이 불가능**하다.
+  * 이러한 요구 사항은 **대부분의 경우 조인으로 풀어낼 수 있으므로 조인을 사용하되, 그 조차 불가능하다면 포기**해야 한다.
+  * 또는 좋은 접근은 아니지만 네이티브 SQL을 활용하거나, 메인 쿼리와 서브 쿼리를 각각 요청하는 방식을 고려할 수도 있다.
+
+### JPQL의 타입 표현
+* JPQL에서 사용 가능한 타입 표현은 크게 다음과 같다.
+  1. 문자형: 'Hello'와 같은 형태로 표현한다.
+  2. 숫자형: 10L, 10D, 10F와 같은 형태로 표현한다.
+  3. 불린형: TRUE, FALSE와 같은 형태로 표현한다.
+  4. 열거형: 패키지명을 포함하여 `study.MemberType.Admin`과 같은 형태로 표현한다.
+     * 이 경우, 열거형 클래스의 이름이 MemberType이 된다.
+     * 이렇듯 **쿼리에 풀 패키지 경로를 하드코딩하지 않기 위해, 일반적으로는 setParameter를 활용하여 JPQL을 작성하는 것이 권장**된다.
+  5. 엔티티 타입: TYPE(m) = Member와 같이 표현하며, 상속 관계에서 사용한다.
+* setParameter를 활용한 열거형 적용은 다음과 같은 코드로 표현할 수 있다.
+```
+em.createQuery("select m.name from Member m where m.type = :userType", Member.class)
+  .setParameter("userType", MemberType.ADMIN)
+  .getReulstList();
+```
+* 객체 지향적으로 개발하는 경우, 상속 관계를 활용하는 방식은 다음과 같은 코드로 표현할 수 있다.
+```
+em.createQuery("select i from Item i where type(i) = Book", Item.class)
+  .getResultList();
+```
+
+### SQL 문법을 따르는 JPQL 표현식의 예시
+* JPQL은 다음과 같은 키워드를 제공하며, SQL 표준과 동일한 문법을 지향한다.
+  1. EXISTS
+  2. IN
+  3. AND, OR, NOT
+  4. =, >, <, >=, <=, <>
+  5. BETWEEN, LIKE, IS NULL
