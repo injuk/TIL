@@ -159,3 +159,52 @@ select distinct t from Team t join fetch t.members
   2. 또는 페치 조인 후 애플리케이션 차원에서 Dto로 변환하는 경우
   3. 또는 JPQL을 설계하는 시점에서 new operation을 통해 Dto로 변환하여 조회하는 경우
 * **페치 조인은 실무에서 사용성도 높고, 그 중요성도 높으므로 반드시 이해하고 넘어가는 것이 중요**하다.
+
+### JPQL과 다형성 쿼리
+* 엔티티가 상속 관계를 사용하는 경우, type 키워드를 통해 조회 대상을 특정한 엔티티의 자식으로 한정지을 수 있다.
+* 예를 들어, Item 엔티티를 상속받는 Book 또는 Album 엔티티만 조회하는 경우의 JPQL은 다음과 같이 작성된다.
+```
+select i from Item i where type(i) in (Book, Album)
+```
+* 이 경우, 실제 SQL은 다음과 같이 요청된다.
+```
+select i from i where i.DTYPE in ('B', 'A')
+```
+
+### TREAT
+* TREAT 키워드는 Java의 타입 캐스팅과 유사한 개념으로, 상속 구조 상의 부모 타입을 특정한 자식 타입으로 취급하는 경우에 사용이 가능하다.
+* 예를 들어, Item을 조회하던 중 임의의 엔티티를 자식인 Book 엔티티로 취급하는 쿼리는 다음과 같다.
+```
+select i from Item i where treat(i as Book).auther = 'hong'
+```
+* 이 경우, 실제 SQL은 다음과 같이 요청된다.
+  * 이러한 **SQL 쿼리는 상속 관계를 사용하는 JPA의 전략에 따라 바뀔 수 있다**.
+  * 예를 들어, 아래의 쿼리는 단일 테이블 전략을 사용하는 경우의 쿼리에 해당한다.
+```
+select i.* from Item i where i.DTYPE = 'B' and i.auther = 'hong'
+```
+
+### JPQL 엔티티 직접 사용하기
+* JPQL의 경우, 엔티티를 직접 사용하면 SQL에서 해당 엔티티의 기본 키 값을 사용하게 된다.
+* 예를 들어, 다음과 같은 두 가지 방식의 JPQL 쿼리를 작성할 수 있다.
+```
+select count(m.id) from Member m
+select count(m) from Member m
+```
+* 첫 번째 방식은 엔티티의 아이디를 사용하는 반면, 두 번째 방식은 엔티티를 직접 사용한다.
+* 그러나 **두 쿼리 모두 실행시 실제 SQL은 다음과 같이 기본 키 값을 사용하도록 변경**된다.
+```
+select count(m.id) as cnt from Member m
+```
+* 이는 **엔티티 자체를 파라미터로 전달하거나, 엔티티의 식별자를 직접 전달하더라도 동일하며 실제 SQL은 항상 기본 키 값을 사용하도록 변경**된다.
+  * **JPA에서는 `select m from Member m where m = :member` 형태의 JPQL로 엔티티를 파라미터로 전달할 수 있다**.
+* 이렇듯 **엔티티가 JPA를 통해 데이터베이스에 전달된 경우, 쿼리 상에서는 엔티티를 구분하는 식별자인 기본 키 값을 사용**하게 된다.
+* **이는 연관 관계에 있어 외래키로 사용된 엔티티를 파라미터로 전달한 경우에도 마찬가지이며, 실제 SQL 상에서는 엔티티의 외래 키 값을 사용**하게 된다.
+```
+select m from Member m where m.team = :team
+```
+* 상술한 JPQL 쿼리 역시 실제 SQL로는 다음과 같이 매핑된다.
+```
+select m.* from Member m where m.TEAM_ID=[팀ID]
+```
+* 이러한 JPA 만의 특징은 객체와 달리 데이터베이스는 엔티티를 식별자를 통해 구분하기 때문에 두드러진다.
