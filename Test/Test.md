@@ -21,3 +21,4 @@
 * [Tdd001](https://github.com/injuk/TIL/blob/master/Test/Tdd/Tdd001.md)
 * [Tdd002](https://github.com/injuk/TIL/blob/master/Test/Tdd/Tdd002.md)
 * [Tdd003](https://github.com/injuk/TIL/blob/master/Test/Tdd/Tdd003.md)
+* [Tdd004](https://github.com/injuk/TIL/blob/master/Test/Tdd/Tdd004.md)
