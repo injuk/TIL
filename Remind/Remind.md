@@ -68,6 +68,7 @@
 
 ## Design Pattern
 1. 팩토리 패턴과 추상 팩토리 패턴의 차이는 무엇인가?
+2. 매개 변수 수집(collecting parameter) 패턴이란 무엇인가?
 
 ## Refactoring
 1. 프로파일러는 무엇이며, 어떠한 것이 자주 사용되는가?
