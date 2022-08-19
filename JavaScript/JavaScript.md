@@ -25,3 +25,7 @@
 * [Basics006](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/Basics/Basics006.md)
 * [Basics007](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/Basics/Basics007.md)
 * [Basics008](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/Basics/Basics008.md)
+
+### AllInOne
+### 2022.08.19 ~ 2022.00.00
+* [AllInOne001](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/AllInOne/AllInOne001.md)
