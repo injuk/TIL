@@ -51,3 +51,70 @@ first/first.ts:3:1 - error TS2322: Type 'string' is not assignable to type 'numb
 [~] ls first                                                                                                                                                                                    
 first.js first.ts
 ```
+
+### TS 문법
+* **TS는 JS 코드 상에서 변수, 매개 변수, 반환형 등의 대상에 타입을 명시한 것**이다.
+  * 사실 상 TS의 모든 개념은 이게 전부이다!
+```
+// 변수
+const num: number = 1;
+
+// 매개 변수와 반환형
+function add(a: number, b: number): number {
+    return a + b;
+}
+```
+* **TS의 경우, 최종 목적은 JS 코드로 변환되는 것이므로 콜론 뒤에 타이핑된 모든 타입 정보를 제거했을 때도 실행 가능한 JS 코드의 형태를 띄어야** 한다.
+  * 이는 사실 상 TS의 기본 규칙에 해당한다.
+* 또한, 원시 타입에 변하지 않는 상수를 활용하는 경우 다음과 같이 타이핑을 적용할 수도 있다.
+  * 이는 **const 키워드로 정의된 변수는 어차피 값이 변하지 않으며, 가능한 한 상세한 타입을 정의해야하는 TS의 특성으로부터 기인하는 타이핑 방식**이다.
+```
+const i_am_42: 42 = 42;
+```
+
+### any 형
+* TS에서, 타입에 any를 명시할 경우 어떠한 형태의 데이터도 받아들일 수 있는 변수가 된다.
+  * 그러나 **모든 것을 any로 적용할 경우 TS가 아닌 JS와 같은 약타입 언어로서 동작하므로, any의 사용은 가능한 한 지양하는 것이 바람직**하다.
+* **이러한 측면에서, TS는 모든 것이 any 형으로 설정된 TS 코드로부터 모든 any를 제거하는 것으로 볼 수도 있다**.
+  * 즉, TS의 주 목적 중 하나는 any 형을 없애는 것에 있다.
+
+### type alias와 interface
+* `type` 키워드를 활용하여 복잡한 타입을 다음과 같이 정의할 수 있으며, 이는 타입 별칭이라고도 지칭할 수 있다.
+```
+type Add = (x: number, y: number) => number;
+const add: Add = (a, b) => {
+    return a + b;
+}
+```
+* 또한, 타입 별칭 대신 `interfcae` 키워드를 활용하여 다음과 같이 타입을 정의할 수도 있다.
+```
+interface Multiply {
+    (x: number, y: number): number;
+}
+const multi: Multiply = (a, b) => {
+    return a * b;
+}
+```
+* 이와 같이, TS의 타이핑은 세 가지 방식이 존재한다.
+  1. 변수 또는 매개 변수, 또는 함수 자체에 타입을 직접 명시하기
+  2. 또는 타입 별칭 적용하기
+  3. 또는 인터페이스 적용하기
+
+### 객체와 배열 타이핑하기
+* 객체의 경우, 다음과 같이 객체에 해당될 프로퍼티와 타입을 동시에 명시해야 한다.
+```
+const obj: { name: string, age: number } = {
+    name: 'ingnoh', age: 14,
+};
+```
+* 반면, 배열의 경우 `[]` 키워드를 활용하여 다음과 같이 타이핑을 적용한다.
+```
+const arr: string[] = [ 'a', 'b' ];
+```
+
+### 튜플 정의하기
+* **튜플은 길이가 고정된 배열을 의미하며, 일반적으로 JS에서 사용되는 개념은 아니다**.
+  * 이 때, 튜플은 배열의 길이 역시 맞추어주어야 하며 다음과 같이 타이핑을 정의할 수 있다.
+```
+const tuple: [number, boolean, string] = [ 1, true, 'hello' ];
+```
