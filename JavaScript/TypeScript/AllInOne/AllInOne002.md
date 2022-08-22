@@ -1,4 +1,4 @@
-# Basics
+# AllInOne
 ## 2022-08-21 Sun
 ### JS로 변환했을 때 사라지는 개념들 파악하기
 * type, type alias, interface, generic, as, enum, declare 등의 개념은 온전히 TS만의 것으로, JS로 변환된 코드에서는 모두 제거된다.
