@@ -42,3 +42,35 @@ interface Man { mdn: false; }
 const man: Man = { mbn: true, mcn: true, mdn: false };
 ```
 * 이러한 **인터페이스의 특징을 활용하여 서드 파티 라이브러리의 코드에 자신이 원하는 동작을 추가하는 식으로 확장하는 응용 역시 가능**해진다.
+
+## 2022-08-23 Tue
+### 큰 타입과 작은 타입 구분하기
+* **타입은 일종의 집합으로 볼 수 있으며, 이에 미루어 보았을 때 `type First = string | number`가 `type Second = string` 보다 큰 타입**이다.
+  * **유사한 논리로 any 타입은 전체 집합이며, never 타입은 공집합으로 이해**할 수 있다.
+* 이러한 **집합론적 관점에서, 작은 타입은 항상 큰 타입에 대입할 수 있지만 그 역은 불가능**하다.
+
+### 더 작은 객체 타입
+* 언뜻 다음과 같은 예시에서, 더 많은 속성을 갖는 Third가 가장 큰 타입처럼 보일 수 있다.
+  * 그러나 **TS에서, 객체 타입 간의 크기 비교는 항상 더 상세한 정보를 갖는 객체가 작은 타입이 된다는 점을 기억**해야 한다.
+  * 따라서, **가장 상세한 정보를 갖는 타입 별칭인 Third가 가장 작은 타입**이 된다.
+```
+type First = { name: string; };
+type Second = { age: number; };
+type Third = { name: string; age: number; };
+```
+* **언제나 좁은 타입은 더 구체적인 타입에 해당하며, 더 큰 타입에 대입이 가능**하다.
+
+### 잉여 속성 검사
+* 다음과 같은 코드에서, 더 작은 타입을 더 큰 타입에 대입하지만 대입에 실패하는 것을 확인할 수 있다.
+  * 이는 객체 리터럴을 그대로 사용하는 경우에 잉여 속성 검사가 수행되기 때문으로, 이를 우회하기 위해서는 객체 리터럴을 별도의 변수로 우선 초기화할 수 있다.
+  * 이는 **타입의 넓고 좁음을 검사하는 데에 더해 잉여 속성을 추가로 검사하기 때문에 발생하는 에러**로 볼 수 있다.
+```
+type First = { name: string; };
+type Second = { age: number; };
+type Third = First & Second; // Third 타입은 { name: 'ingnoh', age: 3, isMale: true } 보다 분명히 큰 타입에 해당한다. 
+
+const enriched = { name: 'ingnoh', age: 3, isMale: true };
+const third: Third = enriched;
+// 아래의 코드와 같이 객체 리터럴을 직접 초기화하는 경우, 잉여 속성 검사의 대상이 되어 사용이 불가능해진다.
+// const third: Third = { name: 'ingnoh', age: 3, isMale: true };
+```
