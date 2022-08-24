@@ -101,3 +101,66 @@ function customTypeGuard(param: Ab | Cd | Ef) {
 * 기본적으로는 typeof, instanceof, in, Array.isArray와 같은 간단한 방식을 사용하되, 이러한 방식만으로는 부족한 경우에 커스텀 타입 가드를 정의한다.
   * 반면, `is` 연산자를 활용하지 않으면 타입 추론이 불가능한 경우 역시 발생할 수 있다.
   * 예를 들어, **TS가 타입을 적절히 추론하지 못하는 경우 `is` 연산자를 활용하는 커스텀 타입 가드를 작성하여 정확한 타입을 추론하도록 지원**할 수 있다.
+
+### readonly 키워드 사용하기
+* **readonly 키워드는 다음과 같이 인터페이스에 할당할 수 있으며, 해당 키워드가 명시된 속성은 쓰기 작업이 불가능한 읽기 전용**이 된다.
+  * 이는 읽기 전용 속성 개념을 도입하여 휴먼 에러에 의해 값이 바뀌는 것을 방지한다.
+```
+interface ValueObject {
+    readonly prop: 'immutable!';
+    name: string;
+}
+
+const valueObj: ValueObject = {
+    prop: 'immutable!',
+    name: 'hello',
+};
+
+valueObj.name = 'world';
+// valueObj.prop = 'mutable!' // readonly로 설정된 속성은 그 값을 수정할 수 없다.
+```
+
+### indexed signature란?
+* 예를 들어, 다음과 같이 **객체가 불특정 다수의 속성을 받아들일 수 있도록 하고 싶은 경우**가 있다.
+  * 이는 즉 객체에 명확한 형태가 없으며, 애플리케이션 로직에 따라 속성이 충분히 많아질 수 있는 경우를 말한다.
+```
+interface BigObject {
+    propA: string;
+    propB: string;
+    propC: string;
+    propD: string;
+    propE: string;
+    propF: string;
+    // ...생략
+}
+```
+* **인덱스드 시그니쳐는 정확히 이러한 상황에 사용할 수 있으며, `[key: string]`과 같은 형태로 작성**한다.
+  * 예를 들어 `[key: string]: string`은 객체에 어떠한 문자열 키를 받아들여도 무방하지만, 이에 대응되는 값 역시 문자열이어야 함을 의미한다. 
+```
+interface BigObject {
+    [key: string]: string;
+}
+const bigObj: BigObject = {
+    propA: 'value',
+    propB: 'value',
+    propC: 'value',
+    propD: 'value',
+    // ...생략
+};
+```
+
+### mapped type이란?
+* **객체에 사용 가능한 키를 몇 종류로 명확히 한정짓고자하는 경우, 다음과 같이 타입 별칭과 맵드 타입을 활용**할 수 있다. 
+  * 그러나 **이 경우, 객체는 맵드 타입에 명시된 모든 키를 반드시 포함**해야 한다.
+```
+type Animals = 'dog' | 'cat' | 'bird';
+const animals: { [ key in Animals ]: string } = {
+    dog: 'dog', // Animals에 명시된 dog, cat, bird를 모두 키로 작성해야 한다.
+    cat: 'cat',
+    bird: 'bird',
+};
+console.log(animals);
+```
+* 이 때, **인터페이스에서는 `|`연산자를 사용할 수 없으므로 상술한 코드와 같은 유형의 맵드 타입을 정의하는 경우에는 반드시 타입 별칭을 사용**해야 한다.
+  * 비단 **맵드 타입 뿐만 아니라, 파이프 연산자 또는 앰퍼샌드 연산자를 활용해야하는 경우에는 반드시 타입 별칭을 사용**해야 한다.
+* **TS에서 가장 중요한 것은 가능한 한 정확한 타이핑을 적용하는 것이므로, TS는 이렇듯 상세한 타이핑 기법을 여럿 제공**한다.
