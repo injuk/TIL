@@ -164,3 +164,153 @@ console.log(animals);
 * 이 때, **인터페이스에서는 `|`연산자를 사용할 수 없으므로 상술한 코드와 같은 유형의 맵드 타입을 정의하는 경우에는 반드시 타입 별칭을 사용**해야 한다.
   * 비단 **맵드 타입 뿐만 아니라, 파이프 연산자 또는 앰퍼샌드 연산자를 활용해야하는 경우에는 반드시 타입 별칭을 사용**해야 한다.
 * **TS에서 가장 중요한 것은 가능한 한 정확한 타이핑을 적용하는 것이므로, TS는 이렇듯 상세한 타이핑 기법을 여럿 제공**한다.
+
+## 2022-08-25 Thu
+### 클래스 활용하기 
+* 기본적으로 TS에서의 클래스는 다음과 같은 형태로 작성할 수 있다.
+  * 생성자에는 기본 값을 정의할 수 있으며, 이 경우 생성자에 기본 값을 전달하지 않아도 무방하다.
+```
+class Cat {
+    name: string;
+    age: number;
+
+    constructor(name: string, age: number = 3) {
+        this.name = name;
+        this.age = age;
+    }
+}
+const cat = new Cat('cat!');
+console.log(cat);
+```
+
+### 인스턴스 타입과 클래스 타입
+* **클래스 역시 타입 별칭으로 사용될 수 있으나 이는 일반적으로 해당 클래스의 인스턴스**를 가리킨다.
+  * **반면, `typeof` 키워드와 클래스의 이름을 혼용할 경우 이는 해당 클래스 자체**를 가리킨다.
+```
+class Template {}
+// Template 자체는 해당 클래스의 인스턴스를 가리키는 타입으로 사용된다.
+const t: Template = new Template();
+// typeof Template은 해당 클래스 자체를 가라키는 타입으로 사용된다.
+const typeofT: typeof Template = Template;
+```
+
+### 클래스의 private 제어자
+* JS의 경우, `#name`과 같이 #을 붙여 해당 속성이 private함을 나타낸다.
+  * 반면, **TS의 경우 `private` 키워드 자체를 사용하여 해당 속성이 private함을 나타낸다**.
+```
+class VeryPrivate {
+    #jsPrivate = 'jsPrivate';
+    private tsPrivate = 'tsPrivate';
+}
+```
+* 이 때, **두 방식 중에서는 TS 방식의 접근 제어 방식이 권장**된다.
+  * 이는 **TS가 private 외에도 protected 등의 접근 제어자를 제공하지만, JS의 `#name`과 같은 private 변수는 이를 구분할 수 없기 때문**이다.
+  * 당연하게도 TS의 private 변수는 JS에서는 public하게 노출되며, 별도로 `#` 키워드를 할당하지는 않는다.
+
+### TS에서의 접근 제어자
+* **TS 역시 다른 객체지향 언어들과 마찬가지로 private, protected, public 접근 제어자를 제공하며, 기본으로 적용되는 것은 public에 해당**한다.
+  * 때문에 public한 필드는 굳이 public 키워드를 명시할 필요가 없다.
+  * **이는 어디까지나 TS의 기능이지 JS의 기능이 아니므로, 한 번 JS 코드로 변환된 후에는 모두 public하게 접근이 가능**해진다.
+* public한 필드는 외부에서 자유로이 접근이 가능한 반면, private한 변수는 외부로부터의 접근이 불가능하여 클래스 내부에서만 사용이 가능하다.
+  * 반면, protected 제어자는 클래스 내부와 해당 클래스를 상속 받은 자식 클래스에서만 접근이 가능하다.
+* 또한, 각각의 접근 제어자는 `readonly` 키워드와 조합하여 읽기 전용 필드로 사용할 수도 있다.
+```
+class IHaveProtectedProps {
+    // 부모 클래스에서만 변수를 정의한다.
+    protected name = 'ingnoh';
+    // 접근 제어자와 readonly 키워드를 조합하여 사용할 수도 있다.
+    private readonly age = 3;
+    public readonly skills = [ 'skillA', 'skillB' ];
+}
+class IAmChildClass extends IHaveProtectedProps {
+    constructor() {
+        super();
+        // 아무런 변수를 정의하지 않았으나, 부모의 protected 필드에는 접근이 가능하다.
+        console.log(this.name);
+        
+        // 부모의 private 변수에는 접근할 수 없다.
+        // console.log(this.age);
+        
+        // 부모의 public 변수에는 접근할 수 있다.
+        console.log(this.skills);
+    }
+}
+const child: IAmChildClass = new IAmChildClass();
+```
+
+### 인터페이스의 구현
+* **TS의 경우, 인터페이스 개념이 존재하지 않는 JS와 달리 `implements` 키워드를 활용하여 클래스가 인터페이스를 구현**하도록 할 수 있다.
+  * 이 경우, 구현 대상 인터페이스가 갖는 모든 속성을 해당 클래스가 반드시 갖도록 코드를 작성해야 한다.
+```
+interface Dev {
+    name: string;
+    skills: string[];
+}
+class Developer implements Dev {
+    name: string;
+    skills: string[];
+
+    constructor(name: string, skills: string[] = []) {
+        this.name = name;
+        this.skills = skills;
+    }
+}
+const junior: Developer = new Developer('ingnoh', [ 'JS', 'TS' ]);
+console.log(junior);
+```
+* JS의 개념이 아닌 인터페이스는 코드 변환시 제거되지만, 그럼에도 개발 단게에서 클래스가 인터페이스를 적절히 준수하는지 컴파일 시점에 확인할 수 있다.
+  * 즉, **클래스의 형태를 인터페이스로 통제할 수 있으므로 보다 객체지향적인 개발이 가능**해진다.
+
+### 실무에서의 인터페이스
+* 인터페이스로 가능한 것은 사실 인터페이스 없이 클래스 내부적으로 모두 해결할 수 있으므로, 적어도 TS의 세계에서는 굳이 인터페이스를 사용하지 않아도 무방하다.
+* 그러나 **OOP 개발자로서 객체지향의 원칙 중 추상을 강조하는 의존성 역전 원칙을 준수하고자 하는 경우, 인터페이스를 적극적으로 활용**할 수 있다.
+  * 다만 **JS에서는 인터페이스가 제거되는 반면, 클래스는 남는다는 점에서 큰 차이점이 존재**한다.
+* **클래스는 순수한 JS 코드 상에서도 적절히 활용이 가능하므로, JS에 반드시 코드가 남겨져야 하는 경우에는 클래스를 사용하는 것이 바람직**하다.
+
+### 추상 클래스 정의하기
+* **TS는 다른 객체지향 언어와 유사한 추상 클래스 개념을 지원하며, 자식 클래스가 이를 상속하여 추상 메소드를 구현하는 식으로 사용**할 수 있다.
+  * 추상 클래스는 인스턴스화할 수 없으며, 반드시 추상 클래스를 상속받는 자식 클래스가 구체 클래스로 구현된 후에야 사용이 가능하다.
+    * 물론 추상 메소드 외에도 이미 구현된 구체 메소드를 가질 수도 있다.
+  * 이 때, 추상 메소드는 `private` 접근 제어자를 제외한 모든 접근 제어자를 사용할 수 있다.
+  * 또한, **추상 메소드를 구현하는 경우 추상 메소드보다 더 허용적인 접근 제어자를 적용할 수 있다**.
+* **추상 클래스 역시 다른 클래스와 마찬가지로 추상 클래스를 상속받아 기능을 확장할 수 있다**.
+```
+abstract class IAmAbstract {
+    // private 접근 제어자는 사용할 수 없다.
+    // private abstract hello(): void;
+    
+    // protected 또는 public 접근 제어자를 활용할 수 있다.
+    protected abstract hello(): void;
+    // public abstract hello(): void;
+}
+// 추상 클래스는 인스턴스화할 수 없다.
+// const abstract: IAmAbstract = new IAmAbstract();
+
+// 추상 클래스는 추상 클래스를 상속받아 기능을 확장할 수 있다.
+abstract class MeToAbstract extends IAmAbstract {
+    public abstract bye(): void;
+    
+    // 추상 클래스는 구체 메소드를 가질 수 있다.
+    protected info() {
+        console.log('info!');
+    }
+}
+
+class IAmConcrete extends MeToAbstract {
+    // 추상 클래스에 적용된 protected 접근 제어자보다 허용적인 public 접근 제어자는 사용할 수 있다.
+    public hello(): void {
+        console.log('hello!');
+    }
+
+    public bye(): void {
+        this.info();
+        console.log('bye!');
+    }
+}
+const concrete: IAmConcrete = new IAmConcrete();
+concrete.hello();
+concrete.bye();
+```
+
+### 인터페이스, 추상 클래스, 접근 제어자
+* **TS는 객체지향 언어가 제공하는 인터페이스와 추상 클래스, 그리고 접근 제어자 기능을 제공하므로 순수 JS의 경우보다 OOP를 쉽게 진행**할 수 있다.
