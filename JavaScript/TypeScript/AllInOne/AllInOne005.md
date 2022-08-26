@@ -111,3 +111,41 @@ const merge = <T = unknown>(x: T, y: T): { x: T, y: T } => ({ x, y });
 console.log(merge(1, 2));
 ```
 * 이 때, **상술한 제네릭 기본 값 또는 unknown 제한의 경우 JSX 문법을 사용하는 React 기반 개발자들을 위한 편의 기능에 해당**한다.
+
+### 인터페이스, 타입 별칭, 클래스의 제네릭
+* 인터페이스와 타입 별칭에도 제네릭을 적용할 수 있으며, 다음과 같은 형태로 작성한다.
+```
+interface IGeneric<T> {
+    some: T;
+}
+const numSomething: IGeneric<number> = { some: 3 };
+const strSomething: IGeneric<string> = { some: '3' };
+
+type GenericType<T> = { some: T };
+const genericNumType: GenericType<number> = { some: 3 };
+const genericStrType: GenericType<string> = { some: '3' };
+```
+* 클래스 역시 마찬가지이며, 인터페이스 또는 타입 별칭과 마찬가지로 모두 이름 뒤에 제네릭 타입을 작성한다.
+  * 이 때, **다른 객체지향 언어와 마찬가지로 new 연산자에서 사용하는 인스턴스 생성자에는 굳이 제네릭 타입을 명시하지 않아도 무방**하다.
+```
+class GenericClass<T> {
+    some: T;
+
+    constructor(some: T) {
+        this.some = some;
+    }
+}
+const numInstance: GenericClass<number> = new GenericClass(3);
+console.log(numInstance);
+// 아래와 같이 new 연산자에서 사용하는 인스턴스 생성자에 제네릭 타입을 명시할 수도 있다.
+const strInstance: GenericClass<string> = new GenericClass<string>('3');
+console.log(strInstance);
+```
+* 이렇듯 **제네릭은 코드 작성 시점에는 타입을 알 수 없으나, 코드를 실행하는 시점에서는 타입이 무엇인지 알 수 있다는 점을 활용**한다.
+  * **TS는 제네릭 타입이 적용된 대상 중 하나라도 타입이 추론되는 시점에 모든 제네릭 타입을 추론된 타입으로 대체하는 식으로 동작**한다.
+  * 또한, 제네릭 타입 자리에 `<number>`와 같이 개발자가 직접 타입을 명시하는 것은 상술한 타입 추론 과정 없이 모든 제네릭 타입을 대체한다.
+  * 이렇듯 직접 제네릭 타입 변수를 타이핑하는 상황은 TS 자체가 타입을 정확히 추론해내지 못할 때 발생할 수 있다.
+
+### 혼동하기 쉬운 제네릭과 타입 변환
+* `something<number>`와 같은 형태로 작성하는 것은 제네릭 타입 변수를 타이핑하는 것에 해당한다.
+* 반면, `<number>something`은 `as` 키워드를 사용하는 것과 유사한 강제 변환에 해당한다.
