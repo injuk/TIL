@@ -33,3 +33,4 @@
 * [AllInOne003](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/AllInOne/AllInOne003.md)
 * [AllInOne004](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/AllInOne/AllInOne004.md)
 * [AllInOne005](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/AllInOne/AllInOne005.md)
+* [AllInOne006](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/AllInOne/AllInOne006.md)
