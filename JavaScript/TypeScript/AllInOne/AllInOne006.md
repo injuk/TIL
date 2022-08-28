@@ -102,3 +102,57 @@ class Overloaded {
 
 console.log(new Overloaded().plus(1, 2)); // 3
 ```
+
+### TS 타이핑 팁
+* 처음부터 완벽한 타입을 정의하려는 것은 다음과 같은 문제가 있다.
+  1. 모든 것을 예상하고 진행하려 하게 되므로, 개발 초기에 시간이 너무 많이 든다.
+  2. **단순히 어렵다**.
+* 때문에 **초기에는 우선 필요한 만큼의 타입만 지정해두고, 추후에 수정 또는 고도화할 필요가 있는 경우에 그에 맞추어 타입을 추가하는 것이 바람직**하다.
+
+### 불필요한 형변환 연산자 as 제거하기
+* 예를 들어 다음과 같이 사용자 정의 예외 인터페이스를 정의하여 사용한다고 가정하자.
+  * 이 경우, catch 블록 내에서 e는 항상 unknown 타입이므로 IError 인터페이스의 속성에 접근하고자 하는 경우 항상 `(e as IError)`를 명시해야 한다.
+```
+interface IError {
+    name: string;
+    message: string;
+    stack?: string;
+    response?: {
+        data: any;
+    };
+}
+
+(async () => {
+    try {
+        // do something!
+    } catch (e: unknown) {
+        console.error((e as IError).response?.data);
+        (e as IError).response?.data;
+        // 형변환하지 않는 경우, 이렇게 사용할 수는 없다.
+        // e.response?.data;
+    }
+})();
+```
+* 이 경우 **코드 전체가 `(e as IError)`로 도배될 가능성이 있으므로, 이를 미연에 방지하기 위해 적절한 변수를 추가하여 리팩토링**을 적용할 수 있다.
+  * 이는 `const myError = e as IError;` 와 같이 작성하며, **이러한 방식을 적용하지 않는 경우의 형변환은 언제나 일회성으로 그칠 위험**이 있다.
+```
+(async () => {
+    try {
+        // do something!
+    } catch (e: unknown) {
+        const myError = e as IError;
+        console.error(myError.response?.data);
+        const data = myError.response?.data;
+        console.log(data);
+    }
+})();
+```
+
+### as 키워드는 지양하기
+* **TS에서 any 타입을 지양하는 만큼 `as` 키워드를 활용한 강제적인 형변환 역시 지양**해야 한다. 
+* 반면, **타입이 unknown으로 추론되는 경우 이를 바로잡기 위한 `as` 키워드의 사용은 바람직한 사용 예시에 해당**한다.
+  * 사실상, `as` 키워드는 unknown 타입에 대해 어쩔 수 없이 사용해야 한다고 외워도 무방하다.
+  * 이는 `any`를 사용해도 되는 상황이 오직 메소드를 오버로딩하는 경우에만 한정되는 것과 일맥상통한다.
+* any가 TS를 사용하는 이유를 무색하게 하므로 지양해야 한다면, `as` 키워드는 형변환 과정에서 휴먼 에러가 발생할 가능성이 높기 때문에 지양해야 한다.
+  * 이러한 측면에서, **상술한 예시 역시 바람직한 코드로 볼 수 없으며 대신 클래스와 `instanceof` 타입 가드를 활용하도록 수정할 수 있다**.
+  * 이렇듯 **실무에서는 되도록 `as` 키워드를 활용한 형변환 대신 Error 클래스를 상속하는 클래스와 타입 가드를 적용하는 것이 바람직**하다.
