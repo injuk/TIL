@@ -80,3 +80,40 @@ type MyPick<T, K extends keyof T> = {
 };
 ```
 * 이렇듯 **제네릭 타입을 정의하는 경우, 반드시 `K extends keyof T`와 같은 제네릭 제한 조건에 우선 집중하는 것이 바람직**하다.
+
+### Exclude 타입이란?
+* **Exclude 타입을 적용하는 경우, 제네릭의 첫 번째 타입 변수의 속성으로부터 두 번째 타입 변수의 속성을 제거**한다.
+  * 아래의 예시에서, Thing 타입은 'some'이 제거되어 'thing'만을 갖게 된다.
+```
+type Something = 'some' | 'thing';
+type Thing = Exclude<Something, 'some'>;
+const thing: Thing = 'thing';
+```
+
+### 복합 유틸리티 타입
+* 유틸리티 타입은 조합되어 새로운 유틸리티 타입을 구현할 수 있으며, 예를 들어 Omit은 다음과 같이 Pick과 Exclude를 조합하여 구현된다. 
+  * 이 때, **두 번째 제네릭 변수로 아무런 값이나 전달되는 것을 방지하기 위해 `K extends keyof any`와 같이 키만을 받아들일 수 있도록 제한**한다.
+```
+type MyOmit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>
+```
+* **`K extends keyof any`와 같은 문장은 `string | number | symbol`로 추론되며, 이는 JS 상에서 객체의 키로 사용될 수 있는 모든 타입이다**.
+
+### 유틸리티 타입을 활용하여 학습하기
+* TS 상에 사전 정의된 여러 유틸리티 타입들은 제네릭과 복합 유틸리티 타입을 적절히 활용하므로, 해당 코드를 분석하는 것만으로도 큰 도움을 받을 수 있다.
+  * 특히, **`lib.es5.d.ts`를 분석하는 과정에서 TS 상에서 활용할 수 있는 여러 제네릭의 활용법을 익힐 수 있다**.
+
+### Exclude, Extract와 삼항연산자
+* 두 유틸리티 타입은 다음과 같이 삼항연산자를 통해 구현되며, 반환 값이 서로 반대임을 확인할 수 있다.
+  * 이 때, 두 유틸리티 타입은 모두 임의의 키 값을 선택하기 위해 사용된다.
+```
+type Exclude<T, U> = T extends U ? never : T;
+type Extract<T, U> = T extends U ? T : never;
+
+type MyKeys = 'name' | 'age' | 'type';
+type Excluded = Exclude<MyKeys, 'name'>; // Excluded는 'age' | 'type' 으로 추론된다.
+type Extracted = Extract<MyKeys, 'name'>; // Extracted는 'name'으로 추론된다.
+```
+* 상술한 두 유틸리티 타입은 우선 MyKeys에 정의된 name, age, type을 각각 체크한다.
+  * 이 때, 각각의 name, age, type이 두 번째 제네릭 타입으로 전달된 name을 확장하는지 확인한다.
+  * **결과는 삼항연산자로 체크하되, 결과에 따라 해당 값을 남기는 경우 제네릭 타입 변수 T를 명시하고 버리는 경우에는 never를 명시**한다.
+* 이렇듯 **TS에서는 새로운 타입을 정의할 때 타입 정의문에 삼항연산자를 사용할 수 있다**.
