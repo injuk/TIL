@@ -62,6 +62,8 @@
 1. type과 interface의 차이는 무엇인가?
 2. any와 unknown의 차이는 무엇인가?
 3. 객체 리터럴 검사, 또는 잉여 속성 검사란 무엇인가?
+4. type과 interface의 위치는 신경 쓰지 않아도 무방한가?
+5. mapped type이란 무엇인가?
 
 ## Architecture
 1. 설계는 왜 필요하고, 무엇을 목적으로 해야하는가?

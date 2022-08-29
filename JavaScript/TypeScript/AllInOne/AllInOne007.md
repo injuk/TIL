@@ -90,7 +90,7 @@ type Thing = Exclude<Something, 'some'>;
 const thing: Thing = 'thing';
 ```
 
-### 복합 유틸리티 타입
+### 복합 유틸리티 타입이란?
 * 유틸리티 타입은 조합되어 새로운 유틸리티 타입을 구현할 수 있으며, 예를 들어 Omit은 다음과 같이 Pick과 Exclude를 조합하여 구현된다. 
   * 이 때, **두 번째 제네릭 변수로 아무런 값이나 전달되는 것을 방지하기 위해 `K extends keyof any`와 같이 키만을 받아들일 수 있도록 제한**한다.
 ```
@@ -117,3 +117,118 @@ type Extracted = Extract<MyKeys, 'name'>; // Extracted는 'name'으로 추론된
   * 이 때, 각각의 name, age, type이 두 번째 제네릭 타입으로 전달된 name을 확장하는지 확인한다.
   * **결과는 삼항연산자로 체크하되, 결과에 따라 해당 값을 남기는 경우 제네릭 타입 변수 T를 명시하고 버리는 경우에는 never를 명시**한다.
 * 이렇듯 **TS에서는 새로운 타입을 정의할 때 타입 정의문에 삼항연산자를 사용할 수 있다**.
+
+## 2022-08-30 Tue
+### Required 타입이란?
+* 임의의 인터페이스가 모든 타입을 옵셔널하게 갖는 경우, 때때로 반드시 모든 타입을 전달받아야 하는 경우가 있을 수 있다.
+  * 예를 들어, **모든 타입을 옵셔널로 갖는 인터페이스로부터 옵셔널 연산자를 제거하되 새로운 타입을 정의하고 싶지는 않은 경우에 활용**할 수 있다.
+  * Required 타입은 정확히 이 경우에 사용하며, 이를 위해 다음과 같은 코드를 작성할 수 있다.
+```
+const requiredAnimal: Required<OptionalAnimal> = { name: 'hello', age: 3, type: 'bird' };
+```
+
+### Required 타입 직접 정의하기
+* Required 타입을 직접 구현하는 경우, 앞서 사용하지 않은 `-?` 연산자가 다음과 같이 적용된다.
+```
+// -? 연산자가 적용되었다.
+type MyRequired<T> = {
+    [key in keyof T]-?: T[key];
+};
+
+const requiredAnimal: MyRequired<OptionalAnimal> = { name: 'hello', age: 3, type: 'bird' };
+```
+* **`-?` 연산자는 모든 옵셔널을 제거하기 위해 사용**하며, 이는 모든 속성을 필수로 변경하는 Required의 용도에 맞는다.
+  * 반면, 옵셔널을 추가하는 `+?` 연산자 역시 사용이 가능하지만 이는 일반적인 `?` 연산자와 같아 사용되지 않는다.
+  * **`[key in keyof T]`는 옵셔널 적용 여부까지 그대로 가져오므로 `-?` 연산자를 사용하지 않는 경우에는 옵셔널 속성을 필수값으로 변경할 수 없다**.
+
+### Readonly 타입이란?
+* **Readonly는 임의의 인터페이스에 할당된 모든 속성에 대해 readonly를 적용하여 수정을 방지하고 싶은 경우에 사용**할 수 있다.
+```
+const mutable: Animal = { type: 'bird', name: 'bird!', age: 3 };
+mutable.name = 'bird?';
+
+const immutable: Readonly<Animal> = { type: 'bird', name: 'bird!', age: 3 };
+// 모든 속성에 대해 readonly가 적용되므로 수정할 수 없어진다.
+// immutable.name = 'bird?'; 
+```
+* 이 때, Readonly 타입은 다음과 같이 간단하게 정의할 수 있다.
+```
+type MyReadOnly<T> = {
+    readonly [key in keyof T]: T[key];
+}
+
+const immutable: MyReadOnly<Animal> = { type: 'bird', name: 'bird!', age: 3 };
+// 모든 속성에 대해 readonly가 적용되므로 수정할 수 없어진다.
+// immutable.name = 'bird?';
+```
+* 반면, **오히려 readonly 속성을 제거하는 새로운 타입으로서 취급하고자 하는 경우에는 역시 `-readonly`를 명시**할 수 있다.
+```
+interface ImmutableAnimal {
+    readonly type?: string;
+    readonly name?: string;
+    readonly age?: number;
+}
+const immutableAnimal: ImmutableAnimal = { type: 'bird', name: 'bird!', age: 3 };
+// readonly 속성은 수정할 수 없다.
+// immutableAnimal.name = 'immutable';
+
+type MyMutableAnimal<T> = {
+    -readonly [key in keyof T]: T[key];
+};
+const mutableAnimal: MyMutableAnimal<ImmutableAnimal> = { type: 'bird', name: 'bird!', age: 3 };
+// 모든 readonly를 제거하였으므로 수정이 가능하다.
+mutableAnimal.name = 'mutable!';
+```
+* 이렇듯 **`-`와 같은 modifier는 이미 존재하는 readonly 또는 옵셔널을 제거하기 위해 유용하게 사용**할 수 있다.
+
+### Record 타입이란?
+* 일반적으로, 무엇이든 받아들일 수 있는 객체 타입은 다음과 같이 정의된다.
+```
+interface Hello {
+    [key: string]: number;
+}
+const hello: Hello = { a: 1, b: 2, c: 3, d: 4 };
+```
+* 반면, **이는 Record 유틸리티 타입을 통해 완벽히 같은 기능을 구현**할 수 있다.
+```
+const recordedHello: Record<string, number> = { a: 1, b: 2, c: 3, d: 4 };
+```
+
+### Record 타입 직접 정의하기
+* Record 타입은 다음과 같은 방식으로 정의할 수 있다.
+  * **이 경우에도 첫 번째 제네릭 타입 변수에는 객체의 키로 사용될 수 있는 값만이 포함되어야 하므로 `K extends keyof any`를 명시**한다.
+```
+type MyRecord<K extends keyof any, V> = {
+    [key in K]: V;
+};
+
+const recordedHello: MyRecord<string, number> = { a: 1, b: 2, c: 3, d: 4 };
+```
+
+### NonNullable 타입이란?
+* `string | null | undefined | number`와 같이 **null과 undefined를 포함하는 유니온 타입은 NonNullable 타입을 통해 이를 제거**할 수 있다.
+```
+type Nullable = string | null | undefined | number;
+// Nullable 타입은 null과 undefined를 포함하는 유니온 타입이므로, 이를 할당할 수 있다.
+const iAmNull: Nullable = null;
+const iAmUndefined: Nullable = undefined;
+
+type NotNull = NonNullable<Nullable>;
+// 반면, NonNullable이 명시된 타입은 null과 undefined 타입을 할당할 수 없게 된다.
+// const iAmNotNull: NotNull = null;
+// const iAmNotUndefined: NotNull = undefined;
+const iAmNumber: NotNull = 42;
+```
+
+### NonNullable 타입 직접 정의하기
+* **NonNullable 타입은 앞선 Extract 또는 Exclude 타입과 같이 삼항연산자를 활용하여 다음과 같이 구현**할 수 있다.
+```
+type MyNonNullable<T> = T extends null | undefined ? never : T;
+
+type MyNotNull = MyNonNullable<Nullable>;
+const iAmNotNull2: MyNotNull = null;
+const iAmNotUndefined2: MyNotNull = undefined;
+const iAmNumber2: MyNotNull = 42;
+```
+* 이렇듯 **유틸리티 타입에는 오로지 키에만 적용되는 타입들이 있는 반면, 객체 자체에만 적용되는 타입들도 존재하므로 이를 구분할 수 있어야 한다**.
+  * 예를 들어, **상술한 NonNullable과 Extract 및 Exclude는 키에만 적용되는 유틸리티 타입에 해당**한다.
