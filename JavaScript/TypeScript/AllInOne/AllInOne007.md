@@ -232,3 +232,56 @@ const iAmNumber2: MyNotNull = 42;
 ```
 * 이렇듯 **유틸리티 타입에는 오로지 키에만 적용되는 타입들이 있는 반면, 객체 자체에만 적용되는 타입들도 존재하므로 이를 구분할 수 있어야 한다**.
   * 예를 들어, **상술한 NonNullable과 Extract 및 Exclude는 키에만 적용되는 유틸리티 타입에 해당**한다.
+
+### Parameters 타입이란?
+* **해당 타입은 함수 내부에서 사용되며, 함수에 전달된 매개 변수들의 타입을 튜플로 가져오고 싶을 때 사용할 수 있다**.
+  * 이 때, Parameters의 제네릭 타입 변수로는 함수의 타입을 전달받아야 하므로 반드시 `<typeof 함수이름>`과 같은 형태로 작성한다.
+  * **반환받은 튜플은 인덱스를 갖고 있으므로, 서로 다른 타입 간에서는 인덱스를 활용한 타입 접근 역시 가능**하다.
+```
+function complicated(paramA: string, paramB: number, paramC: boolean) {}
+type Params = Parameters<typeof complicated>; // [string, number, boolean]
+// 타입으로 구성된 튜플의 인덱스를 통해 임의의 타입에 접근할 수 있다. 
+type StringParam = Params[0]; // string
+```
+
+### Parameters 타입 직접 정의하기
+* Parameters 타입은 제네릭 타입 변수에 함수만을 전달받을 수 있으므로, 다음과 같이 `(...args: any) => any`를 사용한다.
+  * 이 때, **함수의 매개 변수 목록에 접근하기 위해서는 새로운 키워드인 `infer`가 사용**된다.
+```
+type MyParameters<T extends (...args: any) => any> = T extends (...args: infer P) => any ? P : never;
+```
+* 상술한 코드를 부분 별로 분석한 결과는 다음과 같다.
+  1. `<T extends (...args: any) => any>`: 제네릭 타입 변수에 전달될 수 있는 타입을 함수로 제한한다.
+  2. `T extends (...args: infer P)`: **함수에 전달된 매개 변수 목록을 순서대로 순회하며 각각의 타입을 추론**한다.
+  3. `(...args: infer P) => any ? P : never`: **추론에 성공한 경우에는 해당 타입을 그대로 사용하고, 추론에 실패한 경우에는 결과를 버린다**.
+
+### infer 키워드와 ReturnType 유틸리티 타입
+* **infer 키워드는 오로지 extends 문장에서만 사용이 가능하며, TS에 의해 알아서 추론되도록 유도하는 키워드**이다.
+  * 상술한 코드의 경우, `T extends (...args: infer A) => any`는 각각 추론 조건이 참인 경우에 추론된 타입 P를 반환하도록 한다. 
+* 앞선 MyParameters의 예제와 infer 키워드를 적절히 조합하는 경우, 함수의 반환 타입만을 가져오는 유틸리티 타입을 직접 정의할 수도 있다.
+  * **이 경우, 함수의 반환형은 any가 아닌 추론된 타입 `infer P`가 되어야 한다**.
+  * **실제로도 이러한 역할을 수행하는 `ReturnType`유틸리티 타입이 존재**한다.
+```
+// 아래의 타입은 실제 ReturnType 유틸리티 타입의 구현 방식과 유사하다.
+type MyReturns<T extends (...args: any) => any> = T extends (...args: any) => infer R ? R : never;
+
+function returnsComplicated(): { a: string, b: number, c: boolean } {
+    return { a: 'a', b: 1, c: false };
+}
+type Returns = MyReturns<typeof returnsComplicated>;
+const returns: Returns = { a: 'string', b: 42, c: true };
+```
+* 이렇듯 **TS에서는 적절한 유틸리티 타입을 활용하여 임의의 함수로부터 매개 변수 목록의 타입, 또는 반환형 타입을 손쉽게 가져올 수 있다**.
+  * 따라서 **용도에 맞는 유틸리티 타입을 익히는 것은 매우 중요하며, 이는 불필요한 타입 하드 코딩을 크게 줄여주는 결과를 낳는다**.
+
+### ConstructorParameters 타입
+* ConstructorParameters 타입은 생성자의 매개 변수 타입 목록을 튜플로 반환하며, 다음과 같이 구현된다.
+```
+type ConstructorParameters<T extends abstract new (...args: any) => any> = T extends abstract new (...args: infer P) => any ? P : never;
+```
+* 이 때, **`new (...args: any) => any`는 그 자체로 제네릭 타입 변수에 전달될 수 있는 것을 클래스 생성자로 제한**한다.
+  * 또한, **클래스 생성자 타입은 `ConstructorParameters<typeof MyClass>`와 같이 typeof 키워드를 활용하여 전달**할 수 있다.
+
+### 유틸리티 타입의 결론
+* **유틸리티 타입을 통해 TS 개발의 생산성을 높일 수 있으며, 각각의 타입 구현을 이해하는 것으로 타입 및 매개 변수, 반환형 타입을 쉽게 가져올 수 있다**.
+  * 또한, `infer` 키워드를 통해 매개 변수와 반환형의 타입을 추론할 수도 있다.
