@@ -93,6 +93,7 @@
 4. clob, blob이란 무엇인가?
 5. 논리 모델과 물리 모델이란 무엇인가?
 6. inner join, outer join이란 무엇인가?
+7. 데이터베이스 옵티마이저란 무엇인가?
 
 ## Web
 1. Web storage란 무엇인가?
