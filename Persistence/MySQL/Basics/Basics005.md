@@ -200,3 +200,69 @@
 * STATEMENT 형의 바이너리 로그를 사용하는 복제의 경우, 레플리카 서버와 소스 서버의 AI 값이 달라질 수도 있기 때문에 반드시 주의를 기울여야 한다.
   * 그러나 MySQL 8.0부터는 바이너리 로그 포맷의 기본 값이 ROW이므로, 해당 설정 모드를 기본으로 사용한다.
   * 그 **이전 버전 또는 MySQL 8.0 이지만 바이너리 로그 포맷이 STATEMENT 형태인 경우, 연속 모드의 사용이 권장**된다.
+
+## 2022-09-13 Tue
+### InnoDB의 잠금과 인덱스
+```
+> InnoDB 스토리지 엔진에서는 잠금과 인덱스가 매우 중요한 연관 관계를 갖는다.
+```
+* 상술한 바와 같이, **InnoDB에서의 레코드 락은 임의의 레코드를 잠그는 것이 아니라 인덱스 자체를 잠그는 방식으로 처리**된다.
+  * 즉, **변경 대상 레코드를 찾기 위해 검색했던 모든 인덱스의 레코드를 모두 잠금 처리**해야 한다.
+
+### 인덱스 잠금의 예시
+* 예를 들어 employees 테이블에 약 30만 건의 데이터가 존재하며, 다음과 같은 추가 조건이 주어졌다고 가정한다.
+  1. 테이블의 first_name 컬럼에 대해서만 인덱스가 적용되었다.
+  2. 전체 레코드 중 first_name이 Georgi인 사원은 253명이 존재한다.
+  3. 전체 레코드 중 first_name이 Georgi이고 last_name이 Klassen인 사원은 단 1명만 존재한다.
+  4. 이 때, `UPDATE employees SET hire_date=NOW() WHERE first_name='Georgi' AND last_name='Klassen';` 쿼리를 실행한다.
+* 상술한 조건에 의해 **UPDATE 문으로 수정되는 레코드는 단 1건만 존재하지만, 이를 위해 253개의 레코드를 모두 잠그게 된다**.
+  * **253은 first_name이 Georgi인 레코드의 수를 말하며, UPDATE 문을 처리하기 위해 사용한 인덱스에서 스캔한 모든 레코드를 잠그는 것을 의미**한다.
+* 때문에 UPDATE 문을 처리하기 위해 적절한 인덱스가 준비되어 있지 않은 경우 각 클라이언트 간의 동시성은 크게 떨어지게 된다.
+  * 이는 **관련된 레코드를 모두 잠그기 때문이며, 한 세션에서 UPDATE 문을 요청했다면 다른 클라이언트는 해당 테이블을 업데이트하지 못하고 대기**해야 한다.
+  * 당연히 이러한 MySQL의 특징을 잘 모르고 개발을 진행하게 되는 경우 MySQL 서버를 제대로 다룰 수 없다. 
+* UPDATE 문을 요청한 **대상 테이블에 인덱스가 전혀 존재하지 않는다면 내부적으로 자동 생성되는 클러스터 인덱스를 활용하여 레코드를 잠그게 된다**.
+  * 이는 **최악의 경우에 해당하며, 테이블을 풀 스캔하며 UPDATE 작업을 처리하기 위해 30만 건의 모든 레코드를 잠그게 된다**.
+  * 이러한 이유에서 MySQL 서버에서 InnoDB 스토리지 엔진을 사용하는 경우에는 인덱스 설계가 더더욱 중요하다.
+
+### 레코드 수준의 잠금 확인과 해제
+* InnoDB 스토리지 엔진을 사용하는 테이블에 걸린 레코드 수준의 잠금은 다음과 같은 이유에서 테이블 수준의 작업보다 복잡하다.
+  1. 테이블 잠금의 경우, 잠금 대상이 테이블 자체이므로 문제의 원인은 쉽게 발견되고 해결된다.
+  2. **레코드 잠금의 경우, 잠금 대상이 테이블의 레코드 각각이므로 잠긴 레코드가 자주 사용되지 않는다면 오랜 시간 잠긴 상태로 방치될 가능성이 존재**한다.
+* 예전 버전의 MySQL 서버에서는 레코드 잠금에 대한 메타 정보(딕셔너리 테이블)를 전혀 제공하지 않았기에 이러한 정보를 확인하기는 더더욱 어려웠다.
+  * 그러나 **MySQL 5.1 버전부터는 레코드 잠금과 잠금 대기에 대한 조회가 쿼리 한 줄만으로 가능하도록 변경**되었다.
+  * **이를 통해 잠금 또는 잠금 대기 정보를 확인하고, 강제로 잠금을 해제하기 위해 KILL 명령을 통해 MySQL 서버의 프로세스를 강제 종료**시킬 수 있다.
+
+### 레코드 변경 작업 중 발생한 잠금 경합에 대한 레코드 수준 잠금 확인하기
+* **각 트랜잭션이 어떤 잠금을 대기하고, 대기하고 있는 잠금을 어떤 트랜잭션이 갖는지 조회할 수 있는 메타 데이터는 버전에 따라 달리 제공**된다.
+* MySQL 5.1 버전부터는 다음과 같은 메타 데이터를 확인할 수 있다.
+  1. DB: `information_schema`
+  2. 테이블: `INNODB_TRX`, `INNODB_LOCKS`, `INNODOB_LOCK_WAITS`
+* 그러나 MySQL 8.0 버전부터는 `information_schema`의 정보들이 점차 deprecated 처리되고 있으며, 대신 다음과 같은 메타 데이터로 대체되고 있다.
+  1. DB: `performance_schema`
+  2. 테이블: `data_locks`, `data_lock_waits`
+* 예를 들어 여러 UPDATE 문이 실행된 프로세스 목록을 조회하고자 하는 경우, `SHOW PROCESSLIST` 명령을 사용할 수 있다.
+  * **이는 테이블의 레코드에 여러 커넥션으로부터 동시에 가해진 UPDATE 문과 같은 변경 작업으로 인해 잠금 경합이 발생한 경우에 대한 예시에 해당**한다.
+  * **첫 커넥션의 UPDATE 처리에 문제가 발생하여 오랜 시간 동안 COMMIT 되지 않은 경우, 다른 커넥션들은 잠금이 해제될 때까지 대기**한다.
+  * 이는 **전형적인 잠금 경합에 해당하며, 잠금 경합이 발생한 스레드에 대한 개략적인 정보는 상술한 `SHOW PROCESSLIST;` 명령을 활용**할 수 있다.
+* 더 정확한 잠금 대기 순서를 확인하고자 하는 경우, performance_schema의 data_locks와 data_lock_waits 테이블을 다음과 같이 조인할 수 있다.
+```
+SELECT
+  r.trx_id waiting_trx_id,
+  r.trx_mysql_thread_id waiting_thread,
+  r.trx_query waiting_query,
+  b.trx_id blocking_trx_id,
+  b.trx_mysql_thread_id blocking_thread,
+  b.trx_query blocking_query
+FROM performance_schema.data_lock_waits w
+INNER JOIN information_schema.innodb_trx b
+  ON b.trx_id = w.blocking_engine_transaction_id
+INNER JOIN information_schema.innodb_trx r
+  ON r.trx_id = w.requesting_engine_transaction_id;
+```
+* 해당 쿼리의 실행 결과는 다음과 같이 이해할 수 있다.
+  1. waiting_thread: 현재 대기 중인 스레드 ID를 확인할 수 있다.
+  2. blocking_thread: 각 스레드가 어떤 스레드의 완료를 기다리고 있는지 확인할 수 있다.
+* 이를 통해 어떤 스레드에 의해 각 UPDATE 문이 실행 대기 상태에 있는지 알 수 있으며, **더 자세한 정보는 data_locks 테이블의 모든 컬럼을 확인**한다.
+  * 이 때, **쿼리는 `SELECT * FROM performance_schema.data_locks`와 같이 실행**한다.
+* 이러한 **메타 데이터를 통해 어떤 스레드가 잠금을 가진 상태에서 대기 중인지 확인했다면, `KILL 스레드ID` 명령을 통해 스레드를 강제 종료시킬 수 있다**.
+  * 이 과정에서 **명시된 스레드 ID를 갖는 스레드가 강제 종료되며 잠금이 반환되어 나머지 대기 중인 UPDATE 명령들이 실행되고, 잠금 경합은 종료**된다.
