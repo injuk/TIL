@@ -266,3 +266,46 @@ INNER JOIN information_schema.innodb_trx r
   * 이 때, **쿼리는 `SELECT * FROM performance_schema.data_locks`와 같이 실행**한다.
 * 이러한 **메타 데이터를 통해 어떤 스레드가 잠금을 가진 상태에서 대기 중인지 확인했다면, `KILL 스레드ID` 명령을 통해 스레드를 강제 종료시킬 수 있다**.
   * 이 과정에서 **명시된 스레드 ID를 갖는 스레드가 강제 종료되며 잠금이 반환되어 나머지 대기 중인 UPDATE 명령들이 실행되고, 잠금 경합은 종료**된다.
+
+### 트랜잭션 격리 수준
+```
+> 일반적인 DBMS에서는 주로 READ COMMITTED 또는 REPEATABLE READ 격리 수준을 사용한다.
+```
+* **여러 트랜잭션이 동시에 처리되는 경우, 특정한 트랜잭션이 다른 트랜잭션에서 변경하거나 조회하는 데이터를 볼 수 있도록 허용할지 말지를 결정할 수 있다**.
+* **이를 결정하는 것이 트랜잭션의 격리 수준으로 크게 다음과 같은 네 가지로 분류되며 아래로 갈수록 격리, 즉 고립 수준은 높아**진다.
+  1. READ UNCOMMITTED
+  2. READ COMMITTED
+  3. REPEATABLE READ
+  4. SERIALIZABLE
+* **격리 수준이 높아지더라도 SERIALIZABLE 수준까지 가지 않는 이상 크게 성능이 떨어지지는 않는다**. 
+* DIRTY READ라고도 불리우는 READ UNCOMMITTED 수준은 일반적인 데이터베이스에서는 거의 사용되지 않는다.
+* 오라클과 같은 DBMS에서는 주로 READ COMMITTED 수준을 사용한다.
+* MySQL에서는 REPEATABLE READ 수준을 주로 사용한다.
+* SERIALIZABLE 격리 수준의 경우 동시성이 중요한 데이터베이스에서는 거의 사용되지 않는다.
+
+### 세 가지 부정합 문제
+* **데이터베이스의 격리 수준과 함께 다뤄지는 문제 중 세 가지 부정합 문제가 존재하며, 각 문제는 격리 수준에 따라 발생**할 가능성이 있다.
+  1. DIRTY READ: READ UNCOMMITTED 격리 수준에서만 발생할 수 있다.
+  2. NON-REPEATABLE READ: READ UNCOMMITTED, READ COMMITTED 격리 수준에서 발생할 수 있다.
+  3. PHANTOM READ: READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ 격리 수준에서 발생할 수 있다.
+* 이 때, **InnoDB가 갖는 특성으로 인해 REPEATABLE READ 격리 수준에서도 PHANTOM READ 부정합 문제는 발생하지 않는다**.
+
+### READ UNCOMMITTED 격리 수준
+* **READ UNCOMMITTED 격리 수준에서는 임의의 트랜잭션에서의 변경 내용이 COMMIT 또는 ROLLBACK 여부와 관계 없이 다른 트랜잭션에서 보여진다**.
+* 예를 들어, 각각 트랜잭션을 사용하는 두 사용자가 다음과 같은 시나리오로 진행한다.
+  1. 사용자 1이 트랜잭션을 시작(BEGIN)한다.
+  2. 사용자 1이 임의의 테이블에 INSERT 문을 통해 새로운 레코드를 추가한다.
+  3. **이 시점에서 사용자 2가 SELECT 문을 통해 해당 테이블을 조회할 경우, 2.에서 추가된 레코드를 조회할 수 있다**.
+  4. 사용자 1이 INSERT 결과를 COMMIT한다.
+* 이렇듯 **READ UNCOMMITTED 격리 수준에서는 사용자 1이 변경한 내용을 커밋하지 않았더라도 사용자 2가 해당 레코드를 검색**할 수 있다.
+  * 이 때, **사용자 1이 작업 도중 문제가 생겨 INSERT된 레코드를 ROLLBACK하더라도, 사용자 2는 이를 알 방법이 없다는 치명적인 문제가 존재**한다.
+
+### 더티 리드
+```
+> 더티 리드란 임의의 트랜잭션에서 처리 중인 작업이 COMMIT 또는 ROLLBACK 등을 통해 완료되지 않았는데도 다른 트랜잭션에서 조회할 수 있는 현상을 말한다.
+```
+* READ UNCOMMITTED 격리 수준은 더티 리드를 허용하며, 이로 인해 데이터가 나타났다가 사라지는 괴 현상이 발생하기 쉽다.
+  * 당연히 **더티 리드 현상은 애플리케이션 개발자와 사용자를 혼란스럽게 만들 수 있는 요인 중 하나**이다.
+* 이러한 이유에서 더티 리드를 유발하는 READ UNCOMMITTED는 RDBMS 표준에서는 트랜잭션 격리 수준으로 인정조차 하지 않을 정도의 격리 수준이다.
+  * 이는 **READ UNCOMMITTED 격리 수준이 그만큼 정합성에 많은 문제를 일으키는 것으로 이해**할 수 있다.
+  * 따라서 MySQL을 사용하는 경우, 최소한 READ COMMITTED 이상의 격리 수준을 사용하는 것이 바람직하다.
