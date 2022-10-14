@@ -553,3 +553,30 @@ ANALYZE TABLE employees.employees DROP HISTOGRAM ON gender, hire_date;
 ### Extra 컬럼 - Impossible WHERE
 * **상술한 Impossible HAVING과 유사하며, WHERE 절의 조건이 항상 FALSE일 수 밖에 없는 경우에 해당 내용이 표시**된다.
   * 즉, 해당 내용은 불가능한 WHERE 조건 절이 명시되었음을 의미한다.
+
+### Extra 컬럼 - LooseScan
+* 세미 조인 최적화 기법 중 LooseScan 최적화 기법이 사용된 경우, Extra 컬럼에는 해당 내용이 표시된다.
+
+### Extra 컬럼 - No matching min/max row
+* 쿼리의 WHERE 절을 만족하는 레코드가 한 건도 없는 경우 `Impossible WHERE`가 표시된다.
+  * 반면, MIN() 또는 MAX()와 같은 집합 함수가 존재하는 쿼리의 조건 절에 일치하는 레코드가 없는 경우에는 해당 메시지가 출력된다.
+  * 또한, **MIN() 또는 MAX()의 결과로는 NULL이 반환**된다.
+
+### Impossible...과 No matching... 메시지
+* 이러한 휴의 메시지는 **쿼리 자체의 오류처럼 보일 수 있으나, 단지 실행 계획을 산출하기 위한 자료가 존재하지 않음을 의미**한다.
+  * 즉, 상술한 메시지가 출력된다고 해서 반드시 쿼리 자체에 문법적인 오류가 있는 것은 아니다.
+  * 그러나 **쿼리 처리를 위한 데이터가 전혀 없다는 것을 의미하므로, 쿼리 자체가 비즈니스적인 오류를 갖는지 다시 한 번 확인하는 것이 바람직**하다.
+
+### Extra 컬럼 - no matching row in const table
+* 조인을 사용하는 쿼리에서 조인에 사용된 테이블에 const 방식으로 접근하는 경우, 일치하는 레코드가 존재하지 않는 경우 해당 메시지가 표시된다.
+  * 이러한 메시지 역시 상술한 종류와 같은 부류이며, 단지 실행 계획을 산출하기 위한 레코드가 없음을 의미한다.
+
+### Extra 컬럼 - No matching rows after partition pruning
+* **해당 메시지는 파티션된 테이블에 대한 UPDATE 또는 DELETE를 시도하지만, 해당 파티션에 적절한 대상 레코드가 없는 경우 실행 계획에 표시**된다.
+  * 산출된 실행 계획의 partitions 컬럼이 NULL로 표시된 동시에 해당 내용을 확인한 경우, 이는 대상 파티션 자체가 존재하지 않음을 의미할 수 있다.
+
+### Extra 컬럼 - No tables used
+* MySQL 서버는 다른 DBMS와 달리 FROM 절이 없는 쿼리를 허용하며, 다음과 같은 방식으로 사용할 수 있다.
+  1. FROM 절 자체가 없는 쿼리
+  2. FROM 절에 컬럼과 레코드를 각각 하나씩만 갖는 가상의 상수 테이블인 DUAL을 명시한 쿼리
+* 이 때, **FROM 절이 없거나 `... FROM DUAL` 형태의 쿼리에 대해 산출된 실행 계획의 Extra 컬엄에서 `No tables used` 메시지를 확인**할 수 있다.
