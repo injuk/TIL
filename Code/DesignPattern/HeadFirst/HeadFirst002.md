@@ -79,5 +79,87 @@
 * **느슨하게 결합되는 디자인을 적용한 경우, 애플리케이션이 성숙함에 따라 변화가 필요하더라도 무난하게 처리할 수 있는 유연한 객체지향 시스템이 구축**된다.
   * 이는 **서로 의존하는 객체들이 느슨하게 결합되어 상호 의존성 자체가 최소화되기 때문**이다.
 
+## 2022-10-22 Sat
 ### 옵저버 패턴의 정의
-* **옵저버 패턴은 하나의 객체 상태가 변경된 경우에 해당 객체에 의존하는 모든 다른 객체에게 연락이 가고, 자동으로 내용이 갱신되는 1:N 의존성을 정의**한다.
+* **옵저버 패턴은 하나의 객체 상태가 변경된 경우에 해당 객체에 의존하는 모든 다른 객체에게 이를 알리고, 자동으로 내용이 갱신되도록 1:N 의존성을 정의**한다.
+* 또한, 상술했던 주제 인터페이스와 옵저버 인터페이스의 정의에 따라 Java로 인터페이스를 작성할 경우 다음과 같을 수 있다.
+  * 이 중, Observer 인터페이스의 메소드인 update의 시그니쳐는 주제 객체가 관리하는 상태의 종류 및 개수에 따라 변경될 수 있다. 
+```
+// 주제 인터페이스
+public interface Subject {
+    void register(Observer observer);
+    void remove(Observer observer);
+    void notify();
+}
+
+// 옵저버 인터페이스
+public interface Observer {
+    void update(int data);
+}
+```
+* 이에 따라 구체 주제 클래스를 정의하는 경우, 다음과 같은 코드를 작성할 수 있다.
+```
+public class ConcreteSubject implements Subject {
+    private List<Observer> observers;
+    int data;
+    
+    public ConcreteSubject() {
+        this.observers = ArrayList<Observer>();
+    }
+    
+    public void register(Observer observer) {
+        observers.add(observer);    
+    }
+    
+    public void remove(Observer observer) {
+        observers.remove(observer);
+    }
+    
+    // 모든 옵저버 객체는 update 메소드를 구현할 것이므로, 단순히 for 문 순회로도 호출이 가능하다.
+    public void notify() {
+        for(Observer observer : observers) {
+            observers.update(data);
+        }
+    }
+    
+    // 무언가 발생하면 이를 자신이 관리하는 상태에 반영한 후, 모든 옵저버 객체에게 알린다.
+    public void assertSomeEventOccurerd(int data) {
+        this.data = data;
+        notify();
+    }
+}
+```
+* 반면, 구체 옵저버 클래스를 정의하는 경우 다음과 같을 수 있다.
+  * **이 때, 옵저버 클래스는 생성자로 주제 인스턴스를 전달받아 그 참조를 자신의 멤버로 저장할 수 있다**.
+  * 이 경우, 해당 참조 변수는 추후에 옵저버 클래스가 주제 인스턴스로부터 등록을 해제할 경우에 유용하게 사용할 수 있다.
+```
+public class ConcreteObserver implements Observer {
+    private int data;
+    private Subject subject;
+    
+    // 옵저버 객체는 생성자로 주제 인스턴스를 전달받아 자신이 그 참조를 가질 수 있다.
+    // 해당 참조를 활용하여 생성자 차원에서 옵저버 객체를 등록하는 작업까지 수행한다.
+    public ConcreteObserver(Subject subject) {
+        this.subject = subject;
+        subject.register(this);
+    }
+    
+    // 주제 객체로부터 update 메소드가 호출되면 이를 자신의 상태에 반영한 후, 무언가를 수행한다.
+    public void update(int data) {
+        this.data = data;
+        doSomething(); // 이렇듯 값이 변경되었을 때 '무언가'를 호출하는 것은 최선의 방법은 아니며, 다른 패턴을 적용할 수 있다.
+    }
+    
+    public void doSomething() {
+        System.out.println("data: ", + this.data);
+    }
+}
+```
+
+### 주제와 옵저버를 다른 방식으로 개선하기
+* 상술한 주제 클래스는 다음과 같은 문제점이 발생할 수 있다.
+  1. 옵저버 클래스가 필요한 시점이 아닌, 주제 클래스가 적절하다고 판단한 시점에만 데이터 변경 사항을 전달한다.
+  2. **각 옵저버 클래스는 자신에게 정말 필요한 데이터 뿐만이 아니라 필요 없는 정보까지도 전달받아야 한다**.
+  3. **주제 객체가 관리하는 새로운 데이터가 추가되는 경우, 주제 클래스 뿐만 아니라 모든 옵저버 클래스까지도 수정이 필요**해진다.
+* 이러한 특징을 개선하기 위해, 옵저버 클래스가 필요한 시점에 주제 클래스로부터 데이터를 가져갈 수 있도록 접근자 메소드를 추가하는 것을 고려할 수 있다.
+  * 반면, **이 방법을 채택하는 경우에는 항상 주제 클래스와 옵저버 클래스가 너무 단단하게 결합되지는 않는지 경계할 필요**가 있다.
