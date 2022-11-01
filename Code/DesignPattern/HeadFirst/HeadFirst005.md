@@ -55,3 +55,42 @@ class MyFirstSingleton {
 * **싱글톤 패턴을 적용한 클래스는 애플리케이션 전역에서 해당 클래스의 인스턴스에 접근할 수 있는 방법을 제공하도록 구현**한다.
   * 즉, 언제든지 인스턴스가 필요한 클라이언트에는 클래스에 인스턴스를 요청하고 이를 반환받을 수 있어야 한다.
   * 이 때, 인스턴스의 초기화 자체에 **자원을 많이 필요로 하는 인스턴스는 지연 생성 방식으로 구현하는 것이 바람직**하다.
+
+### 고전적 싱글톤 패턴과 멀티스레드
+* **고전적인 싱글톤 패턴을 사용하는 객체를 멀티스레드로 접근하는 경우, 인스턴스의 유일성이 깨질 가능성이 존재**한다.
+  * 예를 들어 다음과 같은 코드에서, getInstance의 if 분기에서 컨텍스트 스위칭이 발생한 경우 인스턴스는 스레드 개수만큼 생성될 수 있다.
+```java
+class MyFirstSingleton {
+    private static MyFirstSingleton instance;
+    
+    private MyFirstSingleton(){}
+    
+    public static MyFirstSingleton getInstance() {
+        if(instance == null) {
+            // 이 시점에서 컨텍스트 스위칭이 발생할 수 있다.
+            instance = new MyFirstSingleton();
+        }
+        return instance;
+    }
+}
+```
+* 이를 가장 빠르게 해결하기 위한 방법은 `synchronized` 키워드를 사용하는 방식이며, 수정된 코드는 다음과 같다.
+  * **해당 키워드를 사용할 경우, 하나의 스레드가 getInstance 메소드의 실행을 마치기 전까지 다른 스레드는 대기**해야 한다.
+  * 즉, 이로 인해 둘 이상의 스레드가 메소드를 동시에 실행하는 일은 발생하지 않게 된다.
+```java
+class MyFirstSingleton {
+    private static MyFirstSingleton instance;
+    
+    private MyFirstSingleton(){}
+    
+    public static synchronized MyFirstSingleton getInstance() {
+        if(instance == null) {
+            instance = new MyFirstSingleton();
+        }
+        return instance;
+    }
+}
+```
+* 그러나 상술한 코드는 다음과 같은 문제점이 존재한다.
+  1. `synchronized` 키워드를 활용하는 동기화는 멀티스레드 애플리케이션의 성능을 직접적으로 저하시킨다.
+  2. **getInstance 메소드가 최초로 호출되어 인스턴스가 생성되는 시점을 제외하면 매소드의 동기화는 전혀 필요하지 않다**. 
