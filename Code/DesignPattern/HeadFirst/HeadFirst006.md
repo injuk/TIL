@@ -209,6 +209,62 @@ class FlyCommand implements Command {
     }
 }
 ```
+* 반면, **리시버가 여러 상태 값을 가져 이를 작업 취소 기능에 반영할 경우 커맨드 객체에 마지막으로 호출된 상태를 저장하는 별도의 멤버 변수가 필요**하다.
+```java
+class Bird {
+    // 리시버 객체는 호출된 메소드에 따라 현재 상태를 멤버 변수로 저장한다.
+    private String status;
+    
+    public Bird() {
+        status = "STOP";
+    }
+    public void stop() {
+        System.out.println("stop flying.");
+        status = "STOP";
+    }
+    public void fast() {
+        System.out.println("fly fast!!!");
+        status = "FAST";
+    }
+    public void slow() {
+        System.out.println("fly slow...");
+        status = "SLOW";
+    }
+    
+    // 리시버 객체는 자신이 관리하는 현재 상태 정보를 반환하기 위한 접근자를 제공한다.
+    public String getStatus() {
+        return status;
+    }
+}
+
+class FlyCommand implements Command {
+    private Bird bird;
+    // 리시버 객체의 이전 상태를 저장하기 위한 멤버 변수를 커맨드 객체에 추가한다.
+    private String prevStatus;
+    
+    public FlyCommand(Bird bird) {
+        this.bird = bird;
+    }
+    
+    @Override
+    public void execute() {
+        // execute 메소드가 호출된 경우, 리시버 객체에 작업을 위임하기 전에 리시버 객체의 현재 상태를 저장한다.
+        prevStatus = bird.getStatus();
+        bird.fly();
+    }
+    
+    @Override
+    public void undo() {
+        // 리시버 객체의 이전 상태를 저장하는 멤버 변수의 값에 따라 이전 동작으로 되돌린다.
+        if(prevStatus == 'FAST')
+            bird.fast();
+        else if(prevStatus == 'SLOW')
+            bird.slow();
+        else
+            bird.stop();
+    }
+}
+```
 
 ### 인보커 객체에 작업 취소 기능 추가하기
 * 상술한 커맨드 객체의 수정 사항에 맞추어 인보커 객체에 다음과 같이 몇 줄을 추가하면 간단하게 작업 취소 기능을 구현할 수 있다.
