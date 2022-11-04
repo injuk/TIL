@@ -178,3 +178,66 @@ class Main {
     }
 }
 ```
+
+### 커맨드 객체의 작업 취소
+* 예를 들어 **커맨드 객체를 통해 어떤 작업을 처리했을 때, UNDO 기능을 통해 이를 취소하려는 요구 사항이 발생**할 수 있다.
+* **이는 커맨드 객체의 공통 기능으로 추가되어야하므로, 당연히 execute 메소드와 같은 undo 메소드의 추가가 필요**하다.
+```java
+public interface Command {
+    void execute();
+    void undo();
+}
+```
+* 상술한 FlyCommand의 예제에서 undo 메소드를 반영하는 경우, 다음과 같은 코드를 작성할 수 있다.
+  * 만일 StopCommand가 존재한다고 가정하면 해당 커맨드 객체의 undo 메소드는 `bird.fly();` 를 호출하는 식으로 구현된다.
+```java
+class FlyCommand implements Command {
+    private Bird bird;
+    
+    public FlyCommand(Bird bird) {
+        this.bird = bird;
+    }
+    
+    @Override
+    public void execute() {
+        bird.fly();
+    }
+    
+    @Override
+    public void undo() {
+        bird.stop();
+    }
+}
+```
+
+### 인보커 객체에 작업 취소 기능 추가하기
+* 상술한 커맨드 객체의 수정 사항에 맞추어 인보커 객체에 다음과 같이 몇 줄을 추가하면 간단하게 작업 취소 기능을 구현할 수 있다.
+```java
+class LetItFly {
+  private Command command;
+  // 작업 취소 기능에 대비하여 마지막으로 execute 메소드가 호출된 커맨드 객체를 참조하기 위한 멤버 변수를 추가한다.
+  private Command lastInvoked;
+  
+  public LetItFly() {
+      // NPE의 발생에 대비하여 NoCommand와 같은 널 객체를 활용할 수 있다.
+      Command noCommand = new NoCommand();
+      this.command = noCommand;
+      this.lastInvoked = noCommand;
+  }
+
+  public void setCommand(Command command) {
+    this.command = command;
+  }
+
+  public void runCommand() {
+    command.execute();
+    // 커맨드 객체의 execute 메소드가 호출되면 이를 멤버 변수로 참조한다.
+    lastInvoked = command;
+  }
+  
+  public void undo() {
+      // 클라이언트 코드로부터 작업 취소 요청이 수신될 경우, 이를 커맨드 객체에 정의된 undo 메소드로 포워딩한다.
+      lastInvoked.undo();
+  }
+}
+```
