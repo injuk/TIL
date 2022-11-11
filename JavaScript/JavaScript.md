@@ -38,4 +38,5 @@
 * [AllInOne008](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/AllInOne/AllInOne008.md)
 
 ### EffectiveTS
-### 2022.00.00 ~ 2022.00.00
+### 2022.11.12 ~ 2022.00.00
+* [EffectiveTS001](https://github.com/injuk/TIL/blob/master/JavaScript/TypeScript/EffectiveTS/EffectiveTS001.md)
