@@ -95,3 +95,37 @@
   * 반면, 반복자 인터페이스에 새로운 기능을 추가하고자 하는 경우에는 Iterator 인터페이스를 확장할 수 있다.
 * Enumeration 인터페이스는 Iterator와 유사한 용도로 사용되지만, 최근에는 Iterator를 지원하는 클래스가 더 많아 Enumeration은 잘 사용되지 않는다.
   * 이 때, **두 인터페이스 간의 변환 또는 혼용이 필요한 경우에는 어댑터 패턴을 적용**할 수 있다.
+
+## 2022-11-21 Mon
+### Iterable 인터페이스 
+* **모든 컬렉션은 Iterable 인터페이스를 구현하며, 해당 인터페이스는 Iterator 인터페이스를 구현하는 반복자를 반환하는 iterator() 메소드를 제공**한다.
+  * **ArrayList 등 모든 컬렉션 클래스는 Iterable을 확장하는 Collection 인터페이스를 구현하므로 Iterable**이다.
+* **해당 인터페이스는 컬렉션에 있는 각각의 항목을 대상으로 반복 작업을 수행하기 위한 forEach 메소드 역시 포함**한다.
+  * 또한, Iterable 인터페이스는 컬렉션을 대상으로 하는 반복 작업에서 더 발전된 기능을 제공하는 spliterator 메소드도 함께 제공한다.
+* 이 밖에도 Java의 경우 Iterable의 forEach 메소드를 통해 향상된 for문과 같은 문법적인 기능을 함께 제공한다.
+  * 반면, **forEach 메소드는 람다식과 함께 `names.forEach(name -> System.out.println(name));`과 같은 형태로 직접 호출할 수도 있다**.
+
+### 향상된 for문
+* 임의의 ArrayList를 Iterator로 순회하는 경우, 다음과 같이 코드를 작성하게 된다.
+  * 이렇듯 반복자는 hasNext와 next 메소드를 필수적으로 사용하게 된다.
+```java
+public class Main {
+  public static void main(String[] args) {
+    List<String> names = new ArrayList();
+    Iterator iterator = names.iterator();
+    while(iterator.hasNext())
+        System.out.println(iterator.next());
+  }
+}
+```
+* 그러나 ArrayList 역시 Iterable을 확장하는 Collection API이므로, Iterable이기에 다음과 같이 향상된 for문을 적용할 수 있다.
+  * 이 경우, hasNext 또는 next 메소드를 사용할 필요가 없으므로 코드를 간단하게 작성할 수 있다.
+```java
+public class Main {
+  public static void main(String[] args) {
+    List<String> names = new ArrayList();
+    for(String name: names)
+      System.out.println(iterator.next());
+  }
+}
+```
