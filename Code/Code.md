@@ -38,6 +38,7 @@
 * [HeadFirst007](https://github.com/injuk/TIL/blob/master/Code/DesignPattern/HeadFirst/HeadFirst007.md)
 * [HeadFirst008](https://github.com/injuk/TIL/blob/master/Code/DesignPattern/HeadFirst/HeadFirst008.md)
 * [HeadFirst009](https://github.com/injuk/TIL/blob/master/Code/DesignPattern/HeadFirst/HeadFirst009.md)
+* [HeadFirst010](https://github.com/injuk/TIL/blob/master/Code/DesignPattern/HeadFirst/HeadFirst010.md)
 
 ## CodingTest
 ### 2022.02.20 ~ 
