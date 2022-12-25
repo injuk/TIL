@@ -55,6 +55,7 @@
 * [EssenceOfOO003](https://github.com/injuk/TIL/blob/master/Code/OOP/EssenceOfOO/EssenceOfOO003.md)
 * [EssenceOfOO004](https://github.com/injuk/TIL/blob/master/Code/OOP/EssenceOfOO/EssenceOfOO004.md)
 * [EssenceOfOO005](https://github.com/injuk/TIL/blob/master/Code/OOP/EssenceOfOO/EssenceOfOO005.md)
+* [EssenceOfOO006](https://github.com/injuk/TIL/blob/master/Code/OOP/EssenceOfOO/EssenceOfOO006.md)
 
 ## Objects
 ### 2022.03.24 ~ 2022.04.10
