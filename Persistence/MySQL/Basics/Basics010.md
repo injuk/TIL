@@ -254,7 +254,7 @@ ANALYZE TABLE employees.employees DROP HISTOGRAM ON gender, hire_date;
 
 ### 실행 계획 - table 컬럼
 * **MySQL 서버의 실행 계획은 단위 SELECT 쿼리 기준이 아닌 테이블 기준으로 표시**된다.
-  * 이 떄, `SELECT NOW();`와 같이 별도의 테이블을 사용하지 않는 SELECT 문은 실행 계획에서 해당 컬럼이 NULL로 표시된다.
+  * 이 때, `SELECT NOW();`와 같이 별도의 테이블을 사용하지 않는 SELECT 문은 실행 계획에서 해당 컬럼이 NULL로 표시된다.
 * **table 컬럼에는 `<derivedN>` 또는 `<union M,N>`과 같이 꺾쇠를 사용하는 이름이 명시되는 경우가 있으며, 이는 임시 테이블을 의미**한다.
   * 이 때, **꺾쇠 안에 표시되는 숫자는 SELECT 쿼리의 실행 계획에서 적용된 id 컬럼 값을 의미**한다.
   * 예를 들어, 해당 컬럼이 `<derived2>`로 표시되었다면 해당 테이블은 단위 SELECT 쿼리의 식별자가 2인 실행 계획으로부터 생성된 파생 테이블이 된다.

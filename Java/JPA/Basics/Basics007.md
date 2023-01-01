@@ -51,7 +51,7 @@
 * **영속성 컨텍스트에 대상 엔티티가 이미 존재하는 경우에는 getReference 메소드를 다시 호출하더라도 실제 엔티티가 반환**된다.
   * 때문에 아래의 코드는 모두 Member.class가 출력되며, 이는 프록시 객체를 반환하는 getReference 역시 동일하다.
   * **영속성 컨텍스트에 원본 엔티티가 관리되고 있는 경우, 프록시를 만드는 것은 단점이 더 크므로 JPA는 성능 최적화를 위해 1차 캐시의 원본을 반환**한다.
-  * 무엇보다도, **JPA는 반드시 같은 트랜잭션 안에서 동일한 식별자를 갖는 엔티티 간의 동일성을 보장해야 하기 떄문이기도**하다.
+  * 무엇보다도, **JPA는 반드시 같은 트랜잭션 안에서 동일한 식별자를 갖는 엔티티 간의 동일성을 보장해야 하기 때문이기도**하다.
   * 같은 이유에서 동일한 식별자에 대해 em.getReference를 여러 번 호출하더라도 동일성을 보장하기 위해 항상 같은 프록시 객체가 반환된다. 
 ```
 Member m1 = em.find(Member.class, 1L);
@@ -78,7 +78,7 @@ System.out.println(m1 == m2);
 
 ### 프록시의 상태 확인하기
 * `PersistenceUnitUtil.isLoaded(Object entity)` 메소드를 통해 프록시 객체의 초기화 여부를 확인할 수 있다.
-  * 이 떄, PersistenceUnitUtil 객체는 `emf.getPersistenceUnitUtil()` 메소드를 호출하여 얻을 수 있다. 
+  * 이 때, PersistenceUnitUtil 객체는 `emf.getPersistenceUnitUtil()` 메소드를 호출하여 얻을 수 있다. 
 * `entity.getClass().getName()` 메소드를 통해 프록시 객체의 클래스를 확인할 수 있다.
 * `org.hibernate.Hibernate.initializa(entity)` 메소드를 통해 프록시를 강제로 초기화할 수 있다.
   * **프록시 객체에 대해 강제 초기화를 수행할 경우, 그 시점에 실제 데이터베이스에 대한 SELECT 쿼리가 요청**된다. 
@@ -191,11 +191,11 @@ private List<Child> childList = new ArrayList<>();
 ### 영속성 전이와 고아 객체 기능의 조합
 * 스스로 생명 주기를 관리하는 엔티티는 em.persist와 em.remove 메소드를 통해 영속화하거나 제거할 수 있다.
   * 즉, 생명 주기를 JPA의 영속성 컨텍스트의 도움으로 구성하게 된다.
-* 이 떄, **두 기능을 조합하여 엔티티 간의 생명 주기를 관리하기 위해 `cascade = CascadeType.ALL, orphanRemoval = true`를 적용**할 수 있다.
+* 이 때, **두 기능을 조합하여 엔티티 간의 생명 주기를 관리하기 위해 `cascade = CascadeType.ALL, orphanRemoval = true`를 적용**할 수 있다.
   * 이렇듯 **두 기능을 모두 활성화한 경우, 부모 엔티티를 통해 자식 엔티티의 생명 주기 역시 쉽게 관리**할 수 있다.
   * 예를 들어 비즈니스 로직을 구현한 코드 상에서는 em.persist 또는 em.remove 메소드를 통해 부모 엔티티만을 관리하는 것처럼 작성할 수 있다.
   * 결국 **부모 엔티티의 생명 주기는 JPA의 영속성 컨텍스트가 관리하지만, 자식 엔티티의 생명 주기는 부모 엔티티가 관리**하게 된다.
 * 이러한 **두 기능의 조합은 도메인 주도 개발의 Aggregate Root 개념을 구현할 때 유용하게 사용**될 수 있다.
   * 예를 들어 도메인 주도 개발에서, 리포지토리는 오직 Aggregate Root만 사용하되 다른 객체들은 사용하지 않는 것을 효율적인 접근으로 본다.
   * 반면, Aggregate Root가 아닌 객체들은 Aggregate Root를 통해서 생명 주기를 관리해야 한다.
-  * 이로 미루어 보았을 떄, 상술한 예시에서 부모 엔티티가 Aggregate Root가 되며 자식 엔티티는 Aggregate Root를 통해 생명 주기를 관리한다.
+  * 이로 미루어 보았을 때, 상술한 예시에서 부모 엔티티가 Aggregate Root가 되며 자식 엔티티는 Aggregate Root를 통해 생명 주기를 관리한다.
