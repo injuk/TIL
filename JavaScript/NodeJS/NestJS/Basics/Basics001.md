@@ -115,3 +115,62 @@ export class BoardsModule {}
   3. 2.에서 결정된 폴더 안에 controller 파일을 생성하고, `--no-spec` 옵션이 명시되지 않았다면 테스트 코드도 함께 생성한다.
   4. 2.에서 결정된 폴더 안에 module 파일이 존재하는지 확인한다.
   5. **module 파일이 존재한다면 이를 업데이트하여 controller 정보를 import하며, 존재하지 않는다면 AppModule에 import**한다.
+
+## 2023-01-05 Thu
+### NestJS 프로바이더란?
+* **프로바이더는 NestJS의 기본 개념이며, 대부분의 서비스 / 리포지토리 / 팩토리 / 헬퍼 등의 클래스는 프로바이더로 취급**될 수 있다.
+* 이 때, **프로바이더의 주요한 아이디어는 종속성으로서 주입될 수 있다는 점**에 있다.
+  * 때문에 **객체 간의 다양한 관계와 인스턴스 간의 연결은 NestJS 런타임에게 위임**될 수 있다.
+* 예를 들어 컨트롤러가 요청에 응답하기 위한 모든 로직을 포함하는 것보다는 이를 별도의 여러 서비스로 추출하되, 이들 의존성을 컨트롤러에게 주입할 수 있다.
+
+### 서비스란?
+* 서비스는 NestJS 뿐만 아닌 소프트웨어 개발 분야에서 통용되는 개념으로, 임의의 요청을 받은 컨트롤러가 처리해야 할 작업을 대부분 처리한다.
+  * 예를 들어 컨트롤러가 요청을 처리하는 과정이 복잡한 경우, 이를 별도의 서비스에서 처리하도록 할 수 있다.
+* NestJS의 경우, 서비스는 `@Injectable()` 데코레이터를 명시하여 모듈에 제공된다.
+  * 또한, 서비스 인스턴스는 애플리케이션 전체에서 사용될 수 있다는 특징이 존재한다.
+* 바꿔 말해 서비스 인스턴스는 정의만 했다고 해서 컨트롤러에서 사용할 수 있는 것은 아니며, 컨트롤러가 의존성을 주입받을 수 있도록 코드를 작성할 필요가 있다.
+  * 이 때, 이는 Java Spring의 생성자 주입 방식과 유사한 형태의 코드로 작성된다.
+
+### 프로바이더 사용 시 주의사항
+```
+> 프로바이더는 반드시 NestJS 런타임에 등록되어야 사용이 가능하다.
+```
+* **프로바이더의 등록은 모듈에서 명시하며, `@Module()` 데코레이터의 인자로 `providers: [프로바이더명]`와 같은 형태로 프로바이더 정보를 등록**한다.
+  * 이 때, **`providers` 에는 해당 모듈에서 사용하고자 하는 프로바이더 목록을 전달**한다.
+
+### 서비스 생성하기
+* 서비스 역시 nest cli를 활용하여 생성하며, 명령어 형식은 컨트롤러와 유사하게 `nest g service [서비스명] --no-spec` 와 같이 입력한다.
+  * 이 떄, 명령어 입력 결과로 모듈에 자동으로 서비스가 import되는 식으로 코드가 수정된다는 점 역시 동일하다.
+* 이렇게 생성된 파일에는 `@Injectable()` 데코레이터가 명시되어 있으며, NestJS 런타임은 이를 통해 다른 컴포넌트가 해당 서비스를 사용할 수 있도록 한다.
+  * 때문에 프로바이더는 다른 컨트롤러 등 NestJS 프로젝트 전역에서 사용될 수 있다.
+```typescript
+import { Injectable } from '@nestjs/common';
+
+@Injectable() // 해당 데코레이터를 활용하여 NestJS는 프로바이더를 다른 모듈에 주입한다.
+export class BoardsService {}
+```
+
+### 의존성 주입하기
+* **NestJS의 경우, 의존성 주입은 다음과 같이 생성자 안에서 이루어진다**.
+  * 이 때, private 접근 제어자는 TS의 기능을 활용한 것으로 Vanilla JS에서는 불가능하다.
+  * 또한 **`this.some = some`와 같은 코드가 없는 이유는 생성자 매개변수에 명시된 private은 암묵적으로 인자를 프로퍼티로 선언하기 때문**이다.
+```typescript
+import { Controller } from '@nestjs/common';
+import { BoardsService } from './boards.service';
+
+@Controller('boards')
+export class BoardsController {
+    // NestJS 런타임의 DI는 생성자 주입 방식을 사용한다. 
+    constructor(private boardsService: BoardsService) {}
+}
+```
+* 이는 생성자에 private 접근 제어자를 명시한 인자는 암묵적으로 클래스 프로퍼티로 취급되는 것을 이용한 예시이며, 이를 사용하지 않는 경우 코드는 다음과 같다.
+```typescript
+@Controller('boards')
+export class BoardsController {
+  private boardsService: BoardsService; // TS 에서는 생성자 등에서 프로퍼티를 사용하기 전에 반드시 명시해두어야 한다.
+  constructor(boardsService: BoardsService) {
+    this.boardsService = boardsService;
+  }
+}
+```
