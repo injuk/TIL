@@ -198,3 +198,25 @@ createBoardV2(@Body('title') title: string, @Body('description') description: st
   return this.boardsService.createBoard(title, description);
 }
 ```
+
+## 2023-01-06 Fri
+### DTO란?
+```
+> 계층형 구조를 채택하는 아키텍쳐에서 DTO는 계층 간의 데이터 교환을 위해 존재한다.
+```
+* DTO는 일반적으로 데이터베이스로부터 얻은 데이터를 서비스 또는 컨트롤러에게 전송하기 위해 사용하는 객체이며, 역시 인터페이스 또는 클래스로 정의할 수 있다.
+  * 그러나 **NestJS의 경우, 인터페이스 DTO보다는 클래스 형태의 DTO를 권장**한다.
+  * 이는 클래스가 인터페이스와는 달리 런타임에서도 사용되기 때문이며, 이로 인해 NestJS가 지원하는 파이프 등의 기능을 유용하게 활용할 수 있다.
+* 데이터를 교환하기 위해 DTO를 정의하는 것은 크게 다음과 같은 장점을 갖는다.
+  1. 데이터 유효성을 검증하는 과정이 더 효율적이다.
+  2. 타입으로서 정의되어 코드의 안정성을 높여준다.
+  3. 데이터의 형태가 변경되는 경우 DTO를 사용하는 방식이 변경에 더 유연하게 대응할 수 있다.
+
+### 간단한 DTO
+* DTO는 다음과 같은 클래스를 활용하여 간단하게 정의할 수 있으며, 필요한 컨트롤러 또는 서비스에서 이를 import하여 사용한다.
+```typescript
+export class CreateBoardDto {
+  public title: string;
+  public description: string;
+}
+```
