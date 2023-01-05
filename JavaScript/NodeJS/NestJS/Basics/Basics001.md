@@ -174,3 +174,27 @@ export class BoardsController {
   }
 }
 ```
+
+### 모델 정의하기
+* 비즈니스 로직에서 사용되는 임의의 개념을 사용하기 전에, 우선 해당 개념이 어떠한 형태인지 정의하는 것이 바람직하다.
+  * 이러한 형태를 모델이라고 지칭하며, TS에서는 모델을 정의하기 위해 인터페이스나 클래스를 활용할 수 있다.
+  * 이 때, 인터페이스는 모델이 갖는 정보에 대한 타입만을 체크하는 반면 클래스는 인스턴스화까지 가능하다는 차이점이 존재한다.
+* 이렇듯 인터페이스 또는 클래스를 활용하여 모델을 정의하는 것은 많은 에러를 컴파일 시점에 미리 잡을 수 있게 하며, 코드의 가독성 역시 높여주는 효과가 있다.
+
+### 컨트롤러 핸들러에서 데이터를 수신하기
+* POST 등의 메소드로 컨트롤러를 호출하는 경우, 핸들러에서 사용자가 전달한 요청 본문을 처리해야하는 경우가 있을 수 있다.
+  * Express의 경우, `req.body`와 같은 형식으로 사용자의 요청 본문을 수신할 수 있다.
+  * NestJS의 경우, **핸들러에서 요청 본문을 수신하기 위해서는 핸들러 메소드의 매개 변수에 `@Body()` 데코레이터를 다음과 같이 명시**할 수 있다.
+```typescript
+@Post('/')
+createBoard(@Body() dto: BoardDto): Board {
+  return this.boardsService.createBoard(dto.title, dto.description);
+}
+```
+* 또는 아래와 같이 `@Body([타입명])` 데코레이터를 명시하는 것으로 원하는 프로퍼티만을 사용할 수도 있다.
+```
+@Post('/v2')
+createBoardV2(@Body('title') title: string, @Body('description') description: string): Board {
+  return this.boardsService.createBoard(title, description);
+}
+```
