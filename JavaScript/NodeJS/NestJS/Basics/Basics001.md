@@ -220,3 +220,108 @@ export class CreateBoardDto {
   public description: string;
 }
 ```
+
+### 컨트롤러에서 Path variable 수신하기
+* 간단한 상세 조회 또는 삭제 API 등, Path를 통해 id와 같은 식별자를 전달받아야 하는 경우에는 다음과 같이 `@Param([Path명])` 데코레이터를 사용한다.
+```typescript
+@Get('/:id')
+getBoard(@Param('id') id: string): Board {
+  return this.boardsService.getBoard(id);
+}
+```
+
+### NestJS의 파이프
+* NestJS의 **파이프 역시 `@Injectable()` 데코레이터가 명시된 클래스이며, 주로 데이터의 형태 변형 또는 유효성 검증을 위해 사용**한다.
+* **파이프는 컨트롤러 핸들러에 의해 처리되는 인수에 대해 동작하며, 핸들러 메소드가 동작하기 전에 우선적으로 호출**된다.
+* 예를 들어 사용자의 리소스 생성 요청은 기본적으로 컨트롤러의 적절한 핸들러에게 바로 포워딩되지만, 파이프가 있는 경우 마치 프록시처럼 요청을 가로챈다.
+  * 이후 파이프가 정상적으로 동작하는 데에 성공했다면 그 때 컨트롤러의 핸들러에게 처리한 데이터를 전달하게 된다.
+  * 반면, 파이프의 동작 과정에서 유효성 검증이나 데이터 변환에 실패한 경우에는 에러를 발생시킨다.
+
+### 파이프의 종류
+* 파이프를 사용하는 방법은 파이프의 종류에 따라 달라질 수 있으며, 이 때 파이프의 종류는 크게 다음과 같이 분류할 수 있다.
+  1. Handler-level
+  2. Parameter-level 
+  3. Global-level
+
+### Handler-level 파이프
+* 핸들러 단의 파이프는 컨트롤러의 핸들러 메소드에서 `@UsePipes()` 데코레이터를 명시하는 것으로 사용할 수 있다.
+  * 이 때, **핸들러 단의 파이프는 핸들러 메소드가 전달 받는 모든 파라미터에 대해 적용**된다.
+
+### Parameter-level 파이프
+* **매개 변수 단의 파이프는 컨트롤러의 핸들러 메소드가 전달 받는 매개 변수 중 특정한 값에 대해서만 적용**된다.
+  * 이 때, 매개 변수 단의 파이프는 별도의 데코레이터 대신 매개 변수를 명시하는 `@Body([매개 변수명], [파이프명])` 데코레이터에 인자로 전달된다.
+  * 물론 `@Param([매개 변수명], [파이프명])`과 같은 파이프 적용 역시 가능하다.
+
+### Global-level 파이프
+* **가장 넓은 범위에 대해 적용되는 글로벌 파이프는 클라이언트로부터 전달되는 모든 요청에 대해 적용되며, 최상위 영역을 의미하는 `main.ts`에 명시**된다.
+```typescript
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  app.useGlobalPipes([파이프명]); // 글로벌 파이프는 이러한 형태로 적용된다.
+  await app.listen(3000);
+}
+bootstrap();
+```
+
+### NestJS의 빌트인 파이프
+* NestJS는 다음과 같은 기본적인 빌트인 파이프를 제공하며, 각 파이프는 명시적인 이름을 통해 어떠한 동작을 수행하는지 쉽게 짐작할 수 있다.
+  1. ValidationPipe
+  2. ParseIntPipe
+  3. ParseFloatPipe
+  4. ParseBoolPipe
+  5. ParseArrayPipe
+  6. ParseUUIDPipe
+  7. ParseEnumPipe
+  8. DefaultValuePipe
+  9. ParseFilePipe
+* 예를 들어 ParseIntPipe의 경우, 다음과 같이 적용할 수 있다.
+```typescript
+@Get('/temp/:id')
+getTemp(@Param('id', ParseIntPipe) id: number): number {
+  return id;
+}
+```
+* 이 때, id 위치에 숫자가 아닌 알파벳 등을 전달할 경우 다음과 같은 에러 메시지를 확인할 수 있다.
+```json
+{
+    "statusCode": 400,
+    "message": "Validation failed (numeric string is expected)",
+    "error": "Bad Request"
+}
+```
+
+### 파이프를 활용한 유효성 처리
+* Dto 클래스를 예시로 들어 빈 값이 아니어야 하는 등의 유효성 조건을 적용하고 싶은 경우, 다음과 같은 두 라이브러리를 유용하게 사용할 수 있다.
+  1. `class-validator`
+  2. `class-transformer`
+* 둘 모두를 npm 등의 패키지 관리자를 통해 설치한 후, Dto의 각 프로퍼티에 빈 값이 들어오지 않도록 다음과 같이 Dto를 수정할 수 있다.
+```typescript
+import { IsNotEmpty } from 'class-validator';
+
+export class CreateBoardDto {
+  @IsNotEmpty()
+  public title: string;
+
+  @IsNotEmpty()
+  public description: string;
+}
+```
+* 그러나 **이러한 데코레이터만으로는 원하는 유효성 검증 효과를 얻을 수 없으며, 반드시 컨트롤러에 핸들러 단 파이프를 다음과 같이 명시**해주어야 한다.
+```typescript
+@Post('/')
+@UsePipes(ValidationPipe) // 핸들러 단의 파이프를 명시한다.
+createBoard(@Body() dto: CreateBoardDto): Board {
+  return this.boardsService.createBoard(dto);
+}
+```
+* 이제 유효성 검증 조건에 위배되는 데이터를 전송할 경우, 다음과 같은 메시지가 반환되며 요청에 실패하게 된다.
+```json
+{
+    "statusCode": 400,
+    "message": [
+        "title should not be empty",
+        "description should not be empty"
+    ],
+    "error": "Bad Request"
+}
+```
