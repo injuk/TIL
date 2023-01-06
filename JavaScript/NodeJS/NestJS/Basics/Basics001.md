@@ -345,3 +345,39 @@ getBoard(id: string): Board {
     "message": "Not Found"
 }
 ```
+
+## 2023-01-07 Sat
+### 커스텀 파이프와 PipeTransform 인터페이스
+* 상술한 바와 같이 NestJS에는 빌트인 파이프가 여럿 존재하지만, 자신이 원하는 형태의 파이프를 직접 정의하는 커스텀 파이프 또한 정의가 가능하다.
+* 이 때, **모든 커스텀 파이프는 반드시 `PipeTransform` 인터페이스를 구현**해야 한다.
+  * 사실 **해당 인터페이스는 NestJS에서 사용되는 모든 파이프가 구현하는 인터페이스이며, 이를 통해 `transform()` 메소드의 구현을 강제**한다.
+  * 나아가 `transoform()` 메소드는 모든 파이프에 필요하며, 해당 메소드는 NestJS가 인자(arguments)를 처리하기 위해 호출된다.
+* 예를 들어 단순히 값을 로깅하는 커스텀 파이프는 `PipeTransform` 인터페이스를 구현하는 것으로 다음과 같이 간단하게 구현이 가능하다.
+```typescript
+import { ArgumentMetadata, PipeTransform } from '@nestjs/common';
+
+export class BoardUpdateValidationPipe implements PipeTransform {
+  transform(value: any, metadata: ArgumentMetadata): any {
+    console.log(`value`);
+    console.log(value);
+    console.log(`metadata`);
+    console.log(metadata);
+
+    return value;
+  }
+}
+```
+* 반면, dto 만을 검증하는 상술한 파이프는 `@Body()` 아래와 같이 데코레이터에 전달하는 것으로 바로 사용이 가능하다.
+```typescript
+@Patch('/:id')
+updateBoard(@Param('id') id: string, @Body(BoardUpdateValidationPipe) dto: UpdateBoardDto): Board {
+  return this.boardsService.updateBoard(id, dto);
+}
+```
+
+### transform() 메소드란?
+* 해당 메소드의 시그니쳐는 `transform(value: any, metadata: ArgumentMetadata)`와 같이 두 개의 매개 변수를 갖는다.
+  1. value: 처리가 된 인자의 값을 의미한다.
+  2. metadata: 인자에 대한 메타데이터를 포함하는 객체를 의미한다.
+* **해당 메소드는 value를 다시 반환하며, 이 때 반환되는 값은 컨트롤러의 핸들러 메소드 등에 전달**된다.
+* 반면, **`transform()` 메소드 처리 과정에서 예외가 발생한 경우 이는 핸들러 메소드로 전해지는 대신 클라이언트에게 직접 반환**된다.
