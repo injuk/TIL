@@ -325,3 +325,23 @@ createBoard(@Body() dto: CreateBoardDto): Board {
     "error": "Bad Request"
 }
 ```
+
+### 빌트인 예외를 활용한 404 반환
+* 적절한 객체를 찾아내지 못한 경우 빈 응답보다는 404 에러를 반환하는 것이 바람직하며, 이는 NestJS의 빌트인 예외를 통해 쉽게 구현할 수 있다.
+```typescript
+getBoard(id: string): Board {
+  const board: Board = this.boards[this.boardIdx.get(id)];
+  if (!board) throw new NotFoundException();
+  // 또는 다음과 같이 작성하여 반환되는 에러의 메시지를 지정할 수 있다.
+  // if (!board) throw new NotFoundException('아무 것도 없지롱');
+
+  return board;
+}
+```
+* 이를 활용할 경우, 적절한 객체를 찾지 못했을 때는 다음과 같은 404 에러가 반환된다.
+```json
+{
+    "statusCode": 404,
+    "message": "Not Found"
+}
+```
