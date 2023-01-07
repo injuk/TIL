@@ -95,3 +95,12 @@ export class BoardRepository extends Repository<Board> {
   
 }
 ```
+* 또한, **이렇게 생성한 리포지토리 모듈을 다른 서비스에서 import하여 사용할 수 있도록 도메인 모듈을 다음과 같이 수정**해야 한다.
+```typescript
+@Module({
+  imports: [TypeOrmModule.forFeature([BoardRepository])],
+  controllers: [BoardsController],
+  providers: [BoardsService],
+})
+export class BoardsModule {}
+```
