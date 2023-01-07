@@ -20,7 +20,6 @@
   * 이 중 **`synchronize` 속성을 특히 주의해야 하며, true인 경우에는 애플리케이션 실행 시점에 엔티티가 변경되었다면 테이블을 DROP한 후 재생성**한다.
 ```typescript
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-
 export const typeOrmConfig: TypeOrmModuleOptions = {
   type: 'postgres',
   host: '127.0.0.1',
@@ -47,3 +46,34 @@ import { typeOrmConfig } from './configs/typeorm.config';
 })
 export class AppModule {}
 ```
+
+### 엔티티 정의하기
+* **관계형 데이터베이스의 테이블 엔티티 각각은 TypeORM에서 같은 클래스의 객체로 취급되므로, 이를 엔티티 클래스로 정의하여 테이블을 자동 생성할 수 있다**.
+  * 쉽게 말해 TypeORM 상에서는 엔티티로 정의한 클래스가 관계형 데이터베이스의 테이블로 변환된다.
+* 이 떄, 엔티티를 정의하기 위해 자주 사용되는 데코레이터들은 크게 다음과 같다.
+  1. @Entity(): 해당 클래스가 엔티티임을 명시하기 위해 사용되며, `@Entity()` 데코레이터가 명시된 클래스는 관계형 데이터베이스의 테이블로 변환된다.
+  2. @PrimaryGeneratedColumn(): 컬럼에 명시되는 데코레이터로서 해당 컬럼이 테이블의 PK이자, AI가 설정됨을 의미한다.
+  3. @Column(): 역시 컬럼에 명시되는 데코레이터이며, 해당 프로퍼티가 일반적인 테이블 컬럼임을 의미한다.
+* 상술한 내용을 토대로 간단한 엔티티 클래스를 다음과 같이 정의할 수 있다.
+  * 이러한 엔티티 클래스를 정의한 후, NestJS 애플리케이션을 실행하면 해당 엔티티 클래스에 정의된 내용에 맞는 테이블이 pg에 자동으로 생성되게 된다.
+```typescript
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BoardStatus } from './board.model';
+
+@Entity()
+export class Board extends BaseEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  title: string;
+
+  @Column()
+  description: string;
+
+  @Column()
+  status: BoardStatus;
+}
+```
+* 이 때, **엔티티 클래스의 이름은 관계형 데이터베이스에 생성되는 테이블의 이름을 결정짓기 때문에 반드시 적절한 이름을 명명하는 것이 바람직**하다.
+  * **기본적으로 `lower_snake_case`를 채택하므로, 카멜 케이스로 작성된 클래스 이름은 자동으로 적절히 변환되어 적용**된다.
