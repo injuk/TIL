@@ -77,3 +77,21 @@ export class Board extends BaseEntity {
 ```
 * 이 때, **엔티티 클래스의 이름은 관계형 데이터베이스에 생성되는 테이블의 이름을 결정짓기 때문에 반드시 적절한 이름을 명명하는 것이 바람직**하다.
   * **기본적으로 `lower_snake_case`를 채택하므로, 카멜 케이스로 작성된 클래스 이름은 자동으로 적절히 변환되어 적용**된다.
+  * 또한, pg의 경우 별도의 설정이 없다면 해당 엔티티는 `public` 스키마에 생성된다.
+
+### 리포지토리 정의하기
+* 리포지토리는 데이터베이스 관련 작업을 담당하며, 이렇듯 서비스 클래스로부터 데이터베이스 관련 작업을 분리하는 것을 리포지토리 패턴이라고도 한다.
+  * 때문에 리포지토리는 엔티티 객체와 함께 동작하며, 엔티티의 조회나 수정 및 생성과 삭제 등을 담당한다.
+* TypeORM의 경우 간단한 리포지토리는 다음과 같이 정의할 수 있으며, EntityRepository와 Repository를 import하여 사용한다.
+  * 리포지토리 클래스가 `Repository`를 상속하는 것으로 엔티티를 조회하거나 삽입 및 삭제 등의 작업을 수행할 수 있게 된다.
+  * 반면, `@EntityRepository()` 데코레이터는 클래스를 사용자 정의 리포지토리로 명시하기 위해 사용한다.
+  * 아래 코드의 경우, `@EntityRepository(Board)`와 같은 데코레이터를 명시하는 것으로 해당 리포지토리 클래스가 Board 엔티티를 관리함을 선언한다. 
+```typescript
+import { EntityRepository, Repository } from 'typeorm';
+import { Board } from './board.entity';
+
+@EntityRepository(Board)
+export class BoardRepository extends Repository<Board> {
+  
+}
+```
