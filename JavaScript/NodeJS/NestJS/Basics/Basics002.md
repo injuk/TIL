@@ -104,3 +104,38 @@ export class BoardRepository extends Repository<Board> {
 })
 export class BoardsModule {}
 ```
+
+## 2023-01-08 Sun
+### 리포지토리를 서비스에 주입하기
+* 컨트롤러 클래스가 서비스 클래스를 사용하듯, 서비스 클래스 역시 리포지토리 클래스를 사용하기 위해 다음과 같이 의존성을 주입한다.
+  * 그러나 **리포지토리 클래스는 프로바이더가 아니므로 컨트롤러가 서비스 클래스를 주입 받던 예시와 달리 `@InjectRepository()` 데코레이터를 사용**한다.
+  * 이렇듯 해당 데코레이터를 통해 서비스에서 원하는 리포지토리를 사용함을 명시할 수 있다.
+```typescript
+@Injectable()
+export class BoardsService {
+  constructor(
+    @InjectRepository(BoardRepository) private boardRepository: BoardRepository,
+  ) {}
+}
+```
+
+### 리포지토리에서 데이터베이스 테이블을 조회하기
+* TypeORM을 사용하는 리포지토리는 TypeORM이 제공하는 메소드를 활용하며, 상세 조회를 예로 들었을 떄 사용되는 메소드는 `findOneBy()`가 된다.
+* 이 떄, 서비스에서 다음과 같이 작성해두는 것만으로도 무방하며 별도로 리포지토리 클래스를 수정할 필요는 없다.
+```typescript
+@Injectable()
+export class BoardsService {
+  constructor(
+    @InjectRepository(BoardRepository) private boardRepository: BoardRepository,
+  ) {}
+
+  async getBoardById(id: number): Promise<Board> {
+    const board = await this.boardRepository.findOne({ where: { id } });
+    // 또는 아래와 같은 방식도 가능하다!
+    // const board = await this.boardRepository.findOneBy({ id });
+    if (!board) throw new NotFoundException(`there is no board with id ${id}`);
+
+    return Promise.resolve(board);
+  }
+}
+```
