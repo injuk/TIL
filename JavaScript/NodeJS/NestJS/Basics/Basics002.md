@@ -139,3 +139,117 @@ export class BoardsService {
   }
 }
 ```
+
+### 리포지토리에서 신규 리소스를 생성하기
+* 리소스 생성 로직 역시 서비스와 컨트롤러에서 모두 작업되어야 하며, 이 때 리소스 생성 로직을 다음과 같이 간단하게 정의할 수 있다.
+```typescript
+async createBoard(dto: CreateBoardDto): Promise<Board> {
+  const { title, description } = dto;
+
+  const board = this.boardRepository.create({
+    title,
+    description,
+    status: BoardStatus.PUBLIC,
+  });
+  await this.boardRepository.save(board);
+
+  return board;
+}
+```
+* 이 때, 하나의 메소드만으로 조회가 가능했던 상술한 조회 로직과 달리 리소스 생성에는 다음과 같은 두 메소드가 사용된다.
+  1. create(): 해당 리포지토리에서 관리하는 엔티티의 인스턴스를 new 연산자로 생성하는 것과 같다.  
+  2. save(): 주어진 단일 엔티티 또는 배열 형태로 정의된 엔티티 목록을 저장하되, 엔티티의 존재 여부에 따라 `createOrUpdate` 형태로 동작한다.
+* 특히 **`save()` 메소드의 경우 단일 트랜잭션에서 엔티티의 생성 또는 업데이트를 수행**한다.
+* 또한, 컨트롤러 역시 기존에 작성해둔 유효성 검증 데코레이터를 활용할 수 있도록 `@UsePipes()` 데코레이터를 다음과 같이 명시한다.
+  * 이를 통해 **`createBoard` 핸들러에 전달되는 request body인 `CreateBoardDto`의 모든 프로퍼티는 `ValidationPipe`에 의해 검증**된다.
+```typescript
+@Post('/')
+@UsePipes(ValidationPipe)
+createBoard(@Body() dto: CreateBoardDto): Promise<Board> {
+  return this.boardService.createBoard(dto);
+}
+```
+* 그러나 리포지토리 패턴에서 데이터베이스와 관련된 작업은 리포지토리에서 작업하는 것이 바람직하므로, 상술한 서비스 로직의 위치를 다음과 같이 옮겨준다.
+  * 이 경우, 리소스 생성과 관련된 컨트롤러 및 서비스의 메소드는 단순히 리포지토리의 메소드를 호출하기 위한 포워딩 역할만을 수행하게 된다.
+```typescript
+export class BoardRepository extends Repository<Board> {
+  async createBoard(dto: CreateBoardDto): Promise<Board> {
+    const board = new Board();
+    board.title = dto.title;
+    board.description = dto.description;
+    board.status = BoardStatus.PUBLIC;
+
+    // 또는 아래와 같이 작성해도 무방하다.
+    // const board = this.create({
+    //   title: dto.title,
+    //   description: dto.description,
+    //   status: BoardStatus.PUBLIC,
+    // });
+
+    await this.save(board);
+
+    return board;
+  }
+}
+```
+
+### 리포지토리에서 리소스 삭제하기
+* TypeORM의 경우, 리포지토리에서 제공하는 리소스 삭제 관련 메소드는 크게 다음과 같이 분류된다.
+  1. remove(): **반드시 존재하는 리소스만을 제거해야 하며, 그렇지 않은 경우 404 에러가 발생**한다.
+  2. delete(): 리소스가 존재하는 경우에만 제거하며, 그렇지 않은 경우에는 아무런 영향을 주지 않는다.
+* 이러한 특징으로 인해 `remove()` 메소드는 일반적으로 리소스 조회 후 제거를 시도하게 되며, 때문에 DB IO를 최소한 두 번 사용하게 된다는 특징이 있다.
+* 예를 들어 리소스 삭제를 위해서는 서비스 클래스에 다음과 같이 작성할 수 있다.
+```typescript
+async deleteBoardById(id: number): Promise<void> {
+  const result = await this.boardRepository.delete(id);
+  console.log(result);
+
+  if (!result.affected)
+    throw new NotFoundException(`there is no board with id ${id}`);
+}
+```
+* 또한, 해당 메소드를 컨트롤러에서 호출하면서 StatusCode를 204로 변경하는 핸들러 메소드의 예시는 다음과 같다.
+  * 나아가 path variable로 전달되는 id는 반드시 정수형이어야 하므로, `@Param()` 데코레이터에 유효성 검증을 위해 `ParseIntPipe`를 명시할 수 있다.
+```typescript
+@Delete('/:id')
+@HttpCode(204)
+deleteBoardById(@Param('id', ParseIntPipe) id: number): Promise<void> {
+  return this.boardService.deleteBoardById(id);
+}
+```
+
+### 리소스 수정하기
+* 데이터베이스 상의 리소스를 수정하는 경우의 작업 흐름은 크게 다음과 같다.
+  1. `find()` 등의 메소드를 활용하여 데이터베이스 상의 리소스를 조회한다.
+  2. 조회한 리소스를 임의로 수정한다.
+  3. `save()` 메소드를 활용하여 수정된 리소스를 저장한다.
+* 상술한 흐름에 따라, 서비스 클래스에서 구현한 수정 메소드를 예로 들 경우 코드는 다음과 같다.
+```typescript
+async updateBoard(id: number, dto: UpdateBoardDto): Promise<Board> {
+  const board = await this.getBoardById(id);
+
+  const { title, description, status } = dto;
+  if (title) board.title = title;
+  if (description) board.description = description;
+  if (status) board.status = status;
+
+  await this.boardRepository.save(board);
+
+  return board;
+}
+```
+
+### 리포지토리에서 리소스 목록 조회하기
+* 목록 조회는 단순히 리포지토리의 `find()` 메소드를 활용하여 다음과 같이 간단하게 구현할 수 있다.
+```typescript
+getAllBoards(): Promise<Board[]> {
+  return this.boardRepository.find();
+}
+```
+* 반면, 찾아낸 리소스 목록과 개수를 함꼐 반환하고자 하는 경우에는 다음과 같이 구현할 수도 있다.
+```typescript
+async getAllBoards() {
+  const [results, count] = await this.boardRepository.findAndCount();
+  return { results, count };
+}
+```
