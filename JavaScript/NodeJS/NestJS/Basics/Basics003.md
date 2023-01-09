@@ -98,3 +98,17 @@ async createUser(dto: AuthCredentialDto): Promise<void> {
   }
 }
 ```
+
+### 로그인 기능 구현하기
+* 상술한 내용을 토대로, 사용자에게 username과 비밀번호를 전달받았을 때 이를 bcryptjs를 활용하여 검증하는 코드는 다음과 같이 간단하게 구현이 가능하다.
+  * 이 때, `bcrypt.compare()` 메소드에 전달할 인자의 순서를 바꾸면 로그인에 실패하므로 순서에 주의하여 반드시 평문을 먼저 전달해야 한다.
+```typescript
+async signIn(dto: AuthCredentialDto): Promise<string> {
+  const { username, password } = dto;
+  const user = await this.authRepository.getUserByUsername(username);
+  if (user && (await bcrypt.compare(password, user.password)))
+    return 'login success';
+
+  throw new UnauthorizedException('login failed');
+}
+```
