@@ -68,3 +68,33 @@ async createUser(dto: AuthCredentialDto): Promise<void> {
   }
 }
 ```
+
+## 2023-01-10 Tue
+### 비밀번호 암호화하기
+* 비밀번호를 데이터베이스에 저장하는 방법은 크게 다음과 같이 분류할 수 있다.
+  1. 평문으로 저장하기: 최악의 방법이며, 개발자라면 절대 하지 말아야 할 방식에 해당한다.
+  2. 암호화 키를 활용하여 암호화하기: 양방향 암호화에 해당하며, 암복호화를 모두 하나의 암호화 키와 암호화 알고리즘 조합을 사용한다.
+  3. SHA256 등을 통해 단방향 암호화하기: 단방향 암호화에 해당하며, 알고리즘을 활용하여 해시된 값을 저장한다.
+  4. 솔트와 단방향 암호화를 조합하기: 사용자가 입력한 비밀번호에 임의의 문자열인 솔트를 더한 후에 알고리즘을 적용하여 해시된 값을 저장한다.
+* 이 때, 양방향 암호화의 경우 대부분의 알고리즘이 노출되어 있으므로 암호화 키가 노출되었을 경우 보안에 취약해질 수 있다는 특징이 있다.
+  * 반면, 단방향 암호화의 경우 복호화할 수 없으나 많은 사용자가 적용하는 비밀번호의 형태가 유사하므로 레인보우 테이블 방식을 통해 공격당할 가능성이 존재한다.
+* 상술한 방식 중 가장 적절한 것은 솔트와 단방향 암호화를 조합한 것으로, 이는 bcryptjs와 같은 라이브러리를 활용하여 다음과 같이 간단하게 구현이 가능하다.
+  * 이 경우, 비밀번호에 사용되는 salt는 매 번 달라지므로 같은 비밀번호를 사용하는 사용자들도 서로 다른 값을 데이터베이스에 저장하게 된다.
+```typescript
+async createUser(dto: AuthCredentialDto): Promise<void> {
+  const { username, password } = dto;
+
+  const salt = await bcrypt.genSalt(); // bcryptjs를 활용하여 salt를 생성한다.
+  const hashedPassword = await bcrypt.hash(password, salt);  // 생성된 salt를 활용하여 해시한다.
+  const user = this.create({ username, password: hashedPassword }); // 해시된 값을 데이터베이스에 저장한다.
+
+  try {
+    await this.save(user);
+  } catch (e) {
+    if (e.code === '23505')
+      throw new ConflictException(`username(${username}) is already exists.`);
+
+    throw new InternalServerErrorException();
+  }
+}
+```
