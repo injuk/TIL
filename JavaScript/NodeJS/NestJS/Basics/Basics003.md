@@ -23,4 +23,48 @@ export class AuthCredentialDto {
     password: string;
 }
 ```
-* 
+
+### 중복된 사용자 이름 체크하기
+* TypeORM을 사용하여 중복된 사용자 이름을 검증하는 방법은 크게 다음과 같이 분류할 수 있다.
+  1. `findOne()` 메소드를 활용하여 같은 사용자명이 존재하는지 확인한 후에 데이터를 저장
+  2. 또는 데이터베이스 차원에서 중복된 사용자명이 존재하는 경우에 에러를 던지도록 구현
+* 이 중 첫 번째 방식은 불필요한 DB IO가 발생하므로, 일반적으로는 다음과 같이 두 번째 방법을 사용하는 것이 바람직하다.
+  * 이렇듯 TypeORM에서는 `@Unique()` 데코레이터를 활용하여 이러한 기능을 간단하게 구현할 수 있다.
+```typescript
+@Entity()
+@Unique(['username']) // @Unique() 데코레이터의 인자에 중복을 체크할 컬럼을 배열 형태로 전달한다.
+export class User extends BaseEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  username: string;
+
+  @Column()
+  password: string;
+}
+```
+* 상술한 어노테이션은 내부적으로는 테이블에 UQ 제약 조건을 거는 식으로 동작하며, 다음과 같은 특이 사항이 존재한다.
+  1. 테이블에 존재하지 않는 컬럼명을 명시할 경우, 정상적으로 동작하지 않는다.
+  2. 이미 작성한 `@Unique()` 데코레이터를 제거하는 경우, 서버가 재시작될 때 해당 제약 조건을 제거한다.
+* 이 때, 중복된 사용자명을 전달할 경우 다음과 같이 500 에러가 발생하므로 반드시 이를 핸들링해주어야 한다.
+```shell
+[Nest] 2796  - 01/09/2023, 7:54:23 PM   ERROR [ExceptionsHandler] duplicate key value violates unique constraint "UQ_78a916df40e02a9deb1c4b75edb"
+QueryFailedError: duplicate key value violates unique constraint "UQ_78a916df40e02a9deb1c4b75edb"
+```
+* 이러한 에러는 pg에서 발생한 예외를 적절히 핸들링하지 않아 컨트롤러까지 에러가 전파되는 것으로, 코드를 통해 다음과 같이 간단하게 수정할 수 있다.
+```typescript
+async createUser(dto: AuthCredentialDto): Promise<void> {
+  const { username, password } = dto;
+  const user = this.create({ username, password });
+
+  try {
+    await this.save(user);
+  } catch (e) {
+    if (e.code === '23505')
+      throw new ConflictException(`username(${username}) is already exists.`);
+
+    throw new InternalServerErrorException();
+  }
+}
+```
