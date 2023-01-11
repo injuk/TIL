@@ -131,3 +131,48 @@ async signIn(dto: AuthCredentialDto): Promise<string> {
   1. 요청시 자신이 갖고 있던 토큰 정보를 헤더에 포함시킨다.
   2. 서버는 JWT를 활용하여 토큰을 분석한 후, 헤더 및 페이로드에 자신이 갖는 암호화 정보를 활용하여 시그니쳐를 다시 생성하고 이를 사용자의 값과 비교한다.
   3. 비교 결과가 참인 경우, 사용자의 요청을 처리한 후 결과를 반환한다.
+
+### NestJS에서 JWT 사용하기
+* NestJS 프로젝트에서 JWT와 더불어 passport를 사용하기 위해서는 우선 다음과 같이 필요한 모듈을 설치한다.
+  * 명령어: `npm i @nestjs/jwt @nestjs/passport passport passport-jwt`
+* 이후 AuthModule을 다음과 같이 수정하여 애플리케이션 전역에서 JWT와 passport 모듈을 사용할 수 있도록 수정하되 다음과 같은 옵션을 입력한다.
+  1. secret: 토큰의 시그니쳐 구간을 생성하기 위해 사용되는 평문을 의미한다. 
+  2. signOptions.expiresIn: 토큰의 만료 기간을 정의한다.
+```typescript
+@Module({
+  imports: [
+    PassportModule.register({
+      defaultStrategy: 'jwt',
+    }),
+    JwtModule.register({
+      secret: 'my-super-secret',
+      signOptions: {
+        expiresIn: 60 * 60,
+      },
+    }),
+    TypeOrmExModule.forCustomRepository([AuthRepository]),
+  ],
+  providers: [AuthService],
+  controllers: [AuthController],
+})
+export class AuthModule {}
+```
+* 이렇듯 필요한 모든 모듈을 애플리케이션에 import한 경우, AuthService를 다음과 같이 수정하여 인증 성공시 토큰을 반환할 수 있도록 한다.
+```typescript
+// 더 이상 login succeed라는 문자열을 반환하지 않으므로, 함수의 반환형을 수정한다.
+async signIn(dto: AuthCredentialDto): Promise<{ accessToken: string }> {
+  const { username, password } = dto;
+  const user = await this.authRepository.getUserByUsername(username);
+  if (user && (await bcrypt.compare(password, user.password)))
+    return this.#createToken(username);
+
+  throw new UnauthorizedException('login failed');
+}
+
+// jwt 토큰의 payload에는 원하는 내용을 추가하되, 민감한 정보는 담지 않는 것이 바람직하다.
+#createToken(username) {
+  const payload = { username };
+  const result = this.jwtService.sign(payload);
+  return { accessToken: result };
+}
+```
