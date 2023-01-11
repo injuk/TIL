@@ -176,3 +176,91 @@ async signIn(dto: AuthCredentialDto): Promise<{ accessToken: string }> {
   return { accessToken: result };
 }
 ```
+
+## 2023-01-12 Thu
+### passport 모듈이란?
+* 사용자는 로그인 성공시 JWT 토큰을 반환받으며, 이후에는 해당 값을 헤더에 넣어 서버와 주고 받게 된다.
+  * 이 때, **서버는 secret text를 활용하여 전달 받은 토큰의 유효성을 검증한 후 페이로드 구간의 정보를 토대로 사용자 정보를 조회**한다.
+* passport 모듈은 이러한 과정을 쉽게 처리할 수 있도록 돕는 라이브러리이며, NestJS 프로젝트에는 다음과 같은 인증 전략을 정의할 수 있다.
+  * 이러한 인증 절차는 passport 모듈 없이도 적용할 수 있으나, 개발 생산성을 높이기 위해서는 라이브러리를 적극적으로 활용할 수 있다.
+  * 아래와 같은 코드를 적용할 경우, 최종적으로 모든 유효한 요청에 대해서 Req 객체에는 사용자 정보가 포함되어야 한다.
+```typescript
+// 다른 모듈에서도 해당 전략을 주입 받을 수 있도록 명시한다.
+@Injectable()
+// PassPortStrategy의 기능을 사용하기 위해 상속하되, JWT 전략을 사용할 수 있도록 Strategy를 인자로 넘겨준다.
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  // 토큰 유효성 검증을 마친 후, 페이로드 구간의 username을 토대로 User 객체를 조회하기 위해 주입한다.
+  constructor(private authRepository: AuthRepository) {
+    super({
+      // JWT 토큰 발행 시 사용한 secret text와 같다.
+      secretOrKey: 'my-super-secret',
+      // 해당 전략이 JWT 토큰을 어느 위치에서 받아들이는지 명시한다.
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+
+      // 즉, 해당 전략은 베어러 토큰을 가져와 secret text로 유효성을 검증하는 방식으로 동작하게 된다.
+    });
+  }
+
+  async validate(payload: { username: string }): Promise<User> {
+    const user: User = await this.authRepository.getUserByUsername(
+            payload.username,
+    );
+
+    if (!user) throw new UnauthorizedException(`invalid authorization token`);
+
+    // 이렇게 반환된 값은 추후 Guard를 활용하여 Req 객체에 포함시키게 된다.
+    return Promise.resolve(user);
+  }
+}
+```
+* 반면, 이렇게 정의한 전략과 passport 모듈은 의존성 주입을 적용하면서 다른 모듈에서도 사용할 수 있어야 하므로 AuthModule을 다음과 같이 수정한다.
+```typescript
+@Module({
+  imports: [
+    PassportModule.register({
+      defaultStrategy: 'jwt',
+    }),
+    JwtModule.register({
+      secret: 'my-super-secret',
+      signOptions: {
+        expiresIn: 60 * 60,
+      },
+    }),
+    TypeOrmExModule.forCustomRepository([AuthRepository]),
+  ],
+  controllers: [AuthController],
+  // JWT 전략을 해당 모듈에서 주입받아 사용할 수 있도록 등록한다.
+  providers: [AuthService, JwtStrategy],
+  // AuthModule이 사용하는 JWT 전략과 passport 모듈을 다른 모듈에서도 사용할 수 있도록 export 한다. 
+  exports: [JwtStrategy, PassportModule],
+})
+export class AuthModule {}
+```
+
+### NestJS의 @Req 데코레이터
+* `@Req` 데코레이터는 express의 Request 객체를 의미하며, 일반적으로 사용자 요청에 대한 모든 정보를 포함한다.
+* 하나의 **요청에 대해 해당 객체는 계속해서 유지되므로, JWT와 passport 모듈을 활용하여 얻어낸 사용자 정보를 담아두기에 적절**하다.
+  * 이 때, **`@UseGuards()` 데코레이터와 `AuthGuard()` 함수를 조합하는 것으로 Request 객체에 사용자 정보를 담아줄 수 있다**.
+```typescript
+@Post('/test')
+@UseGuards(AuthGuard())
+test(@Req() req): void {
+  // 이제 Request 객체에 user 정보가 포함된다.
+  console.log('req', req);
+}
+```
+
+### NestJS와 미들웨어
+* NestJS는 애플리케이션 요청을 처리하는 과정 중간에서 특정한 작업을 처리하는 미들웨어로 취급되는 요소들을 포함하며, 각각 다음과 같이 다른 목적으로 사용된다.
+  1. Pipes: 유효성 검증 또는 데이터 변환을 위해 사용하며, 요청이 컨트롤러에 도달하기 전에 호출된다.
+  2. Filters: **오류 처리를 위한 미들웨어이며, 임의의 경로에 대해 특정한 에러 핸들러를 적용하는 등 복잡성을 관리하기 위해 사용**된다. 
+  3. Guards: **인증을 위한 미들웨어이며, 임의의 경로에 대해 인가된 사용자와 그렇지 않은 사용자를 구분하여 서버에 알린다**. 
+  4. Interceptors: **응답 매핑이나 캐시 관리, 또는 요청 로깅과 같이 각 요청이 처리되기 전 또는 후에 임의의 기능을 호출하는 강력한 미들웨어**이다.
+* 이 때, **NestJS는 이들 미들웨어에 대해 일반적으로 다음과 같은 호출 순서를 갖는다**.
+```text
+Client > Middleware > Guard > Interceptor(Before) > Pipe 
+> Controller > Service( > Repository > DataBase > Repository > Service) > Controller
+> Interceptor(After) > Filter(when error occurred) > Client
+```
+* 때문에 상술한 코드와 같이 `@UseGuards()` 데코레이터를 적용할 경우, 해당 요청에 대해 인증과 관련된 미들웨어를 적용하게 된다.
+  * 나아가 **토큰이 유효하지 않거나, 존재하지 않는 경우 401 Unauthorized로 요청이 실패할 수 있도록 처리**한다.
