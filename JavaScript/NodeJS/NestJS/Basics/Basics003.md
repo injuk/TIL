@@ -264,3 +264,27 @@ Client > Middleware > Guard > Interceptor(Before) > Pipe
 ```
 * 때문에 상술한 코드와 같이 `@UseGuards()` 데코레이터를 적용할 경우, 해당 요청에 대해 인증과 관련된 미들웨어를 적용하게 된다.
   * 나아가 **토큰이 유효하지 않거나, 존재하지 않는 경우 401 Unauthorized로 요청이 실패할 수 있도록 처리**한다.
+
+### NestJS에서 커스텀 데코레이터 사용하기
+* 가드를 활용하여 Request 객체에 사용자 정보를 삽입했으나, user 파라미터를 더 쉽게 사용하고 싶은 경우가 있을 수 있다.
+* 커스텀 데코레이터는 이러한 요구사항에 적절하게 적용할 수 있으며, 다음과 같이 구현된다.
+  * 아래의 코드에서, AuthGuard에 의해 Request 객체에 사용자 정보가 포함되어 있으므로 이를 `@GetUser()`와 같은 형태로 바로 사용할 수 있도록 한다.
+```typescript
+// 파라미터에 적용 가능한 데코레이터를 생성하기 위해서 createParamDecorator 함수를 사용한다.
+export const GetUser = createParamDecorator((data, ctx: ExecutionContext): User => {
+  // ctx.switchToHttp().getRequest() 문장을 통해 상술한 Request 객체를 받아올 수 있다.
+  const req = ctx.switchToHttp().getRequest();
+
+  return req.user;
+});
+```
+* 또한, 이렇게 정의한 커스텀 데코레이터는 다음과 같이 컨트롤러에서 적용할 수 있다.
+  * 단, Request 객체에 User 정보를 삽입하는 것은 `@UseGuards(AuthGuard())` 해당 코드는 제거하지 않아야 한다.
+  * 반면 상술한 코드에서 정의한 `@GetUser()` 데코레이터는 Request 객체에 User 정보가 포함되어 있는 것을 전제로 한다.
+```typescript
+@Post('/test')
+@UseGuards(AuthGuard())
+test(@GetUser() user: User): void {
+  console.log('user', user);
+}
+```
