@@ -288,3 +288,32 @@ test(@GetUser() user: User): void {
   console.log('user', user);
 }
 ```
+
+## 2023-01-13 Fri
+### 인가된 사용자에게만 권한을 할당하기
+* 게시물 작성 등의 API 호출은 인가된 사용자에게만 할당하는 경우가 많으며, 의존성 주입을 활용하여 이는 간단하게 구현할 수 있다.
+* 예를 들어, 게시물을 관리하는 Boards 모듈에서 인증을 관리하는 Auth 모듈을 import하는 것으로 인증 기능을 손쉽게 적용할 수 있다.
+  * 이 때, **Boards 모듈에서 Auth 모듈을 import하는 경우 Auth 모듈이 export하는 모든 기능을 사용할 수 있게 된다**.
+```typescript
+@Module({
+  imports: [
+    TypeOrmExModule.forCustomRepository([BoardRepository]),
+    // 구현된 인증 기능을 활용하기 위해 AuthModule을 import한다. 
+    AuthModule,
+  ],
+  controllers: [BoardsController],
+  providers: [BoardsService],
+})
+export class BoardsModule {}
+```
+* 이러한 인증 기능 역시 다음과 같이 Boards 모듈에서 `@UseGuards(AuthGuard())` 데코레이터를 적용하는 것으로 사용하게 된다.
+  * 이 때, **`AuthGuard`는 각 라우트 핸들러 별로 할당하거나 컨트롤러 전체에 대해 적용할 수 있다**.
+```typescript
+@Controller('boards')
+@UseGuards(AuthGuard()) // 컨트롤러에 적용된 @UseGuard() 데코레이터는 컨트롤러가 제공하는 모든 핸들러 메소드에 적용된다.
+export class BoardsController {
+  constructor(private boardService: BoardsService) {}
+  // 생략
+}
+```
+* 이제 `Authorization` 헤더를 켜거나 끈 상태에서 게시물 관련 기능에 접근할 경우, 인가되지 않은 경우에 401 에러가 반환되는 것을 확인할 수 있다.
