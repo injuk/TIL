@@ -84,3 +84,42 @@ async getAllBoards(user: User) {
 }
 ```
 * 그러나 **가능한 한 대부분의 작업은 ORM을 사용하되, 복잡한 경우에 한해서만 쿼리 빌더는 사용하는 것이 바람직**하다.
+
+## 2023-01-14 Sat
+### 로그의 종류와 로그 레벨
+* 로그는 애플리케이션에서 문제가 발생했을 경우, 이에 대한 정보를 얻기 위해 매우 유용하게 사용될 수 있다.
+* 이 때, 로그의 종류는 일반적으로 다음과 같이 분류될 수 있다.
+  1. Log: 중요한 정보이며, 범용적인 로깅을 의미한다.
+  2. Error: 치명적이거나 파괴적이며, 아직 처리되지도 않은 문제를 의미한다.
+  3. Warning: 치명적이거나 파괴적이지는 않지만, 아직 처리되지 않은 문제를 의미한다.
+  4. Debug: 개발자 용 로그이며, 오류 발생시 로직의 정보를 얻는 데에 유용한 정보를 의미한다.
+  5. Verbose: 운영자 용 로그이며, 애플리케이션의 동작에 대한 통찰을 제공하는 정보를 의미한다.
+* 또한, **상술한 로그들은 레벨 개념을 도입하여 다음과 같이 애플리케이션의 환경에 따라 출력할 정보를 선택하는 것이 일반적**이다.
+  1. 개발 환경: Log, Error, Warning, Debug, Verbose 
+  2. 스테이징 환경: Log, Error, Warning
+  3. 운영 환경: Log, Error
+
+### NestJS 애플리케이션 로그
+* 일반적으로 개발 과정의 중간 중간에 로그를 삽입하는 경우가 많으며, Express 애플리케이션의 경우 Winston 라이브러리가 주로 사용된다.
+  * 반면, NestJS 애플리케이션에서는 별도의 빌트인 모듈인 `logger` 클래스를 활용한다.
+* 예를 들어 게시물 컨트롤러에서 사용자가 모든 게시물을 조회하고자 한 경우, 이러한 정보는 `logger.verbose()`를 활용하여 다음과 같이 구현할 수 있다.
+```typescript
+@Controller('boards')
+@UseGuards(AuthGuard())
+export class BoardsController {
+  // logger를 컨트롤러의 private 프로퍼티로 정의하되, 로그의 출력 위치를 구분하기 위한 문자열을 생성자에 전달한다.
+  private logger = new Logger('BoardsController');
+
+  constructor(private boardService: BoardsService) {}
+  
+  @Get()
+  getAllBoards(@GetUser() user: User) {
+    this.logger.verbose(`User ${user.username} trying to get all boards`);
+    return this.boardService.getAllBoards(user);
+  }
+}
+```
+* 이 경우, 사용자가 자신의 모든 게시물을 조회하고자 할 때 `logger.verbose()`는 콘솔에 다음과 같은 로그를 출력한다.
+```shell
+[Nest] 2041  - 01/14/2023, 4:00:55 PM VERBOSE [BoardsController] User injuk1 trying to get all boards
+```
