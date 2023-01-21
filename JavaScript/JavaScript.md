@@ -16,12 +16,17 @@
 
 ## NestJS
 ### Basics
-### 2022.01.02 ~ 2022.01.14
+### 2023.01.02 ~ 2023.01.14
 * [Basics001](https://github.com/injuk/TIL/blob/master/JavaScript/NodeJS/NestJS/Basics/Basics001.md)
 * [Basics002](https://github.com/injuk/TIL/blob/master/JavaScript/NodeJS/NestJS/Basics/Basics002.md)
 * [Basics003](https://github.com/injuk/TIL/blob/master/JavaScript/NodeJS/NestJS/Basics/Basics003.md)
 * [Basics004](https://github.com/injuk/TIL/blob/master/JavaScript/NodeJS/NestJS/Basics/Basics004.md)
 * [Basics005](https://github.com/injuk/TIL/blob/master/JavaScript/NodeJS/NestJS/Basics/Basics005.md)
+
+## Prisma
+### Basics
+### 2023.01.22 ~ 2023.00.00
+* [Basics001](https://github.com/injuk/TIL/blob/master/JavaScript/NodeJS/Prisma/Basics/Basics001.md)
 
 ## TypeScript
 ### Basics

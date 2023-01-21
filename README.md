@@ -2,7 +2,7 @@
 Today I learned :)
 
 ### 이 날은 안해요
-1. 2023.01.15 ~ 2023.01.21: **1년 연속 TIL 성공 기념** 휴식
+1. ~~2023.01.15 ~ 2023.01.21~~: **1년 연속 TIL 성공 기념** 휴식
 
 ## Java
 * [Java](https://github.com/injuk/TIL/blob/master/Java/Java.md)
