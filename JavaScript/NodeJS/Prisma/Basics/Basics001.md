@@ -56,4 +56,67 @@ https://pris.ly/d/getting-started
     
 [my-first-prisma-orm]
 ```
-* 
+
+### 애플리케이션과 ORM, 데이터베이스 연결하기
+* 세 가지 요소가 서로 연결되기 위해서는 우선 데이터베이스의 정보를 ORM이 알아야 하며, 애플리케이션은 ORM을 통해서 데이터베이스에 연결되어야 한다.
+  * 때문에 데이터베이스 인프라가 준비되면 해당 데이터베이스에 대한 연결 정보를 ORM에게 전달할 필요가 있다.
+* NestJS와 Prisma의 예로 들어, 세 요소 간의 연결은 다음과 같은 요소들이 담당하게 된다.
+  1. 애플리케이션과 ORM 간의 연결: NestJS 코드 상에 정의한다.
+  2. ORM과 데이터베이스 간의 연결: **`prisma.schema` 파일에 명시**한다.
+
+### prisma.schema
+* `prisma.schema` 파일에는 데이터베이스 연결과 관련된 모든 정보를 명시하며, 이로 인해 다음과 같은 장단점이 존재할 수 밖에 없다.
+  1. 파일 하나로 모든 것을 관리할 수 있으므로 편리하다.
+  2. 그러나 해당 파일이 노출된 경우 큰 문제로 번지기 쉽다.
+* 반면, `prisma init` 명령어를 통해 생성된 기본적인 `prisma.schema` 파일은 아래와 같은 형태를 가지며 각 구성 요소는 다음과 같은 의미를 갖는다.
+  1. generator: 데이터 모델을 기반으로 어떤 클라이언트가 생성될지 명시한다.
+  2. datasource: 데이터베이스 자체를 의미한다.
+     1. provider: 연결 대상 데이터베이스의 엔진을 의미한다.
+     2. url: 데이터베이스 호스트 주소를 의미하며, 하드코딩보다는 `env("환경 변수명")` 형태로 환경 변수를 활용하는 것이 바람직하다.
+```
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+```
+
+### Prisma Service 정의하기
+* NestJS 프로젝트에서 Prisma를 사용하기 위해, 다음과 같은 PrismaService를 정의한다.
+  * 이 경우, `npm i @prisma/client` 명령어를 우선 입력하여 필요한 종속성을 준비해두어야 한다.
+```typescript
+import { Injectable, OnModuleInit, INestApplication } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+
+@Injectable()
+export class PrismaService extends PrismaClient implements OnModuleInit {
+  async onModuleInit() {
+    await this.$connect();
+  }
+
+  async enableShutdownHooks(app: INestApplication) {
+    this.$on('beforeExit', async () => {
+      await app.close();
+    });
+  }
+}
+```
+* 이는 NestJS의 생명주기 이벤트와 관련이 있으며, 부트스트랩 이후의 단계에 해당하는 OnModuleInit 시점에 데이터베이스에 연결을 시도하는 점을 알 수 있다.
+  * 반면, `enableShutdownHooks` 메소드에서는 애플리케이션이 종료되는 이벤트에 맞추어 데이터베이스와의 연결 종료를 시도하게 된다.
+
+### Prisma Module 정의하기
+* 상술한 Prisma Service를 애플리케이션 전역에서 활용할 수 있도록 다음과 같이 PrismaModule을 정의한다.
+```typescript
+import { Global, Module } from "@nestjs/common";
+import { PrismaService } from './prisma.service';
+
+@Global() // PrismaModule은 애플리케이션 전역에서 사용될 것으로 보여지므로, @Global() 데코레이터를 명시한다.
+@Module({
+  providers: [PrismaService],
+  exports: [PrismaService], // PrismaService를 다른 모듈에서도 사용할 수 있도록 export한다.
+})
+export class PrismaModule {}
+```
