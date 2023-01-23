@@ -83,6 +83,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 ```
+* 백엔드 애플리케이션에서 정의한 객체는 데이터베이스가 곧장 이해할 수 없으므로 ORM을 통해 데이터베이스의 row로 변환되며, 이 때 client가 사용된다.
+  * 즉, **`generator client`는 ORM 상에서 동작하며 백엔드 상의 객체를 데이터베이스로 매핑하는 Mapper 역할을 수행**한다.
 
 ### Prisma Service 정의하기
 * NestJS 프로젝트에서 Prisma를 사용하기 위해, 다음과 같은 PrismaService를 정의한다.
@@ -120,3 +122,61 @@ import { PrismaService } from './prisma.service';
 })
 export class PrismaModule {}
 ```
+
+## 2023-01-24 Tue
+### Prisma push 활용하기
+* git과 마찬가지로, ORM이 데이터베이스에 데이터를 밀어 넣는 포워드 엔지니어링은 `push`라는 용어로 지칭한다.
+  * 반면, 반대의 동작은 자연스레 `pull`이라는 용어로 지칭된다.
+* 이를 활용하여 `prisma/schema.prisma`에 다음과 같이 새로운 엔티티를 명시한 후 `prisma db push` 명령어를 입력할 수 있다.
+  * 해당 명령어를 실행할 경우, Prisma cli는 기본적으로 현재 위치로부터 `./prisma/schema.prisma` 파일을 탐색하므로 명령어 실행 위치에 주의한다.
+```shell
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  // autoincrement에는 @기호를 명시하지 않음에 주의한다.
+  id Int @id @default(autoincrement())
+}
+```
+* 해당 명령어가 정상적으로 실행되면 다음과 같은 메시지가 노출되며 엔티티가 데이터베이스 테이블로 동기화되는 것을 확인할 수 있다.
+```shell
+[my-first-prisma-orm] prisma db push
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "my_first_prisma", schema "study" at "localhost:35432"
+
+🚀  Your database is now in sync with your Prisma schema. Done in 326ms
+
+✔ Generated Prisma Client (4.9.0 | library) to ./node_modules/@prisma/client in 51ms
+
+[my-first-prisma-orm]
+```
+
+### generator란?
+```
+> Mapper는 ORM의 많은 기능 중 백엔드 애플리케이션 상의 객체를 데이터베이스에 전달하는 역할만을 수행하며, 코드 상에서는 Prisma Client 형태로 구현된다. 
+```
+* Mapper는 백엔드 애플리케이션 - ORM - 데이터베이스로 이어지는 관계에서, ORM 상에서 애플리케이션의 객체를 데이터베이스와 연결하는 역할을 맡는다.
+* 이 떄, **이러한 Mapper를 Prisma에서는 generator라고 지칭**하며 `generate` 명령어를 통해 다음과 같이 생성할 수 있다.
+```shell
+[my-first-prisma-orm] prisma generate
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+
+✔ Generated Prisma Client (4.9.0 | library) to ./node_modules/@prisma/client in 1.81s
+You can now start using Prisma Client in your code. Reference: https://pris.ly/d/client
+```
+import { PrismaClient } from '@prisma/client'
+const prisma = new PrismaClient()
+```
+[my-first-prisma-orm] 
+```
+* 또한, **`prisma generate` 명령어를 활용하여 생성된 클라이언트는 `node_modules/.prisma/client` 상에 자동 생성된 코드의 형태로 존재**한다.
+* 이렇듯 기본적으로는 `prisma db push` 명령어만으로도 데이터베이스와 Prisma 스키마가 동기화될 수 있다.
+  * 그러나 **가능하다면 `prisma generate` 명령어를 이어서 입력하는 습관을 들여 두 개념 간의 동기화를 한 번 더 확인하는 것이 바람직**하다.
