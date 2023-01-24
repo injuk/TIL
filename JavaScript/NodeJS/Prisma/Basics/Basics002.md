@@ -71,3 +71,121 @@ async createUser() {
   return user;
 }
 ```
+
+### 레코드 간의 관계를 활용하여 생성하기
+* 사용자와 사용자 정보가 1:1 관계를 맺는다고 가정할 때, 두 정보를 하나의 트랜잭션 안에서 동시에 생성하고 싶은 경우가 있을 수 있다.
+* 언뜻 이 경우, 상술한 내용을 따라 사용자 정보를 다음과 같이 삽입하면 될 것처럼 보일 수 있다.
+```typescript
+async createUser() {
+  const user = await this.prisma.user.create({
+    data: {
+      name: faker.name.firstName(),
+      email: faker.datatype.uuid(),
+      profile: faker.lorem.sentence(),
+    },
+  });
+
+  // 상술한 코드와 마찬가지로 사용자 정보를 별도로 삽입한다.
+  const userInfo = await this.prisma.userInfo.create({
+    data: {
+      userId: user.userId,
+      height: '174',
+      weight: 70,
+      address: faker.address.city(),
+      phone: '',
+    },
+  });
+
+  this.logger.debug(
+    `this.prisma.user.create result: ${JSON.stringify({
+      ...user,
+      userInfo,
+    })}`,
+  );
+
+  return {
+    ...user,
+    userInfo,
+  };
+}
+```
+* 그러나 상술한 코드는 불편할 뿐더러 트랜잭션에 묶이지 않는다는 단점이 존재하므로, 다음과 같이 NestQuery를 활용하는 것이 바람직하다.
+    * 이 경우, **사용자 정보는 `schema.prisma`의 사용자 모델에 명시해두었던 가상 컬럼을 활용하여 삽입**한다.
+    * 또한 **가상 컬럼을 명시하는 것만으로는 결과에 사용자 정보가 포함되지 않으므로, `include` 프로퍼티를 추가하여 결과를 조인한 후 반환**하도록 한다.
+```typescript
+async createUser() {
+  const user = await this.prisma.user.create({
+    data: {
+      name: faker.name.firstName(),
+      email: faker.datatype.uuid(),
+      profile: faker.lorem.sentence(),
+
+      // 사용자 모델에 명시된 가상 컬럼을 통해 사용자 정보를 삽입한다.
+      userInfo: {
+        create: {
+          // NestQuery의 경우 userId를 명시해줄 필요는 없다.
+          // userId: user.userId,
+          height: '174',
+          weight: 70,
+          address: faker.address.city(),
+          phone: '',
+        },
+      },
+    },
+    include: {
+      userInfo: true,
+    },
+  });
+
+  this.logger.debug(
+    `this.prisma.user.create result: ${JSON.stringify(user)}`,
+  );
+
+  return user;
+}
+```
+
+### createMany API를 활용하여 여러 레코드를 생성하기
+* createBulk와 같은 동작이 필요한 경우, `PrismaService`의 `createMany()` API를 다음과 같이 활용하여 간단하게 구현할 수 있다.
+    * 이 경우, **실행 결과에는 삽입된 레코드 자체가 아닌 삽입된 레코드의 개수가 반환**된다.
+```typescript
+async createUser() {
+  const data = new Array(1000000).fill({}).map((e) => {
+    e.name = faker.name.firstName();
+    e.email = faker.datatype.uuid();
+    e.profile = faker.lorem.sentence();
+    return e;
+  });
+  const user: { count: number } = await this.prisma.user.createMany({
+    data,
+  });
+
+  this.logger.debug(
+    `this.prisma.user.create result: ${JSON.stringify(user)}`,
+  );
+
+  return user;
+}
+```
+* 그러나 **`createMany()` API를 활용하는 경우, `create()` API의 경우와는 달리 가상 컬럼을 활용한 데이터의 삽입은 불가능**하다.
+
+### PrismaClient를 활용하여 타이핑하기
+* `import { Prisma } from '@prisma/client';`와 같은 형태로 import할 경우, `prisma generate`에 의해 자동 생성된 타입을 사용할 수 있다.
+```typescript
+// 사용자 정보를 생성하기 위해 필요한 타입은 Prisma.UserCreateInput 형태로 import할 수 있다.
+async createUser(payload: Prisma.UserCreateInput) {
+  // 사용자 정보를 의미하는 모델인 User 역시 @prisma/client로부터 import한다.
+  const user: User = await this.prisma.user.create({
+    data: {
+      name: payload.name,
+      profile: payload.profile,
+    },
+  });
+
+  this.logger.debug(
+          `this.prisma.user.create result: ${JSON.stringify(user)}`,
+  );
+
+  return user;
+}
+```

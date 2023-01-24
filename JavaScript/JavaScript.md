@@ -27,6 +27,7 @@
 ### Basics
 ### 2023.01.22 ~ 2023.00.00
 * [Basics001](https://github.com/injuk/TIL/blob/master/JavaScript/NodeJS/Prisma/Basics/Basics001.md)
+* [Basics002](https://github.com/injuk/TIL/blob/master/JavaScript/NodeJS/Prisma/Basics/Basics002.md)
 
 ## TypeScript
 ### Basics
