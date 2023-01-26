@@ -224,3 +224,44 @@ getUserWithPost() {
   });
 }
 ```
+
+### delete API를 활용하여 레코드 삭제하기
+* `PrismaService`를 활용하여 레코드를 삭제하는 경우, `delete()` API를 다음과 같이 활용할 수 있다.
+  * 또한, 일반적으로 PathVariable 또는 QueryString으로 전달 받는 값은 문자열이므로 필요한 경우 반드시 명시적 형변환을을 적용해주어야 한다.
+```typescript
+deleteUserById(id: number) {
+  return this.prisma.user.delete({
+    where: {
+      // PathVariable 또는 QueryString으로 전달되는 id 값은 문자열이므로, 이를 숫자형으로 형변환한다.
+      userId: Number(id),
+    },
+  });
+}
+```
+* 상술한 `delete()` API는 결과로 제거된 레코드를 반환하는 반면, `deleteMany()` API는 제거된 레코드의 개수를 반환한다.
+  * 이 때, `deleteMany()` API 역시 where 속성을 활용하여 레코드를 제거하므로 API 호출 형태는 `delete()` API와 다르지 않다.
+* 반면, 아래와 같이 `schema.prisma`에 명시된 결과에 따라 사용자가 제거된 경우 사용자 정보 역시 함께 제거된다.
+```
+model UserInfo {
+  userId Int  @id @map("USER_ID")
+  // onDelete: Cascasde에 의해 사용자 정보는 사용자가 제거될 때 함께 제거된다.
+  user   User @relation("USER_DETAIL_INFO", fields: [userId], references: [userId], onDelete: Cascade)
+
+  height String @map("HEIGHT") @db.Char(3)
+  weight Int    @map("WEIGHT") @db.Integer
+
+  address   String   @map("ADDRESS") @db.Text
+  phone     String   @map("PHONE") @db.Char
+  createdAt DateTime @default(now()) @map("CREATED_AT") @db.Timestamptz()
+
+  @@map("USER_INFO")
+}
+```
+* 이렇듯 `onDelete`는 참조 무결성을 위해 FK로 참조되는 레코드가 제거되었을 때 이를 참조하는 레코드를 어떻게 할지 결정하는 옵션이며, 다음과 같이 분류된다.
+  1. Restrict: FK로 이미 참조되고 있는 레코드를 제거할 경우, 에러를 발생시킨다.
+  2. Cascade: FK로 참조되는 레코드가 제거된 경우, 이를 참조하는 레코드도 함께 제거한다.
+  3. SetNull: FK로 참조되는 레코드가 제거된 경우, 이를 참조하는 레코드의 FK는 null로 설정한다.
+  4. SetDefault: FK로 참조되는 레코드가 제거된 경우, 이를 참조하는 레코드의 FK는 default 값으로 설정한다.
+* 이 중 SetNull 옵션은 FK가 null을 허용해야 하므로 사용처가 제한적인 한계가 있으며, SetDefault 옵션은 반드시 default 값이 설정되어 있어야 한다.
+  * 즉, SetNull 옵션은 FK와 가상 컬럼이 모두 옵셔널한 값이어야 하므로 `schema.prisma`에 ? 기호가 명시되어 있어야 한다.
+* 그러나 **참조 무결성을 준수하기 위한 `onDelete` 옵션에 정답은 없으므로, 상황과 기획 의도에 맞는 적절한 옵션을 선택하는 것이 바람직**하다.
