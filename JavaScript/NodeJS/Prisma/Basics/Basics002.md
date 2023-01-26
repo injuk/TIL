@@ -189,3 +189,38 @@ async createUser(payload: Prisma.UserCreateInput) {
   return user;
 }
 ```
+
+## 2023-01-26 Thu
+### schema.prisma의 옵셔널 속성
+* `schema.prisma`에서, ? 기호를 명시한 속성은 옵셔널한 속성으로 취급된다.
+  * 이 때, **연관 관계를 위해 참조되는 컬럼에 옵셔널 기호를 적용했을 경우에는 아래와 같이 가상 컬럼 역시 옵셔널하게 설정**해주어야 한다.
+```
+model Post {
+  postId   Int    @id @default(autoincrement()) @map("POST_ID")
+  content  String @map("CONTENT") @db.Text
+  
+  // 아래와 같이 임의의 속성에 ? 기호를 명시하여 옵셔널한 속성으로 취급할 수 있다.
+  authorId Int?    @map("AUTHOR_ID")
+
+  // 그러나 authorId 컬럼은 가상 컬럼인 author에서 참조하므로, 이 경우에는 가상 컬럼 역시 옵셔널하게 설정해주어야 한다.
+  author User? @relation("USER_HAS_MANY_POSTS", fields: [authorId], references: [userId])
+
+  @@map("POST")
+}
+```
+
+### findUnique API를 활용하여 단건 조회하기
+* `PrismaService`를 활용하여 레코드를 단건 조회하는 경우, `findUnique()` API를 다음과 같이 활용할 수 있다.
+  * 이 때, where 속성을 활용하여 where 조건 절을 나타낼 수 있으며 include 속성을 활용한 조인 연산 역시 가능하다.
+```typescript
+getUserWithPost() {
+  return this.prisma.user.findUnique({
+    where: {
+      userId: 1,
+    },
+    include: {
+      posts: true,
+    },
+  });
+}
+```
