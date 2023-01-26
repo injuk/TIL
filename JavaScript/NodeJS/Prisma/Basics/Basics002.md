@@ -265,3 +265,44 @@ model UserInfo {
 * 이 중 SetNull 옵션은 FK가 null을 허용해야 하므로 사용처가 제한적인 한계가 있으며, SetDefault 옵션은 반드시 default 값이 설정되어 있어야 한다.
   * 즉, SetNull 옵션은 FK와 가상 컬럼이 모두 옵셔널한 값이어야 하므로 `schema.prisma`에 ? 기호가 명시되어 있어야 한다.
 * 그러나 **참조 무결성을 준수하기 위한 `onDelete` 옵션에 정답은 없으므로, 상황과 기획 의도에 맞는 적절한 옵션을 선택하는 것이 바람직**하다.
+
+## 2023-01-27 Fri
+### deleteMany API를 활용하여 여러 레코드 삭제하기
+* 기본적으로 `deleteMany()` API 역시 where 속성을 활용하므로 `delete()` API와 사용 방법이 크게 다른 점은 없다.
+  * 반면, 상술한 바와 같이 `deleteMany()` API는 제거된 레코드가 아닌 제거된 레코드의 개수를 반환한다는 점에서 차이가 있다.
+* 반면, 쿼리 상에서는 where in 구문을 활용하여 여러 레코드를 삭제할 수 있듯 다음과 같이 `deleteMany()` API에 in 조건을 전달할 수 있다.
+```typescript
+deleteUsers() {
+  return this.prisma.user.deleteMany({
+    where: {
+      userId: {
+        // 아래와 같이 여러 userId를 제거하고 싶은 경우 in 속성을 활용할 수 있다.
+        in: [1000062, 1000061, 1000060],
+      },
+    },
+  });
+}
+```
+* 또한, **`deleteMany()` API 역시 where 속성에 빈 객체가 참조될 경우 전체 레코드를 제거하므로 사용 상에 주의를 기울일 필요**가 있다.
+* 그러나 `delete()` API 또는 `deleteMany()` API는 실무에서 잘 사용되지 않으며, 대신 삭제된 상태로 전이시키는 등의 조치를 취하는 것이 일반적이다.
+
+### @updatedAt 활용하기
+* Prisma의 경우, 레코드가 수정된 시간을 자동으로 관리해주는 `@updatedAt` 기능이 제공되며 이는 다음과 같이 사용할 수 있다.
+```
+model UserInfo {
+  userId Int  @id @map("USER_ID")
+  user   User @relation("USER_DETAIL_INFO", fields: [userId], references: [userId], onDelete: Cascade)
+
+  height String @map("HEIGHT") @db.Char(3)
+  weight Int    @map("WEIGHT") @db.Integer
+
+  address   String   @map("ADDRESS") @db.Text
+  phone     String   @map("PHONE") @db.Char
+  createdAt DateTime @default(now()) @map("CREATED_AT") @db.Timestamptz()
+  
+  // 이렇게 작성하는 것으로 레코드가 수정된 시간은 자동으로 기록된다.
+  updatedAt DateTime @updatedAt
+
+  @@map("USER_INFO")
+}
+```
