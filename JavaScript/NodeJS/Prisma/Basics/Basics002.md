@@ -306,3 +306,85 @@ model UserInfo {
   @@map("USER_INFO")
 }
 ```
+
+### Prisma를 활용하여 레코드 update하기
+* Prisma의 경우, 다음과 같은 세 방식의 update 기능을 제공한다.
+  1. `upsert()`: 레코드가 존재하지 않는 경우 삽입하고, 존재하는 경우에는 수정한다.
+  2. `update()`:
+  3. `updateMany()`:
+* 예를 들어 `upsert()` API의 경우 다음과 같이 코드를 작성할 수 있다.
+  * 또한, 이 경우에도 상술한 모델에서 명시한 `@updatedAt`에 의해 수정 일자는 Prisma로부터 자동으로 추적된다.
+  * 반면 `upsert()` API는 실무에서는 자주 사용되지 않으며, 대신 if 분기를 활용하여 레코드가 존재하는 경우에 대한 처리를 별도로 정의한다.
+```typescript
+async patchUser(payload) {
+  const userInfo = await this.prisma.userInfo.upsert({
+    // userId를 기반으로 upsert할 지점을 찾은 후,
+    where: {
+      userId: Number(payload.userId),
+    },
+    // 존재한다면 아래와 같이 update하고,
+    update: {
+      height: String(payload.height),
+    },
+    // 존재하지 않는다면 아래와 같이 insert한다.
+    create: {
+      userId: Number(payload.userId),
+      height: String(payload.height),
+      phone: '',
+      weight: Math.round(Math.random() * 100) + 100,
+      address: faker.address.city(),
+    },
+  });
+
+  return userInfo;
+}
+```
+* 반면, `update()` API는 존재하는 레코드에 대해서만 다음과 같은 코드를 활용하여 수정이 가능하며 이 경우에도 수정 일자는 자동으로 적용될 수 있다.
+  * 이 경우, dto와 Pipe를 적절히 사용한다면 형변환이 필요 없어질 수 있다.
+  * 반면, **아래와 같은 코드의 경우 명시적인 형변환을 적용하지 않는다면 ORM 차원에서 에러가 발생하므로 쿼리는 실행조차 할 수 없게 된다**.
+```typescript
+async patchUser(payload) {
+  const userInfo = await this.prisma.userInfo.update({
+    // 아래와 같은 userId 조건을 갖는 레코드에 대해
+    where: {
+      userId: Number(payload.userId),
+    },
+    // 아래와 같이 수정한다.
+    data: {
+      height: String(payload.height),
+      weight: Number(payload.weight),
+    },
+    // update API 역시 include 속성을 활용하여 가상 컬럼에 명시된 레코드 값을 조회할 수 있다.
+    include: {
+      user: true,
+    },
+  });
+
+  return userInfo;
+}
+```
+* **`updateMany()` API의 사용 방법 자체는 `update()` API와 유사한 반면, 수정된 레코드 개수가 반환되므로 `include` 속성은 사용할 수 없다**.
+  * 이 때, **`updateMany()` API 역시 `deleteMany()` API와 마찬가지로 where 속성에 `{}`를 전달하면 모든 레코드가 수정되므로 주의**해야 한다.
+```typescript
+async patchUser(payload) {
+  const userInfo = await this.prisma.userInfo.updateMany({
+    where: {
+      userId: {
+        in: [1, 2],
+      },
+    },
+    data: {
+      height: String(payload.height),
+      weight: Number(payload.weight),
+    },
+  });
+
+  return userInfo;
+}
+```
+
+### 레코드의 수정과 onUpdate 속성
+* 레코드를 삭제하는 경우 `schema.prisma`에 `onDelete` 속성을 명시할 수 있었듯, 레코드를 수정하는 경우에도 `onUpdate` 속성을 명시할 수 있다.
+* 이 때, `onUpdate` 속성에 명시할 수 있는 속성은 대표적으로 Cascade가 있다.
+  * 해당 옵션은 임의의 레코드의 어떤 컬럼이 FK로 참조되는 경우, 해당 컬럼이 수정되면 FK로 참조하는 레코드 역시 함께 수정된다.
+  * 이 때, 실무에서는 **FK의 참조 무결성을 위배하지 않기 위해 대부분의 경우 Cascade 옵션만이 사용되며 그 이외의 옵션은 잘 고려되지 않는다**.
