@@ -140,3 +140,99 @@ async getPostsWithPagination(page, take) {
 * 읽기 연산에서 조인은 일반적으로 편리하나, 불필요한 데이터가 늘어나 리소스의 낭비를 늘린다는 단점이 수반된다.
   * 반면, Prisma의 경우 ORM 차원에서 쿼리 결과를 정돈하여 사용자가 보기 쉬운 결과를 반환하며, 중복되는 정보는 제거하여 리소스 낭비를 방지한다.
   * 이렇듯 **Prisma ORM에서 조인하는 경우에는 가상 컬럼을 활용하여 중복성을 제거**한다.
+
+## 2023-01-29 Sun
+### select 속성 활용하기
+* 조회 결과의 일부만을 반환하고자 하는 경우, 다음과 같이 `select` 속성을 활용할 수 있다.
+  * 이 때, **조회하고자 하는 각 컬럼을 true로 명시하는 반면 false는 인식조차하지 않음에 주의**한다.
+  * 즉, **조회하지 않고자 하는 컬럼은 false로 두는 것이 아니라 애초에 명시하지 않아야 한다**.
+```typescript
+getUserWithPost() {
+  return this.prisma.user.findUnique({
+    where: {
+      userId: 1,
+    },
+    // 사용자 레코드의 userId, provider, email 컬럼 정보만을 조회한다.
+    select: {
+      userId: true,
+      provider: true,
+      email: true,
+    },
+  });
+}
+```
+* 반면, **`select` 속성을 사용하면서 `include` 속성을 활용하여 조인을 하고자 하는 경우에 두 속성은 함께 명시할 수 없다는 특징이 존재**한다.
+  * 때문에 이러한 경우에는 **`select` 속성에 조인하고자 하는 가상 컬럼을 true로 명시해야 하며, Prisma는 가상 컬럼을 암시적으로 조인하여 반환**한다.
+```typescript
+getUserWithPost() {
+  return this.prisma.user.findUnique({
+    where: {
+      userId: 1,
+    },
+    select: {
+      userId: true,
+      provider: true,
+      email: true,
+      
+      // 가상 컬럼을 select한 경우, Prisma는 내부적으로 조인 연산을 적용한다. 
+      posts: true,
+    },
+  });
+}
+```
+
+### Prisma 중첩 쿼리 활용하기
+* 상술한 바와 같이 조인 연산에는 중복되는 데이터가 포함될 수 있으며, 이러한 종류의 데이터는 Prisma의 중첩 쿼리를 활용하여 해결할 수 있다.
+  * 이 때, **중첩 쿼리는 `select` 속성에 명시된 가상 컬럼에 대해 다시 `select` 속성을 명시하는 형식**을 갖는다.
+```typescript
+getUserWithPost() {
+  return this.prisma.user.findUnique({
+    where: {
+      userId: 1,
+    },
+    select: {
+      userId: true,
+      provider: true,
+      email: true,
+      posts: {
+        // 가상 컬럼으로부터 다시 select 속성을 활용하여 정확히 원하는 컬럼의 정보만을 조회할 수 있다.
+        select: {
+          postId: true,
+          content: true,
+        },
+      },
+    },
+  });
+}
+```
+* 이러한 **중첩 쿼리는 단지 한 단계만이 가능한 것은 아니며, 다음과 같이 추가적인 단계를 명시하는 것으로 조인을 더 유발시킬 수도 있다**.
+```typescript
+  getUserWithPost() {
+    return this.prisma.user.findUnique({
+      where: {
+        userId: 1,
+      },
+      select: {
+        userId: true,
+        provider: true,
+        email: true,
+        posts: {
+          select: {
+            postId: true,
+            content: true,
+            
+            // post가 갖는 가상 컬럼인 author를 활용하여 다시 조인을 유발시킨다.
+            author: {
+              select: {
+                userId: true,
+                name: true,
+                provider: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+```
+* 이 때, **중첩 쿼리를 사용하는 경우에는  이미 조회한 정보를 하위 단계에서 다시 명시하는 순환 참조가 발생하지 않도록 주의를 기울이는 것이 바람직**하다.
