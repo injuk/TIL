@@ -105,3 +105,38 @@ model TableForMaybeStudySchema {
   @@schema("maybe_study")
 }
 ```
+
+### findMany API를 활용한 페이지네이션 구현하기
+* `count()` API와 `findMany()` API를 활용할 경우, 다음과 같이 간단하게 페이지네이션을 구현할 수 있다.
+  * 이 때, `count()` API는 조건에 맞는 레코드의 개수를 반환한다.
+  * `findMany()` API 역시 조건에 맞는 레코드 목록을 반환하는 점에서는 유사하며, take나 skip 및 orderBy 등의 속성 역시 사용이 가능하다.
+```typescript
+async getPostsWithPagination(page, take) {
+  const [count, posts] = await Promise.all([
+    this.prisma.post.count(),
+    this.prisma.post.findMany({
+      // take 속성은 몇 개의 레코드를 조회할지를 의미한다.
+      take,
+      
+      // skip 속성은 몇 개의 레코드를 건너 뛸지를 의미하며, 일반적인 offset의 기능을 수행한다.
+      skip: take * (page - 1),
+      
+      // orderBy는 어떠한 컬럼을 기준으로 결과를 정렬할지를 의미하며, 기본적으로 오름차순 정렬을 적용한다.
+      orderBy: {
+        postId: 'desc',
+      },
+    }),
+  ]);
+
+  return {
+    currentPage: page,
+    totalPage: Math.ceil(count / take),
+    posts,
+  };
+}
+```
+
+### Prisma ORM에서의 조인 연산
+* 읽기 연산에서 조인은 일반적으로 편리하나, 불필요한 데이터가 늘어나 리소스의 낭비를 늘린다는 단점이 수반된다.
+  * 반면, Prisma의 경우 ORM 차원에서 쿼리 결과를 정돈하여 사용자가 보기 쉬운 결과를 반환하며, 중복되는 정보는 제거하여 리소스 낭비를 방지한다.
+  * 이렇듯 **Prisma ORM에서 조인하는 경우에는 가상 컬럼을 활용하여 중복성을 제거**한다.
