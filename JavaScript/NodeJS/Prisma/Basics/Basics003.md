@@ -236,3 +236,68 @@ getUserWithPost() {
   }
 ```
 * 이 때, **중첩 쿼리를 사용하는 경우에는  이미 조회한 정보를 하위 단계에서 다시 명시하는 순환 참조가 발생하지 않도록 주의를 기울이는 것이 바람직**하다.
+
+### findUnique와 findUniqueOrThrow API
+* Prisma에서 검색을 위해 활용할 수 있는 API 중 `findUnique()` API는 유일한 값을 기반으로 레코드를 조회하기 위해 사용된다.
+  * 때문에 해당 **API에 전달할 where 속성에는 PK 또는 UQ 제약 조건 등 DB 차원에서도 유일성이 보장되는 컬럼 정보만을 전달**할 수 있다.
+* 그러나 `findUnique()` API는 존재하지 않는 컬럼에 대해 조회할 경우 빈 값을 의미하는 null을 반환하며, 로직으로 이를 검증하는 것이 필수적이게 된다.
+```typescript
+async getUserWithPost(userId) {
+  const user = await this.prisma.user.findUnique({
+    where: {
+      userId,
+    },
+  });
+
+  // 이렇듯 레코드의 존재 여부를 애플리케이션 로직으로 검증해주어야 한다.
+  if (!user)
+    throw new HttpException(`user(${userId}) not found`, HttpStatus.NOT_FOUND);
+
+  return user;
+}
+```
+* Prisma는 이러한 상황에 사용할 수 있도록 `findUniqueOrThrow()` API를 제공하며, 다음과 같이 간단하게 코드에 적용할 수 있다.
+  * 이 경우, 검색에 실패한다면 해당 API를 호출한 코드 상에서 즉시 예외가 발생하게 된다.
+```typescript
+async getUserWithPost(userId) {
+  try {
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: {
+        userId,
+      },
+    });
+    return user;
+  } catch (e) {
+    if (e instanceof NotFoundError) {
+      throw new HttpException(`user(${userId}) not found`, HttpStatus.NOT_FOUND);
+    }
+    
+    throw e;
+  }
+}
+```
+* **그러나 실무에서는 이러한 방법보다는 상술한 `findUnique()` API를 호출하되 결과를 코드로 검증하는 방식이 선호**되곤 한다.
+
+### findUnique API를 활용한 복합키 검색
+* 상술한 바와 같이 `findUnique()` API는 유일성이 보장되는 컬럼에 대해서만 조회할 수 있으며, 이는 UQ 제약 조건에도 해당이 된다.
+* 이렇듯 UQ 제약 조건을 활용하여 검색하는 경우, 다음과 같이 `schema.prisma`에 명시했던 UQ 제약 조건의 이름을 명시한다.
+```typescript
+async getUserWithPost(userId) {
+  const user = await this.prisma.user.findUniqueOrThrow({
+    where: {
+      // UQ_PROVIDER_EMAIL은 schema.prisma에 명시된 UQ 제약 조건의 이름이며, 객체 형태로 해당 UQ 제약 조건을 구성하는 컬럼을 명시한다. 
+      UQ_PROVIDER_EMAIL: {
+        provider: 'KAKAO',
+        email: 'ingnoh1001',
+      },
+    },
+  });
+  if (!user)
+    throw new HttpException(
+            `user(${userId}) not found`,
+            HttpStatus.NOT_FOUND,
+    );
+
+  return user;
+}
+```
