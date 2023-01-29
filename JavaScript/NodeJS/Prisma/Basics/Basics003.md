@@ -301,3 +301,107 @@ async getUserWithPost(userId) {
   return user;
 }
 ```
+
+## 2023-01-30 Mon
+### where 속성과 다양한 연산자
+* 상술한 내용중 where 속성을 명시하여 조건을 전달하는 것은 내부적으로는 다음과 같이 equals 연산이 생략된 것과 같다.
+```typescript
+async getUser() {
+  const users = await this.prisma.user.findMany({
+    where: {
+      // 아래는 name: 'Elnora'를 작성한 것과 동일한 결과를 보인다.
+      name: {
+        equals: 'Elnora',
+      },
+    },
+  });
+
+  return users;
+}
+```
+* equals와 반대되는 동작은 not 연산자가 있으며, 이 역시도 다음과 같이 간단한 사용이 가능하다.
+```typescript
+async getUser() {
+  const users = await this.prisma.user.findMany({
+    where: {
+      name: {
+        not: 'Elnora',
+      },
+    },
+    // 너무 많은 검색 결과가 존재할 것으로 보이는 경우, take 속성을 통해 조회 개수를 지정할 수 있다.
+    take: 5,
+  });
+
+  return users;
+}
+```
+* 또한, 이러한 검색 조건의 전달은 다음과 같이 중첩 쿼리에서도 적용이 가능하다.
+  * 이 경우, in 또는 startsWith 등 where 속성이 제공하는 다른 연산자들도 사용이 가능하다.
+```typescript
+async getUser() {
+  const users = await this.prisma.user.findMany({
+    where: {
+      // 사용자와 1:1 관계를 갖는 사용자 정보를 가상 컬럼으로 참조하되, 조건에 맞는 레코드만을 조회한다.
+      userInfo: {
+        address: 'Pleasanton',
+        // address: { in: ['Pleasanton'] },
+        // address: { startsWith: 'P' },
+      },
+    },
+    take: 5,
+    include: {
+      userInfo: true,
+    },
+  });
+
+  return users;
+}
+```
+* 이 때, 검색 조건에 명시된 컬럼이 숫자형인 경우 다음과 같이 이상 / 초과 / 이하 / 미만을 검증할 수 있다.
+  * 이 경우, 적절히 혼합이 가능한 연산자를 둘 이상 명시할 경우 범위에 맞는 값만을 조회할 수 있다.
+```typescript
+async getUser() {
+  const users = await this.prisma.user.findMany({
+    where: {
+      userInfo: {
+        weight: {
+          // 아래와 같이 작성할 경우, 80 초과 90 미만인 값만을 조회한다.
+          gt: 80,
+          lt: 90,
+          // gte: 80,
+          // lte: 80,
+        },
+      },
+    },
+    take: 5,
+    include: {
+      userInfo: true,
+    },
+  });
+
+  return users;
+}
+```
+* 반면, **여러 조건에 대해 AND 또는 OR 조건을 적용하고 싶은 경우에는 다음과 같이 배열 형태로 조회 조건을 나열**할 수 있다.
+```typescript
+async getUser() {
+  const users = await this.prisma.user.findMany({
+    where: {
+      AND: [
+        { userInfo: { weight: { lt: 80 } } },
+        { userInfo: { address: { contains: 'e' } } },
+      ],
+      // OR: [
+      //   { userInfo: { weight: { lt: 80 } } },
+      //   { userInfo: { address: { contains: 'e' } } },
+      // ],
+    },
+    take: 5,
+    include: {
+      userInfo: true,
+    },
+  });
+
+  return users;
+}
+```
