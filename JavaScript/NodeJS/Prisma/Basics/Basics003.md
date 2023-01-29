@@ -405,3 +405,115 @@ async getUser() {
   return users;
 }
 ```
+
+### $transaction API
+* 트랜잭션은 여러 개의 쿼리를 논리적으로 하나의 단위로 묶어주며, Prisma는 `$transaction()` API를 통해 해당 기능을 제공한다.
+* 이 때, `$transaction()` API를 사용하기 위한 구성 요소는 크게 다음과 같이 분류된다.
+  1. 첫 번째 인자: 배열 형태로 전달되며, 실행할 개별 쿼리들을 의미한다.
+  2. 두 번째 인자: 옵셔널한 값이며, 트랜잭션에 관련된 다음과 같은 옵션을 전달한다.
+    1. maxWait: 해당 트랜잭션이 완료될 때까지 몇 초 간 대기할 것인지 명시한다.
+    2. timeout: 트랜잭션 실행 시간에 대한 제한을 몇 초로 설정할 것인지 명시한다.
+    3. isolationLevel: **트랜잭션이 실행되는 과정에서 적용될 격리 레벨을 명시**한다.
+* **상술한 바에 따라 `$transaction()` API는 다음과 같은 형태로 사용하며, 트랜잭션에 포함된 각 쿼리 별 결과가 배열 형태로 반환**된다.
+```typescript
+async createPost() {
+  // 이렇듯 각 쿼리는 $transaction() API에 첫 번째 인자로 전달될 배열에 나열한다.
+  const result = await this.prisma.$transaction([
+    this.prisma.user.findMany({
+      where: {
+        userId: 1,
+      },
+    }),
+    this.prisma.user.findMany({
+      where: {
+        userId: 2,
+      },
+    }),
+    this.prisma.user.create({
+      data: {
+        name: faker.name.firstName(),
+        email: faker.datatype.uuid(),
+        profile: faker.lorem.paragraph(),
+      },
+    }),
+  ]);
+
+  // 결과인 result는 배열이며, 각 쿼리 별 실행 결과가 포함된다.
+  return result;
+}
+```
+* 또한, 이렇게 정의된 쿼리는 다음과 같은 로그를 기반으로 동일한 트랜잭션 내에서 실행되었음을 확인할 수 있다.
+```shell
+{
+  args: { where: { userId: 1 } },
+  dataPath: [],
+  // 아래 속성이 트랜잭션 내에서 실행되었음을 의미한다.
+  runInTransaction: true,
+  action: 'findMany',
+  model: 'User'
+}
+// ...생략
+prisma:query SELECT 1
+// 각 쿼리는 동일한 BEGIN - COMMIT 블록에 위치하게 된다.
+prisma:query BEGIN
+prisma:query SELECT "study"."USER"."USER_ID", "study"."USER"."NAME", "study"."USER"."PROVIDER", "study"."USER"."EMAIL", "study"."USER"."PROFILE" FROM "study"."USER" WHERE "study"."USER"."USER_ID" = $1 OFFSET $2
+prisma:query SELECT "study"."USER"."USER_ID", "study"."USER"."NAME", "study"."USER"."PROVIDER", "study"."USER"."EMAIL", "study"."USER"."PROFILE" FROM "study"."USER" WHERE "study"."USER"."USER_ID" = $1 OFFSET $2
+prisma:query INSERT INTO "study"."USER" ("NAME","PROVIDER","EMAIL","PROFILE") VALUES ($1,$2,$3,$4) RETURNING "study"."USER"."USER_ID"
+prisma:query SELECT "study"."USER"."USER_ID", "study"."USER"."NAME", "study"."USER"."PROVIDER", "study"."USER"."EMAIL", "study"."USER"."PROFILE" FROM "study"."USER" WHERE "study"."USER"."USER_ID" = $1 LIMIT $2 OFFSET $3
+prisma:query COMMIT
+```
+* 반면, Prisma 4.7 버전 이전에서의 **`$transaction()` API는 첫 쿼리에서 조회한 결과를 토대로 두 번쨰 쿼리를 실행할 수 없었다**.
+  * 즉, `$transaction()` API에서 각 쿼리는 서로 독립적으로 실행된다.
+* 그러나 최근 버전의 경우, 다음과 같이 async 함수를 전달하는 것으로 해당 기능을 간단히 구현할 수 있게 되었다.
+  * 이 경우, **async 함수의 인자로는 `this.prisma`가 전달되므로 반드시 다음과 같이 `this.prisma`를 직접 참조하지 않도록 코드를 작성**한다.
+```typescript
+async createPost(payload: Prisma.PostUncheckedCreateInput) {
+  // 아래와 같이 트랜잭션 내에서 원하는 로직을 마음 껏 작성하며, 각 쿼리는 모두 동일한 트랜잭션에 위치하게 된다.
+  const result = await this.prisma.$transaction(async (transactionCtx) => {
+    // 이 경우, transactionCtx는 this.prisma가 된다.
+    const user = await transactionCtx.user.findUnique({
+      where: { userId: 1 },
+    });
+
+    if (!user) throw new NotFoundException(`user(${1})`);
+
+    return transactionCtx.post.findMany({
+      where: { authorId: user.userId },
+    });
+  });
+
+  return result;
+}
+```
+* **상술한 트랜젹션 방식을 Interactive transaction이라고 지칭하며, 이 경우 result 변수에는 트랜잭션 내에서 마지막으로 반환한 값이 참조**된다.
+
+### Prisma 동작 원리
+* Prisma를 활용하여 쿼리를 시도하는 경우, 요청은 다음과 같은 흐름에 의해 처리된다.
+  1. 사용자의 요청인 쿼리는 백엔드 애플리케이션으로부터 시작하여 Prisma ORM 그 자체이기도 한 Prisma client에게 전달된다.
+  2. Prisma client는 해당 요청을 Prisma 내부에 위치한 엔진인 Prisma engine에 전달한다.
+  3. **Prisma engine은 요청된 쿼리에 대한 유효성을 검증하여 올바른 쿼리인지 확인한 후, 필요한 매핑 작업을 수행**한다.
+  4. 3.의 과정에서 쿼리는 DB가 이해할 수 있는 형태로 매핑되므로, Prisma engine은 실제 DB에 이를 요청한 후 결과를 반환받는다.
+  5. Prisma engine은 DB로부터 반환 받은 결과값을 다시 Prisma client에게 반환한다.
+  6. Prisma client는 전달 받은 결과값을 다시 백엔드 애플리케이션에 반환한다.
+* 이 떄, Prisma 동작의 핵심인 Prisma engine 및 실제 DB 단에서 소요된 시간은 PrismaService의 미들웨어에서 다음과 같이 측정할 수 있다.
+  * 이러한 **동작 원리와 흐름을 적절히 활용할 경우, 각 쿼리와 트랜잭션 별 소요 시간을 파악하여 성능을 튜닝하는 데에 도움**을 받을 수 있다.
+```typescript
+async onModuleInit() {
+  await this.$connect();
+
+  this.$use(async (params, next) => {
+    // 아래에서 선언하는 시간은 Prisma client가 요청을 Prisma engine에 전달하기 직전까지의 시간이다. 
+    const beforeQuery = Date.now();
+    
+    // 아래에서 Prisma engine이 실제로 DB와 상호작용한 후, 결과를 변수 result에 반환한다.
+    const result = await next(params);
+
+    // 아래에서 선언하는 시간은 Prisma client가 요청을 Prisma engine로부터 반환받기 직전까지의 시간이다.
+    const afterQuery = Date.now();
+
+    console.log(`query execution time in ms: ${afterQuery - beforeQuery}`);
+
+    return result;
+  });
+}
+```
