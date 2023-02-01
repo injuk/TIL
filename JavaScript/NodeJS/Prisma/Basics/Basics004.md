@@ -88,3 +88,49 @@ groupBy() {
   });
 }
 ```
+
+## 2023-02-01 Wed
+### connect를 활용하여 FK 참조 관계 추가하기
+* FK로 참조되는 어떤 레코드에 대해 FK를 참조하는 새로운 레코드를 생성하는 경우, 다음과 같이 connect 속성을 활용하여 연결할 수도 있다.
+  * 즉, **connect를 활용할 경우 FK로 참조되는 레코드를 굳이 생성하지 않더라도 기존재하는 레코드에 새로운 자식 레코드를 추가**할 수 있다.
+  * 또한 이 경우, **FK 관계를 활용하는 connect 속성의 특성 상 해당 속성이 참조하는 컬럼은 반드시 유일성이 보장되어야 한다**.
+```typescript
+connectToUser() {
+  return this.prisma.post.create({
+    data: {
+      content: faker.lorem.paragraph(),
+      author: {
+        connect: {
+          userId: 1,
+        },
+      },
+    },
+  });
+}
+```
+
+### 복합 키 조회시 주의사항
+* 아래와 같은 모델이 `schema.prisma`에 정의되어 있다고 할 때, 해당 모델에 대해 `findUnique()` API를 호출한다면 특수한 검색 조건을 사용해야 한다.
+```
+model Cart {
+  user_id Int
+  book_id Int
+  
+  @@id([user_id, book_id])
+}
+```
+* 상술한 모델을 예로 들어 where 속성에 적용해야 하는 특수한 검색 조건은 `user_id_book_id`의 형태와 같다.
+  * 즉, **해당 검색 조건은 단순히 복합 키를 구성하는 컬럼들을 `_`로 이어 붙인 lower_snake_case 를 적용한 것**과 같다.
+```typescript
+getWithComposite(userId, bookId) {
+  return this.prisma.user.findUnique({
+    where: {
+      user_id_book_id: {
+        user_id: userId,
+        book_id: bookId,
+      }
+    },
+  });
+}
+```
+* 이는 **where 속성에 검색 조건으로 복합키의 이름을 명시하기 위함이며, 특히 Prisma는 복합 키의 이름을 상술한 규칙과 같이 정의**한다.
