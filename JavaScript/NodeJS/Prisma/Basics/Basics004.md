@@ -134,3 +134,42 @@ getWithComposite(userId, bookId) {
 }
 ```
 * 이는 **where 속성에 검색 조건으로 복합키의 이름을 명시하기 위함이며, 특히 Prisma는 복합 키의 이름을 상술한 규칙과 같이 정의**한다.
+
+### $queryRaw API를 활용한 로우 쿼리의 실행
+* Prisma의 경우, raw query를 실행하기 위해 제공되는 API는 크게 다음과 같이 분류된다.
+  1. `$queryRaw`: raw query를 실행하기 위한 API이다.
+  2. `$queryRawUnsafe`: 마찬가지로 raw query를 실행할 수 있으나, sql 관련 공격을 당할 수 있는 API에 해당한다.
+* 상술한 이유에서 일반적으로는 `$queryRaw` API가 선호되며, 다음과 같이 간단하게 사용할 수 있다.
+  * 이 경우, raw query는 일반적인 sql 문법에 맞추어 작성한다.
+```typescript
+getByRawQuery() {
+  return this.prisma.$queryRaw`select * from "study"."USER" where "USER_ID" = 1;`;
+}
+```
+* 또는 PrismaClient에 포함되어 있는 `Prisma.sql`을 활용하여 다음과 같이 작성할 수도 있다.
+  * 이러한 두 방식은 내부적으로 큰 차이가 없으며, 어디까지나 개발자 자신의 취향에 맞추어 `$queryRaw` API를 활용하는 것이 바람직하다.
+```typescript
+getByRawQuery() {
+  return this.prisma.$queryRaw(
+    Prisma.sql`select * from "study"."USER" where "USER_ID" = 1;`,
+  );
+}
+```
+* 또한, 이렇듯 raw query를 활용하여 DB와 상호작용 하는 방식은 크게 다음과 같은 장점이 존재한다.
+  1. **Prisma ORM이 제공하는 기능을 활용했을 때보다 상대적으로 좋은 성능**을 보여준다.
+  2. **Prisma ORM이 제공할 수 없는 복잡한 쿼리를 사용할 수 있도록 한다**.
+
+### $executeRaw API를 활용한 로우 쿼리의 실행
+* `$queryRaw` API와 마찬가지로 `$executeRaw` API 역시 raw query를 실행하면서도 안전하지 않은 버전의 API가 존재하고, 두 가지 사용 방식이 있다.
+```typescript
+getByRawQuery() {
+  return this.prisma
+    .$executeRaw`select * from "study"."USER" where "USER_ID" = 1;`;
+}
+```
+* 그러나 `$executeRaw` API는 raw query 로 인해 조회되거나 영향을 받은 레코드의 개수를 반환한다.
+  * **이러한 특징은 쿼리의 결과를 그대로 반환하는 `$queryRaw` API와 확연히 구분**된다.
+
+### Prisma studio 활용하기
+* 터미널에서 `prisma studio` 명령어를 입력할 경우, `http://localhost:5555`를 통해 접속할 수 있는 서버가 실행된다.
+* `prisma studio`를 활용할 경우 프로젝트 초기 시점에 DB Admin 페이지 역할을 수행할 수 있으며, 데이터를 추가하거나 삭제하는 등의 관리 역시 가능하다.
