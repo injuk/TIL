@@ -495,7 +495,7 @@ async createPost(payload: Prisma.PostUncheckedCreateInput) {
   4. 3.의 과정에서 쿼리는 DB가 이해할 수 있는 형태로 매핑되므로, Prisma engine은 실제 DB에 이를 요청한 후 결과를 반환받는다.
   5. Prisma engine은 DB로부터 반환 받은 결과값을 다시 Prisma client에게 반환한다.
   6. Prisma client는 전달 받은 결과값을 다시 백엔드 애플리케이션에 반환한다.
-* 이 떄, Prisma 동작의 핵심인 Prisma engine 및 실제 DB 단에서 소요된 시간은 PrismaService의 미들웨어에서 다음과 같이 측정할 수 있다.
+* 이 때, Prisma 동작의 핵심인 Prisma engine 및 실제 DB 단에서 소요된 시간은 PrismaService의 미들웨어에서 다음과 같이 측정할 수 있다.
   * 이러한 **동작 원리와 흐름을 적절히 활용할 경우, 각 쿼리와 트랜잭션 별 소요 시간을 파악하여 성능을 튜닝하는 데에 도움**을 받을 수 있다.
 ```typescript
 async onModuleInit() {

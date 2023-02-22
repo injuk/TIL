@@ -163,7 +163,7 @@ Datasource "db": PostgreSQL database "my_first_prisma", schema "study" at "local
 > Mapper는 ORM의 많은 기능 중 백엔드 애플리케이션 상의 객체를 데이터베이스에 전달하는 역할만을 수행하며, 코드 상에서는 Prisma Client 형태로 구현된다. 
 ```
 * Mapper는 백엔드 애플리케이션 - ORM - 데이터베이스로 이어지는 관계에서, ORM 상에서 애플리케이션의 객체를 데이터베이스와 연결하는 역할을 맡는다.
-* 이 떄, **이러한 Mapper를 Prisma에서는 generator라고 지칭**하며 `generate` 명령어를 통해 다음과 같이 생성할 수 있다.
+* 이 때, **이러한 Mapper를 Prisma에서는 generator라고 지칭**하며 `generate` 명령어를 통해 다음과 같이 생성할 수 있다.
 ```shell
 [my-first-prisma-orm] prisma generate
 Environment variables loaded from .env
@@ -315,7 +315,7 @@ model Post {
 ```
 * 상술한 코드에서, **가상 컬럼은 ORM에서는 존재하는 것처럼 취급되지만 데이터베이스에는 존재하지 않는 컬럼을 의미**한다.
   * 또한, 이 경우에는 가상 컬럼이 엔티티 간의 관계를 표현하는 데에 사용된 것으로 이해할 수 있다.
-* 이 떄, `@relation` 키워드를 구성하는 fields와 references 속성은 각각 다음과 같은 의미를 갖는다.
+* 이 때, `@relation` 키워드를 구성하는 fields와 references 속성은 각각 다음과 같은 의미를 갖는다.
   1. fields: 다른 테이블을 참조하는 FK 역할을 수행할 컬럼을 명시한다.
   2. references: FK의 실체가 관계를 맺는 상대 테이블의 어떤 컬럼인지 명시한다.
 * 또한, 상술한 예시와 같이 `@relation` 키워드의 첫 번째 인자로서 각 엔티티 간의 관계를 구분하기 위한 별칭을 전달하는 것이 권장된다.
