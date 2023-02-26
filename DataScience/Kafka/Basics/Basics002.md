@@ -137,3 +137,37 @@
 * 또한, 같은 디렉토리의 `kafka-topics.sh` 명령어와 --list 옵션을 병용하여 임의의 브로커 서버와 관련된 토픽의 목록을 조회할 수 있다.
   * 이 떄, 브로커 서버를 처음 실행한 경우라면 아무런 토픽이 없을 것이므로 빈 결과가 출력된다.
   * 그러나 이렇듯 빈 결과가 출력되는 것 역시도 브로커 서버가 정상적으로 실행된 이후에 가능한 것이므로, 역시 카프카의 정상성을 확인하는 지표가 될 수 있다. 
+
+## 2023-02-26 Sun
+### 카프카 브로커 서버 실행하기
+* 카프카 서버를 실행하는 경우 우선 주키퍼를 실행해야 하며, 그 이전에 1.8 버전 이상의 Java가 설치되어 있어야 한다.
+  * 이 때, 주키퍼의 실행은 상술한 쉘 스크립트를 사용하여 진행한다.
+* 모든 준비가 완료된 경우, bin 디렉토리로부터 `./zookeeper-server-start.sh ../config/zookeeper.properties`와 같은 명령어를 실행한다.
+  * 이러한 명령어를 실행할 경우, 아래와 같은 로그를 확인하는 것으로 주키퍼가 실행된 것을 알 수 있다.
+```shell
+[2023-02-26 22:37:51,926] INFO Server environment:java.io.tmpdir=/var/folders/06/kk42q66107zc4v6g8n656d6m0000gn/T/ (org.apache.zookeeper.server.ZooKeeperServer)
+[2023-02-26 22:37:51,926] INFO Server environment:java.compiler=<NA> (org.apache.zookeeper.server.ZooKeeperServer)
+# ...생략
+[2023-02-26 22:37:51,926] INFO Server environment:os.memory.free=498MB (org.apache.zookeeper.server.ZooKeeperServer)
+[2023-02-26 22:37:51,926] INFO Server environment:os.memory.max=512MB (org.apache.zookeeper.server.ZooKeeperServer)
+[2023-02-26 22:37:51,926] INFO Server environment:os.memory.total=512MB (org.apache.zookeeper.server.ZooKeeperServer)
+[2023-02-26 22:37:51,927] INFO minSessionTimeout set to 6000 (org.apache.zookeeper.server.ZooKeeperServer)
+[2023-02-26 22:37:51,927] INFO maxSessionTimeout set to 60000 (org.apache.zookeeper.server.ZooKeeperServer)
+[2023-02-26 22:37:51,927] INFO Created server with tickTime 3000 minSessionTimeout 6000 maxSessionTimeout 60000 datadir /tmp/zookeeper/version-2 snapdir /tmp/zookeeper/version-2 (org.apache.zookeeper.server.ZooKeeperServer)
+[2023-02-26 22:37:51,933] INFO Using org.apache.zookeeper.server.NIOServerCnxnFactory as server connection factory (org.apache.zookeeper.server.ServerCnxnFactory)
+[2023-02-26 22:37:51,935] INFO Configuring NIO connection handler with 10s sessionless connection timeout, 2 selector thread(s), 16 worker threads, and 64 kB direct buffers. (org.apache.zookeeper.server.NIOServerCnxnFactory)
+[2023-02-26 22:37:51,937] INFO binding to port 0.0.0.0/0.0.0.0:2181 (org.apache.zookeeper.server.NIOServerCnxnFactory)
+[2023-02-26 22:37:51,943] INFO zookeeper.snapshotSizeFactor = 0.33 (org.apache.zookeeper.server.ZKDatabase)
+[2023-02-26 22:37:51,944] INFO Snapshotting: 0x0 to /tmp/zookeeper/version-2/snapshot.0 (org.apache.zookeeper.server.persistence.FileTxnSnapLog)
+[2023-02-26 22:37:51,946] INFO Snapshotting: 0x0 to /tmp/zookeeper/version-2/snapshot.0 (org.apache.zookeeper.server.persistence.FileTxnSnapLog)
+[2023-02-26 22:37:51,956] INFO Using checkIntervalMs=60000 maxPerMinute=10000 (org.apache.zookeeper.server.ContainerManager)
+```
+* 이후 새로운 터미널을 열어 bin 디렉토리로부터 `./kafka-server-start.sh ../config/server.properties` 명령어를 통해  브로커를 실행한다.
+  * 이 경우, 아래와 같은 로그를 통해 카프카 브로커가 정상 실행되었음을 알 수 있다.
+```shell
+[2023-02-26 22:41:45,992] INFO Kafka version: 2.5.0 (org.apache.kafka.common.utils.AppInfoParser)
+[2023-02-26 22:41:45,992] INFO Kafka commitId: 66563e712b0b9f84 (org.apache.kafka.common.utils.AppInfoParser)
+[2023-02-26 22:41:45,992] INFO Kafka startTimeMs: 1677418905990 (org.apache.kafka.common.utils.AppInfoParser)
+[2023-02-26 22:41:45,993] INFO [KafkaServer id=0] started (kafka.server.KafkaServer)
+```
+* 이 때, 상술한 바와 같이 `kafka-broker-api-version.sh`과 `kafka-topics.sh`을 통해 브로커의 정상 실행을 확인할 수 있다.
