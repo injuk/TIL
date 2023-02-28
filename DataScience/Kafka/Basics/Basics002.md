@@ -210,3 +210,70 @@ hello.kafka
 Topic: hello.kafka	PartitionCount: 1	ReplicationFactor: 1	Configs: segment.bytes=1073741824
 	Topic: hello.kafka	Partition: 0	Leader: 0	Replicas: 0	Isr: 0
 ```
+
+### 설정과 함께 토픽 생성하기
+* 반면, 파티션 개수 또는 복제 개수를 옵션 형태로 명시하여 다음과 같이 토픽을 생성할 수도 있다.
+  * 이 경우, `--describe` 옵션을 통해 자신이 설정한 토픽의 정보를 확인할 수 있게 된다.
+```shell
+[bin] ./kafka-topics.sh --bootstrap-server my-kafka:9092 --create --partitions 10 --replication-factor 1 --config retention.ms=172800000 --topic advanced.hello.kafka
+WARNING: Due to limitations in metric names, topics with a period ('.') or underscore ('_') could collide. To avoid issues it is best to use either, but not both.
+Created topic advanced.hello.kafka.
+[bin] ./kafka-topics.sh --bootstrap-server my-kafka:9092 --describe --topic advanced.hello.kafka
+Topic: advanced.hello.kafka	PartitionCount: 10	ReplicationFactor: 1	Configs: segment.bytes=1073741824,retention.ms=172800000
+	Topic: advanced.hello.kafka	Partition: 0	Leader: 0	Replicas: 0	Isr: 0
+	Topic: advanced.hello.kafka	Partition: 1	Leader: 0	Replicas: 0	Isr: 0
+	Topic: advanced.hello.kafka	Partition: 2	Leader: 0	Replicas: 0	Isr: 0
+	Topic: advanced.hello.kafka	Partition: 3	Leader: 0	Replicas: 0	Isr: 0
+	Topic: advanced.hello.kafka	Partition: 4	Leader: 0	Replicas: 0	Isr: 0
+	Topic: advanced.hello.kafka	Partition: 5	Leader: 0	Replicas: 0	Isr: 0
+	Topic: advanced.hello.kafka	Partition: 6	Leader: 0	Replicas: 0	Isr: 0
+	Topic: advanced.hello.kafka	Partition: 7	Leader: 0	Replicas: 0	Isr: 0
+	Topic: advanced.hello.kafka	Partition: 8	Leader: 0	Replicas: 0	Isr: 0
+	Topic: advanced.hello.kafka	Partition: 9	Leader: 0	Replicas: 0	Isr: 0
+[bin]
+```
+* 이 때, 상술한 바와 같이 **`--partitions` 옵션 등을 명시하지 않는 경우 server.properties에 설정된 기본 값이 적용된 토픽이 생성**된다.
+
+### 카프카 토픽 수정하기
+* 상술했듯, 아무런 옵션을 병기하지 않고 생성한 카프카 토픽의 설정은 server.properties의 설정을 적용하며, 이는 `--alter` 옵션을 통해 수정할 수 있다.
+```shell
+[bin] ./kafka-topics.sh --bootstrap-server my-kafka:9092 --create --topic update.candidate
+WARNING: Due to limitations in metric names, topics with a period ('.') or underscore ('_') could collide. To avoid issues it is best to use either, but not both.
+Created topic update.candidate.
+[bin] ./kafka-topics.sh --bootstrap-server my-kafka:9092 --describe --topic update.candidate
+Topic: update.candidate	PartitionCount: 1	ReplicationFactor: 1	Configs: segment.bytes=1073741824
+	Topic: update.candidate	Partition: 0	Leader: 0	Replicas: 0	Isr: 0
+[bin] # 상술한 바와 같이, 아무런 옵션을 병기하지 않고 생성한 토픽의 파티션 개수는 기본 설정값인 1이 적용된다.
+[bin] ./kafka-topics.sh --bootstrap-server my-kafka:9092 --alter --partitions 10 --topic update.candidate
+[bin] # --alter를 활용한 토픽의 수정에는 별다른 응답이 출력되지 않는다.
+[bin] ./kafka-topics.sh --bootstrap-server my-kafka:9092 --describe --topic update.candidate
+Topic: update.candidate	PartitionCount: 10	ReplicationFactor: 1	Configs: segment.bytes=1073741824
+	Topic: update.candidate	Partition: 0	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 1	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 2	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 3	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 4	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 5	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 6	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 7	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 8	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 9	Leader: 0	Replicas: 0	Isr: 0
+[bin] # 반면 --alter 옵션을 통해 파티션의 개수를 수정한 경우, 상술한 바와 같이 파티션의 개수가 늘어나게 된다.
+```
+* 이 때, 이러한 **파티션의 증설은 컨슈머를 함께 증설시켜 처리량을 선형으로 늘리는 장점이 있지만 다시 파티션을 줄일 수는 없다는 점을 반드시 고려**해야 한다.
+  * 만일 `--alter` 옵션을 통해 파티션의 개수를 줄이는 경우, 다음과 같은 `InvalidPartitionsException` 예외가 발생하는 것을 확인할 수 있다.
+```shell
+[bin] ./kafka-topics.sh --bootstrap-server my-kafka:9092 --alter --partitions 1 --topic update.candidate
+Error while executing topic command : org.apache.kafka.common.errors.InvalidPartitionsException: Topic currently has 10 partitions, which is higher than the requested 1.
+[2023-02-28 22:52:13,436] ERROR java.util.concurrent.ExecutionException: org.apache.kafka.common.errors.InvalidPartitionsException: Topic currently has 10 partitions, which is higher than the requested 1.
+	at org.apache.kafka.common.internals.KafkaFutureImpl.wrapAndThrow(KafkaFutureImpl.java:45)
+	at org.apache.kafka.common.internals.KafkaFutureImpl.access$000(KafkaFutureImpl.java:32)
+	at org.apache.kafka.common.internals.KafkaFutureImpl$SingleWaiter.await(KafkaFutureImpl.java:89)
+	at org.apache.kafka.common.internals.KafkaFutureImpl.get(KafkaFutureImpl.java:260)
+	at kafka.admin.TopicCommand$AdminClientTopicService.alterTopic(TopicCommand.scala:270)
+	at kafka.admin.TopicCommand$.main(TopicCommand.scala:64)
+	at kafka.admin.TopicCommand.main(TopicCommand.scala)
+Caused by: org.apache.kafka.common.errors.InvalidPartitionsException: Topic currently has 10 partitions, which is higher than the requested 1.
+ (kafka.admin.TopicCommand$)
+[bin]
+```
