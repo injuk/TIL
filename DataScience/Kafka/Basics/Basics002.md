@@ -191,3 +191,22 @@
   * 그러나 분산 시스템에서 분산된 데이터를 줄이는 방법은 너무 복잡하기에 카프카에서는 늘린 파티션의 개수는 다시 줄일 수 없으며, 삭제 후 재생성만이 지원된다.
   * 때문에 **`--alter` 옵션을 토대로 더 적은 파티션 개수를 명시할 경우, `InvalidPartitionsException` 에외가 발생**하게 된다.
   * 이로 인해 파티션의 개수를 늘리거나 새 토픽을 생성하는 경우, 파티션의 개수를 다시 줄이는 상황이 발생하지는 않을지 충분한 논의를 거치는 것이 바람직하다.
+
+## 2023-02-28 Tue
+### 카프카 토픽 생성하기
+* 토픽 생성의 경우, `kafka-topics.sh`과 `--create` 옵션을 아래와 같이 활용할 수 있다.
+  * 또한, 이렇게 생성된 토픽은 `--list` 옵션을 통해서 확인할 수 있다.
+```shell
+[bin] ./kafka-topics.sh --bootstrap-server my-kafka:9092 --create --topic hello.kafka
+WARNING: Due to limitations in metric names, topics with a period ('.') or underscore ('_') could collide. To avoid issues it is best to use either, but not both.
+Created topic hello.kafka.
+[bin] ./kafka-topics.sh --bootstrap-server my-kafka:9092 --list
+hello.kafka
+[bin]
+```
+* 또는 `--describe` 옵션을 명시하여 다음과 같이 생성한 토픽의 세부 정보를 확인할 수도 있다.
+```shell
+[bin] ./kafka-topics.sh --bootstrap-server my-kafka:9092 --describe --topic hello.kafka
+Topic: hello.kafka	PartitionCount: 1	ReplicationFactor: 1	Configs: segment.bytes=1073741824
+	Topic: hello.kafka	Partition: 0	Leader: 0	Replicas: 0	Isr: 0
+```
