@@ -279,9 +279,49 @@ Caused by: org.apache.kafka.common.errors.InvalidPartitionsException: Topic curr
 ```
 
 ## 2023-03-01 Tue
-### kafka-configs.sh이란?
-* 해당 쉘 스크립트는 토픽의 옵션 일부를 설정하기 위해 사용할 수 있으며, `--alter` 또는 `--add-config` 옵션을 병기할 수 있다.
+### kafka-configs.sh 활용하기
+* 해당 쉘 스크립트는 토픽의 옵션 일부를 설정하기 위해 사용할 수 있으며, `--alter --add-config` 옵션을 병기할 수 있다.
   * 예를 들어, 이러한 명령어를 통해 `min.insync.replicas` 옵션을 토픽에 설정할 수 있다.
   * 이 때, 해당 옵션은 프로듀서가 데이터를 보내거나 컨슈머가 이를 읽어들일 때 워터마크 용도 등 안전한 데이터 전송을 보장하기 위해 사용될 수 있다.
 * 또한, 이렇게 수정된 토픽의 설정은 kafka-topics.sh 쉘 스크립트와 `--describe` 옵션을 활용하여 확인할 수 있다.
 * 나아가 `--broker [브로커ID] --all --describe`와 같은 옵션을 병기하는 것으로 브로커에 설정된 여러 옵션의 기본 값을 확인할 수 있다. 
+  * 이 때, 여러 옵션의 기본 값은 브로커의 `server.properties`에 명시된 여러 설정들을 지칭한다.
+  * 그러나 긴 설정 파일을 하나 하나 분석하는 것보다는 상술한 kafka-configs.sh 쉘 스크립트를 활용하는 것을 통해 여러 설정 값을 한 눈에 확인할 수 있다.
+```shell
+[bin] ./kafka-topics.sh --bootstrap-server my-kafka:9092 --describe --topic update.candidate
+Topic: update.candidate	PartitionCount: 10	ReplicationFactor: 1	Configs: segment.bytes=1073741824
+	Topic: update.candidate	Partition: 0	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 1	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 2	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 3	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 4	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 5	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 6	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 7	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 8	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 9	Leader: 0	Replicas: 0	Isr: 0
+[bin] # 상술한 토픽의 경우, 현재 설정은 segment.bytes 만이 적용되어 있는 것을 확인할 수 있다.
+[bin] ./kafka-configs.sh --bootstrap-server my-kafka:9092 --alter --add-config min.insync.replicas=2 --topic update.candidate
+Completed updating config for topic update.candidate.
+[bin] # 상술한 명령어를 토대로 해당 토픽에 새로운 설정인 min.insync.replicas를 적용한다.
+[bin] ./kafka-topics.sh --bootstrap-server my-kafka:9092 --describe --topic update.candidate
+Topic: update.candidate	PartitionCount: 10	ReplicationFactor: 1	Configs: min.insync.replicas=2,segment.bytes=1073741824
+	Topic: update.candidate	Partition: 0	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 1	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 2	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 3	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 4	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 5	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 6	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 7	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 8	Leader: 0	Replicas: 0	Isr: 0
+	Topic: update.candidate	Partition: 9	Leader: 0	Replicas: 0	Isr: 0
+[bin] # 이제 Configs에 이전 명령어를 통해 설정한 min.insync.replicas가 적용된 것을 확인할 수 있다.
+[bin] ./kafka-configs.sh --bootstrap-server my-kafka:9092 --broker 0 --all --describe
+All configs for broker 0 are:
+  log.cleaner.min.compaction.lag.ms=0 sensitive=false synonyms={DEFAULT_CONFIG:log.cleaner.min.compaction.lag.ms=0}
+  offsets.topic.num.partitions=50 sensitive=false synonyms={DEFAULT_CONFIG:offsets.topic.num.partitions=50}
+# ...생략 
+[bin] # 또한, kafka-configs.sh 쉘 스크립트를 토대로 브로커 서버에 적용된 여러 설정의 기본 값을 확인할 수도 있다. 
+```
+* 이 때, 상술한 모든 쉘 스크립트들은 운영 환경에서도 빈번하게 활용되므로 되도록이면 각각의 쉘 스크립트와 사용 가능한 옵션들에 익숙해지는 것이 바람직하다.
