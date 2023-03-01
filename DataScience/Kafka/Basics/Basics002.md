@@ -277,3 +277,11 @@ Caused by: org.apache.kafka.common.errors.InvalidPartitionsException: Topic curr
  (kafka.admin.TopicCommand$)
 [bin]
 ```
+
+## 2023-03-01 Tue
+### kafka-configs.sh이란?
+* 해당 쉘 스크립트는 토픽의 옵션 일부를 설정하기 위해 사용할 수 있으며, `--alter` 또는 `--add-config` 옵션을 병기할 수 있다.
+  * 예를 들어, 이러한 명령어를 통해 `min.insync.replicas` 옵션을 토픽에 설정할 수 있다.
+  * 이 때, 해당 옵션은 프로듀서가 데이터를 보내거나 컨슈머가 이를 읽어들일 때 워터마크 용도 등 안전한 데이터 전송을 보장하기 위해 사용될 수 있다.
+* 또한, 이렇게 수정된 토픽의 설정은 kafka-topics.sh 쉘 스크립트와 `--describe` 옵션을 활용하여 확인할 수 있다.
+* 나아가 `--broker [브로커ID] --all --describe`와 같은 옵션을 병기하는 것으로 브로커에 설정된 여러 옵션의 기본 값을 확인할 수 있다. 
