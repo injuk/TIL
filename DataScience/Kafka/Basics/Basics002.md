@@ -402,7 +402,7 @@ All configs for broker 0 are:
 >k2:world
 >k1:bye
 >k3:kafka
-> # 여기서 control C를 눌러 종료한다.
+>^C # 여기서 control C를 눌러 종료한다.
 [bin] ./kafka-console-consumer.sh --bootstrap-server my-kafka:9092 --topic hello.kafka --from-beginning
 hello
 world
@@ -431,6 +431,7 @@ Processed a total of 1 messages
 ```
 * 임의의 파티션에 존재하는 레코드만을 조회하고 싶은 경우, 다음과 같이 `--partition` 옵션을 명시한다.
   * 아래의 경우, 테스트용 토픽의 파티션 개수가 1이므로 프로듀서에 의해 적재된 모든 레코드가 출력된다.
+  * 반면, 여러 파티션으로 구성된 토픽을 운영하는 경우 메시지 키의 해시에 따라 레코드가 파티션 별로 할당되므로 때로는 아무런 결과를 출력하지 않을 수 있다.
 ```shell
 [bin] ./kafka-console-consumer.sh --bootstrap-server my-kafka:9092 --topic hello.kafka --property print.key=true --property key.separator=":" --from-beginning --partition 0
 k1:hello
@@ -438,4 +439,30 @@ k2:world
 k1:bye
 k3:kafka
 
+```
+
+### 컨슈머 그룹 활용하기
+* kafka-console-consumer.sh 명령에 `--group` 옵션을 명시할 경우, 다음과 같이 해당 컨슈머가 명시된 컨슈머 그룹에 속한 채로 레코드를 소비하게 된다.
+  * 아래 명령의 경우, **컨슈머는 hello.group에 속한 상태에서 `k3:kafka` 메시지까지 소비했다는 사실을 커밋**하게 된다. 
+```shell
+[bin] ./kafka-console-consumer.sh --bootstrap-server my-kafka:9092 --topic hello.kafka --property print.key=true --property key.separator=":" --from-beginning --group hello-group
+k1:hello
+k2:world
+k1:bye
+k3:kafka
+
+```
+* 이러한 커밋 사실은 `__consumer.offsets`라는 내부 토픽에 저장되며, 내부 토픽 역시 토픽이므로 다음과 같은 명령을 통해 정보를 확인할 수 있다.
+  * 이 때, 해당 토픽은 카프카 내부적으로 관리되므로 사용자가 직접 생성하지 않더라도 자동으로 생성되기에 정보를 확인할 수 있다. 
+  * 또한 **중요한 것은 해당 내부 토픽은 임의의 컨슈머 그룹이 어느 레코드까지 소비했는지에 대한 커밋 데이터를 관리하는 용도로 사용된다는 점**에 있다.
+```shell
+[bin] ./kafka-topics.sh --bootstrap-server my-kafka:9092 --list
+__consumer_offsets
+hello.kafka
+[bin] ./kafka-topics.sh --bootstrap-server my-kafka:9092 --describe --topic __consumer.offsets
+Topic: __consumer_offsets	PartitionCount: 50	ReplicationFactor: 1	Configs: compression.type=producer,cleanup.policy=compact,segment.bytes=104857600
+	Topic: __consumer_offsets	Partition: 0	Leader: 0	Replicas: 0	Isr: 0
+# ...생략	
+	Topic: __consumer_offsets	Partition: 49	Leader: 0	Replicas: 0	Isr: 0
+[bin]
 ```
