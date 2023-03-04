@@ -369,7 +369,7 @@ All configs for broker 0 are:
   * 반면, 프로듀서의 경우 임의의 메시지 값이 순차적으로 처리될 필요가 있다고 판단된다면 반드시 동일한 메시지 키를 사용하도록 구현되어야 한다.
 
 ## 2023-03-03 Fri
-### kafka-console-consumer.sh 활용하기
+### kafka-console-consumer.sh 명령이란?
 * 상술한 kafka-console-producer.sh 등으로 전송한 데이터는 kafka-console-consumer.sh 쉘 스크립트를 활용하여 조회할 수 있다.
   * 이 경우 다른 쉘 스크립트 명령어와 마찬가지로 `--bootstrap-server`와 `--topic` 옵션은 필수적으로 병기되어야 한다.
   * 반면, `--from-beginning` 옵션을 통해 토픽의 처음부터 조회가 가능하다.
@@ -391,3 +391,51 @@ All configs for broker 0 are:
     * 결국 **컨슈머 그룹이란 여러 컨슈머들이 어떤 오프셋까지 데이터를 조회하였는지 커밋시키기 위해 사용되는 개념에 해당**한다.
   * 반면, 해당 옵션을 명시하지 않은 경우의 console-consumer 는 컨슈머 그룹을 활성화하지 않으므로 커밋 역시 사용하지 않는다.
   * 상술한 바에 따라, 해당 옵션을 사용한 경우 console-consumer가 재기동된다면 그 이전에 마지막까지 소비한 지점의 다음 레코드부터 출력하게 된다.
+
+## 2023-03-04 Sat
+### kafka-console-consumer.sh 활용하기
+* 상술한 바에 따라, kafka-console-producer.sh 명령과 kafka-console-consumer.sh 명령을 다음과 같이 혼합하여 활용할 수 있다.
+  * 아래 명령의 경우, `--from-beginning` 옵션을 명시하므로 토픽의 처음부터 모든 레코드를 조회하게 된다.
+```shell
+[bin] ./kafka-console-producer.sh --bootstrap-server my-kafka:9092 --topic hello.kafka --property "parse.key=true" --property "key.separator=:"
+>k1:hello
+>k2:world
+>k1:bye
+>k3:kafka
+> # 여기서 control C를 눌러 종료한다.
+[bin] ./kafka-console-consumer.sh --bootstrap-server my-kafka:9092 --topic hello.kafka --from-beginning
+hello
+world
+bye
+kafka
+
+```
+* 그러나 프로듀서가 메시지 키를 포함하는 레코드를 전송한 것과 달리, 컨슈머는 메시지 키를 조회하고 있지 않으므로 다시 다음과 같은 옵션을 사용할 수 있다.
+  * 이 경우, `--property` 옵션을 활용하여 키를 함께 출력할 것을 요청함과 동시에 키 구분자를 컨슈머에 전달하게 된다.
+  * 만일 메시지 키가 존재하지 않는 레코드를 토픽에 전송한 경우, 메시지 키는 null로 설정되므로 구분자와 함께 `null:[메시지 값]` 형태로 출력된다.
+```shell
+[bin] ./kafka-console-consumer.sh --bootstrap-server my-kafka:9092 --topic hello.kafka --property print.key=true --property key.separator=":" --from-beginning
+k1:hello
+k2:world
+k1:bye
+k3:kafka
+
+```
+* 또한, 상술한 명령어에 `--max-messages 1` 옵션을 명시할 경우 다음과 같이 한 번에 하나의 레코드만을 조회하게 된다.
+  * 이 경우, `--from-beginning` 옵션이 함께 명시되므로 토픽의 첫 번째 레코드 하나만을 조회하여 출력하게 된다.
+```shell
+[bin] ./kafka-console-consumer.sh --bootstrap-server my-kafka:9092 --topic hello.kafka --property print.key=true --property key.separator=":" --from-beginning --max-messages 1
+k1:hello
+Processed a total of 1 messages
+[bin] # 상술한 경우와 달리, 하나의 레코드만을 조회한 후 컨슈머가 종료된다.
+```
+* 임의의 파티션에 존재하는 레코드만을 조회하고 싶은 경우, 다음과 같이 `--partition` 옵션을 명시한다.
+  * 아래의 경우, 테스트용 토픽의 파티션 개수가 1이므로 프로듀서에 의해 적재된 모든 레코드가 출력된다.
+```shell
+[bin] ./kafka-console-consumer.sh --bootstrap-server my-kafka:9092 --topic hello.kafka --property print.key=true --property key.separator=":" --from-beginning --partition 0
+k1:hello
+k2:world
+k1:bye
+k3:kafka
+
+```
