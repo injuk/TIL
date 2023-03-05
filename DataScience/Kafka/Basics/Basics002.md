@@ -466,3 +466,25 @@ Topic: __consumer_offsets	PartitionCount: 50	ReplicationFactor: 1	Configs: compr
 	Topic: __consumer_offsets	Partition: 49	Leader: 0	Replicas: 0	Isr: 0
 [bin]
 ```
+
+## 2023-03-05 Sun
+### kafka-consumer-groups.sh 활용하기
+* 컨슈머 그룹은 기본적으로 별도의 생성 명령어를 갖지 않으며, 대신 컨슈머 기동시 새로운 컨슈머 그룹 이름을 명시하는 것으로 생성된다.
+  * 이 때, 생성된 컨슈머 그룹의 목록은 kafka-consumer-groups.sh 쉘 스크립트 명령을 통해 확인할 수 있다.
+  * 또한 컨슈머를 사용하는 경우 컨슈머 그룹은 기본적으로 사용하게 되므로, 해당 명령은 카프카의 컨슈머 그룹을 관리하기 위해 매우 중요할 수 밖에 없다.
+* kafka-topics.sh 명령어의 경우와 유사하게, 해당 명령 역시 `--list`와 `--describe` 옵션을 아래와 같이 사용할 수 있다.
+```shell
+[bin] ./kafka-consumer-groups.sh --bootstrap-server my-kafka:9092 --list
+console-consumer-37619
+hello-group
+[bin] ./kafka-consumer-groups.sh --bootstrap-server my-kafka:9092 --describe --group hello-group
+
+Consumer group 'hello-group' has no active members.
+
+GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID     HOST            CLIENT-ID
+hello-group     hello.kafka     0          13              13              0               -               -               -
+[bin]
+```
+* 특히 `--describe` 옵션의 경우, 해당 컨슈머 그룹이 어떤 토픽의 레코드를 소비했는지에 대한 상태 역시 확인할 수 있다.
+  * 상술한 바와 같이 파티션 번호는 물론 현재 오프셋과 파티션의 마지막 레코드 오프셋, 컨슈머 랙과 컨슈머 ID 등을 알 수 있기에 유용하다.
+  * 때문에 해당 명령은 이러한 상세한 정보를 토대로 컨슈머 그룹에 속한 각 컨슈머의 상태를 조회하는 데에 유용하다.
