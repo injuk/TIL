@@ -488,3 +488,53 @@ hello-group     hello.kafka     0          13              13              0    
 * 특히 `--describe` 옵션의 경우, 해당 컨슈머 그룹이 어떤 토픽의 레코드를 소비했는지에 대한 상태 역시 확인할 수 있다.
   * 상술한 바와 같이 파티션 번호는 물론 현재 오프셋과 파티션의 마지막 레코드 오프셋, 컨슈머 랙과 컨슈머 ID 등을 알 수 있기에 유용하다.
   * 때문에 해당 명령은 이러한 상세한 정보를 토대로 컨슈머 그룹에 속한 각 컨슈머의 상태를 조회하는 데에 유용하다.
+
+### 컨슈머 랙이란?
+* 컨슈머 랙이란, 임의의 컨슈머 그룹이 소비한 파티션의 마지막 레코드 오프셋과 아직 소비되지 않은 파티션의 마지막 레코드와의 차이를 의미한다.
+  * 예를 들어, 파티션 그룹에 열 개의 레코드가 있으나 컨슈머 그룹이 여덟 개의 레코드를 소비했다면 컨슈머 랙은 2가 된다.
+  * 때문에 상술한 예시의 경우, `LAG`은 0으로 출력되었으므로 파티션의 모든 레코드를 컨슈머 그룹이 소비했음을 의미한다.
+* 따라서 컨슈머 랙이 존재한다는 것은 곧 프로듀서가 적재한 레코드의 양에 비해 컨슈머의 처리에 지연이 발생하고 있음을 의미한다.
+  * 즉, **컨슈머 그룹을 운영하는 경우 컨슈머 랙을 지속적으로 확인하여 지연 정도를 체크하는 것은 매우 중요**할 수 밖에 없다.
+  * 예를 들어, 컨슈머 랙 지표를 토대로 토픽의 파티션 수와 컨슈머 수를 늘리는 등 처리량에 대한 대응이 가능하다.
+
+### 컨슈머 그룹의 오프셋 초기화하기
+* 임의의 토픽에 대해 특정한 컨슈머 그룹의 오프셋을 초기화하고자 하는 경우, 다음과 같은 옵션을 병기할 수 있다.
+  1. `--group`: 어떤 컨슈머 그룹의 오프셋을 초기화할지 명시한다.
+  2. `--topic`: 해당 컨슈머 그룹이 소비하는 어떤 토픽의 오프셋을 초기화할지 명시한다.
+  3. `--reset-offsets`: 해당 명령을 통해 오프셋을 초기화하고자 함을 명시한다.
+  4. `--to-earliest`: 어느 시점까지 오프셋을 초기화할지 명시하며, 해당 옵션의 경우 가장 최초의 오프셋을 의미한다.
+  5. `--execute`: 해당 옵션을 명시하여 오프셋 초기화를 실행한다.
+```shell
+[bin] ./kafka-console-consumer.sh --bootstrap-server my-kafka:9092 --topic hello.kafka --property print.key=true --property key.separator=":" --from-beginning --group hello-group
+^CProcessed a total of 0 messages
+[bin] ./kafka-consumer-groups.sh --bootstrap-server my-kafka:9092 --group hello-group --topic hello.kafka --reset-offsets --to-earliest --execute
+
+GROUP                          TOPIC                          PARTITION  NEW-OFFSET
+hello-group                    hello.kafka                    0          0
+[bin] ./kafka-console-consumer.sh --bootstrap-server my-kafka:9092 --topic hello.kafka --property print.key=true --property key.separator=":" --from-beginning --group hello-group
+k1:hello
+k2:world
+k1:bye
+k3:kafka
+null:hello
+null:kafka
+null:my
+null:data
+null:is
+null:in
+null:now
+null:hello
+null:world
+
+```
+* 이러한 오프셋 초기화는 kafka-consumer-groups.sh 명령어가 제공하는 큰 기능 중 하나로, 상술한 바와 같이 어느 시점부터 초기화할지 명시한다.
+* **해당 명령은 주로 임의의 컨슈머 그룹이 특정 토픽에 대해 어느 시점까지 레코드를 소비한 경우, 이를 초기화하여 재처리하고자 하는 경우에 사용**된다.
+* 또한, 다음과 같은 시점 옵션에 따라 컨슈머 그룹이 완전한 처음이 아닌 임의의 시점부터 레코드를 처리할 수 있도록 강제할 수도 있다. 
+  1. `--to-earliest`: 가장 처음, 즉 가장 작은 번호를 갖는 오프셋 시점으로 초기화한다. 
+  2. `--to-latest`: 가장 마지막, 즉 가장 큰 번호를 갖는 오프셋 시점으로 초기화한다. 
+  3. `--to-current`: 현 시점의 타임스탬프를 기준으로 오프셋을 초기화한다.
+  4. `--to-datetime YYYY-MM-DDTHH:mmSS.sss`: 레코드의 타임스탬프를 기준으로 특정한 시점을 일시로 지정하여 초기화한다.
+  5. `--to-offset long_type_value`: 임의의 오프셋을 기준으로 초기화한다.
+  6. `--shift-by +/- long_type_value`: 현재 오프셋을 기준으로 앞 또는 뒤로 명시된 값만큼을 옮기는 방식으로 초기화한다.
+* 이러한 오프셋 초기화 기능은 컨슈머 랙이 크게 발생하여 최신 레코드를 처리하기 까지 오랜 시간이 소요될 것으로 보이는 경우에 유용하게 사용될 수 있다.
+  * 예를 들어, 컨슈머 그룹이 모든 데이터를 순차 처리하는 것보다 최신 레코드부터 처리하는 것이 유리할 것으로 판단되는 경우에 오프셋을 초기화할 수 있다.
