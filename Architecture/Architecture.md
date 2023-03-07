@@ -9,6 +9,7 @@
 * [Basics005](https://github.com/injuk/TIL/blob/master/Architecture/Basics/Basics005.md)
 * [Basics006](https://github.com/injuk/TIL/blob/master/Architecture/Basics/Basics006.md)
 * [Basics007](https://github.com/injuk/TIL/blob/master/Architecture/Basics/Basics007.md)
+* [Summary](https://github.com/injuk/TIL/blob/master/Architecture/Basics/Summary.md)
 
 ## CleanWebApplication
 ### 2022.03.18 ~ 2022.03.23
