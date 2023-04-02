@@ -16,3 +16,7 @@
 * [Basics013](https://github.com/injuk/TIL/blob/master/Kotlin/Basics/Basics013.md)
 * [Basics014](https://github.com/injuk/TIL/blob/master/Kotlin/Basics/Basics014.md)
 * [Basics015](https://github.com/injuk/TIL/blob/master/Kotlin/Basics/Basics015.md)
+
+## EffectiveCodes
+### 2023.04.03 ~ 2023.00.00
+* [EffectiveCodes001](https://github.com/injuk/TIL/blob/master/Kotlin/EffectiveCodes/EffectiveCodes001.md)
