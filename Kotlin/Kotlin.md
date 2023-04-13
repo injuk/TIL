@@ -21,3 +21,4 @@
 ### 2023.04.03 ~ 2023.00.00
 * [EffectiveCodes001](https://github.com/injuk/TIL/blob/master/Kotlin/EffectiveCodes/EffectiveCodes001.md)
 * [EffectiveCodes002](https://github.com/injuk/TIL/blob/master/Kotlin/EffectiveCodes/EffectiveCodes002.md)
+* [EffectiveCodes003](https://github.com/injuk/TIL/blob/master/Kotlin/EffectiveCodes/EffectiveCodes003.md)
