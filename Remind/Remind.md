@@ -34,6 +34,7 @@
 31. 사용되지 않는 import문은 제거되어야 하는가?
 32. Throwable과 RuntimeException의 차이는 무엇인가?
 33. Iterable과 Iterator 인터페이스의 관계는 무엇인가?
+34. 공변성과 불공변성은 무엇이며, 어떻게 활용될 수 있는가?
 
 ## Spring
 1. 스프링과 스프링 부트의 차이는 무엇인가?
