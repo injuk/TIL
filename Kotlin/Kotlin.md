@@ -26,3 +26,4 @@
 * [EffectiveCodes005](https://github.com/injuk/TIL/blob/master/Kotlin/EffectiveCodes/EffectiveCodes005.md)
 * [EffectiveCodes006](https://github.com/injuk/TIL/blob/master/Kotlin/EffectiveCodes/EffectiveCodes006.md)
 * [EffectiveCodes007](https://github.com/injuk/TIL/blob/master/Kotlin/EffectiveCodes/EffectiveCodes007.md)
+* [EffectiveCodes008](https://github.com/injuk/TIL/blob/master/Kotlin/EffectiveCodes/EffectiveCodes008.md)
