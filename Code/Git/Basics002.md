@@ -198,3 +198,23 @@ origin  https://github.com/injuk/TIL.git (push)
   * 예를 들어, `git push origin master` 명령을 통해 origin으로 참조된 저장소의 master 브랜치에 자신의 작업물을 밀어넣을 수 있다.
 * 해당 명령은 클론한 원격 저장소에 대한 쓰기 권한이 존재하고, 클론 이후에 다른 개발자가 누구도 원격 저장소에 데이터를 밀어넣지 않았을 때 사용이 가능하다.
   * **다른 개발자가 이미 작업물을 원격 저장소에 밀어넣었다면, 우선 이를 로컬 저장소에 가져와 머지한 후에야 `git push` 명령을 실행**할 수 있다.
+
+## 2023-05-31 Wed
+### 원격 저장소 상세보기
+* `git remote show [단축된_원격_저장소_이름]` 명령을 활용할 경우, 원격 저장소의 구체적인 정보를 확인할 수 있다.
+  * 해당 명령을 사용할 경우, 아래와 같이 출력된 결과로부터 원격 저장소의 URL과 추적 중인 브랜치에 더해 병합 대상 브랜치 정보를 확인할 수 있다.
+  * 특히, **`git pull` 명령 또는 `git push` 명령에서 단축된 저장소 이름을 생략할 경우 원격 저장소의 어떤 브랜치를 활용하는지 확인**할 수 있다.
+```shell
+[~] git remote show origin
+* 리모트 origin
+  가져오기 URL: https://github.com/injuk/TIL.git
+  푸시  URL: https://github.com/injuk/TIL.git
+  HEAD 브랜치: master
+  리모트 브랜치:
+    master 추적됨
+  'git pull'에 사용할 로컬 브랜치를 설정:
+    master 병합: 리모트 master # git pull 명령을 사용할 경우, 워킹 디렉토리의 master 브랜치는 원격 저장소의 master 브랜치로부터 병합된다.
+  로컬 레퍼런스를 'git push'로 미러링:
+    master에서 master(으)로 푸시 (최신 상태) # git push 명령을 사용할 경우, 원격 저장소의 master 브랜치에 병합된다.
+[~] 
+```
