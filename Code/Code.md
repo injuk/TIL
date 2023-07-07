@@ -100,3 +100,4 @@
 * [Basics003](https://github.com/injuk/TIL/blob/master/Code/Git/Basics003.md)
 * [Basics004](https://github.com/injuk/TIL/blob/master/Code/Git/Basics004.md)
 * [Basics005](https://github.com/injuk/TIL/blob/master/Code/Git/Basics005.md)
+* [Basics006](https://github.com/injuk/TIL/blob/master/Code/Git/Basics006.md)
