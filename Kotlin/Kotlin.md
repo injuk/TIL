@@ -27,3 +27,7 @@
 * [EffectiveCodes006](https://github.com/injuk/TIL/blob/master/Kotlin/EffectiveCodes/EffectiveCodes006.md)
 * [EffectiveCodes007](https://github.com/injuk/TIL/blob/master/Kotlin/EffectiveCodes/EffectiveCodes007.md)
 * [EffectiveCodes008](https://github.com/injuk/TIL/blob/master/Kotlin/EffectiveCodes/EffectiveCodes008.md)
+
+## Concurrency
+### 2023.07.14 ~ 2023.00.00
+* [Concurrency001](https://github.com/injuk/TIL/blob/master/Kotlin/Concurrency/Concurrency001.md)
