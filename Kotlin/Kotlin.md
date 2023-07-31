@@ -31,3 +31,4 @@
 ## Concurrency
 ### 2023.07.14 ~ 2023.00.00
 * [Concurrency001](https://github.com/injuk/TIL/blob/master/Kotlin/Concurrency/Concurrency001.md)
+* [Concurrency002](https://github.com/injuk/TIL/blob/master/Kotlin/Concurrency/Concurrency002.md)
