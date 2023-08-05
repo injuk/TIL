@@ -34,3 +34,18 @@ implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$version")
 * **결과를 처리할 필요 없을 경우, 결과를 반환하지 않는 코루틴을 시작하기 위해 `launch()`를 사용**할 수 있다.
   * 때문에 이는 근본적으로 이벤트나 메시지 기반 시스템에서 자주 사용되는 패턴인 `fire-and-forget` 시나리오에 적합하다.
   * 또한, `launch()`의 경우 필요시에 작업을 취소할 수도 있도록 하는 함수를 함께 제공한다.
+
+## 2023-08-05 Sat
+### 임의의 디스패쳐를 명시하기
+* `async {}` 또는 `launch {}` 등의 경우, 아무런 디스패쳐를 명시하지 않기에 기본적으로 `DefaultDispatcher`를 사용한다.
+* 반면, 임의의 디스패쳐를 명시하고자 하는 경우 다음과 같은 코드를 작성할 수 있다.
+  * 이 경우, **코루틴 빌더를 통해 생성된 코루틴은 전달된 디스패쳐를 통해 어느 스레드에서 실행될지 결정**되게 된다.
+```kotlin
+fun main(args: Array<String>) = runBlocking {
+  val dispatcher = newSingleThreadContext(name = "my-thread")
+  val task = GlobalScope.launch(dispatcher) {
+    // ...do something
+  }
+  task.join()
+}
+```
