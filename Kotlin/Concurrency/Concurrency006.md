@@ -55,3 +55,10 @@
   1. 채널이 닫힌 경우: 즉, `isClosedForSend`가 `true`를 반환하고 있는 경우이며 `ClosedSendChannelException` 예외가 던져진다.
   2. 채널이 열려 있지만 가득 찬 경우: `false`를 반환한다.
   3. 채널이 열려 있고 가득 차지 않은 경우: 인자로 전달된 요소를 대기열에 추가하며, `true`를 반환한다.
+
+## 2023-09-10 Sun
+### 채널의 요소를 조회하기
+* `ReciveChannel`은 채널을 조회하는 경우에 발생할 수 있는 예외를 회피할 수 있도록, 다음과 같은 유효성 검증 프로퍼티를 제공한다.
+  1. `isClosedForReceive`: **수신에 대해 채널이 닫혀 있는지 여부를 확인하기 위해 사용 가능한 프로퍼티에 해당**한다.
+  2. `isEmpty`: **채널이 요소를 추가적으로 수신할 수 있는지 여부를 확인하기 위해 사용 가능한 프로퍼티에 해당**한다.
+* 이 때, `isClosedForReceive`가 `true`인 채널에 대해 `receive()`를 호출할 경우 `ClosedReceiveChannelException` 예외가 던져진다.
