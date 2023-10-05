@@ -66,3 +66,13 @@
 * `DispatchedTask` 역시 `Runnable`이며, `withCoroutineContext()`를 사용하는 적절한 컨텍스를 설정한다.
   * 이후에 `DispatchedContinuation`로부터 `resume()`과 `resumeWith()` 메소드를 호출한다.
 * 이렇듯 스레드를 전환하는 작업은 `CoroutineDispatcher`에 의해 발생하며, 이는 실제 실행 전에 연속체를 가로챌 수 있는 전체 흐름이 있기에 가능하다.
+
+## 2023-10-06 Fri
+### 코루틴의 예외 처리
+* 코루틴 내부에 발생하는 예외 처리는 `CoroutineExceptionHandler`를 활용하여 조절할 수 있다.
+  * 이 때, 핸들러 내부에서 예외가 전파되는 방식은 `handleCoroutineException()` 메소드에 의해 결정된다.
+* 코루틴 내부에서 발생한 예외는 우선 `handleCoroutineException()` 메소드로 전달되며, 크게 다음과 같은 형태로 처리된다.
+  1. 코루틴 컨텍스트에 `CoroutineExceptionHandler`가 존재하는 경우, 해당 핸들러의 `handleException()` 메소드를 호출한 후 메소드를 종료한다.
+  2. 예외가 `CancellationException` 타입인 경우, 해당 예외는 단지 코루틴을 취소하는 과정에서 사용되므로 무시한 후에 메소드를 종료한다.
+  3. 상술한 모든 과정에서 처리되지 않은 예외의 경우, 코루틴 컨텍스트 내에 작업이 존재하는지 확인한 후에 `cancel()` 메소드를 호출하여 취소하고 종료한다.
+  4. 마지막으로 `handleCoroutineExceptionImpl()` 메소드를 호출하며, 해당 메소드의 실제 구현 방식은 플랫폼 별로 달라질 수 있다.
