@@ -58,3 +58,11 @@
     * 또한, 해당 클래스는 멤버 변수로서 `Continuation<T>`과 `CoroutineDispatcher`를 참조한다.
     * 이 때, 해당 **클래스 내에서 연속체와 디스패쳐가 모두 연결되는 지점은 `resume()`과 `resumeWith()` 메소드에 해당**한다.
     * 해당 **클래스는 `resume()` 또는 `resumeWith()` 메소드가 호출될 때마다 디스패쳐를 사용하는 방식으로 동작**한다.
+
+## 2023-10-05 Thu
+### 스레드 전환의 동작 방식
+* 초기의 연속체는 `DispatchedContinuation`에 의해 래핑되며, 필요에 따라 `CoroutineDispatcher`로 전달될 수 있다.
+* `CoroutineDispatcher`는 필요에 따라 어떠한 `Runnable`이든지 사용하는 방식으로 동작하며, `DispatchedTask`를 전송한다.
+* `DispatchedTask` 역시 `Runnable`이며, `withCoroutineContext()`를 사용하는 적절한 컨텍스를 설정한다.
+  * 이후에 `DispatchedContinuation`로부터 `resume()`과 `resumeWith()` 메소드를 호출한다.
+* 이렇듯 스레드를 전환하는 작업은 `CoroutineDispatcher`에 의해 발생하며, 이는 실제 실행 전에 연속체를 가로챌 수 있는 전체 흐름이 있기에 가능하다.
