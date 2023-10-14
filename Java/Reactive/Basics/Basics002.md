@@ -15,3 +15,16 @@
   2. `Subscriber`: `Publisher`를 구독하고, 게시된 데이터를 전달 받아 처리한다.
   3. `Subscription`: `Publisher`에 요청할 데이터의 개수를 지정하거나, 데이터의 구독을 취소한다.
   4. `Processor`: `Publisher`와 `Subscriber`의 기능을 모두 가진다.
+
+## 2023-10-15 Sun
+### 간단한 리액티브 스트림즈의 동작 과정
+* 예를 들어 리액티브 스트림즈의 `Publisher`와 `Subscriber`가 데이터를 요청하고 전달 받는 과정은 다음과 같이 간략화할 수 있다.
+  1. `subscribe`: `Subscriber`는 전달받을 데이터를 구독한다.
+  2. `onSubscribe`: `Publisher`가 데이터를 게시할 준비가 되었을 때 이를 `Subscriber`에게 알린다.
+  3. `Subscription.request`: `Subscriber`는 `Publisher`에게 전달 받고자 하는 데이터의 개수를 요청한다.
+  4. `onNext`: `Publisher`는 `Subscriber`가 요청한 만큼의 데이터 개수를 전달한다.
+  5. `onComplete`: 상술한 과정을 반복하는 과정에서, `Publisher`가 모든 데이터 개수를 전달한 경우 `Subscriber`에게 전송 완료를 알린다.
+  6. `onError`: 반면, `Publisher`가 데이터를 처리하는 과정에서 예외가 발생한 경우에도 이를 `Subscriber`에게 알려야 한다.
+* 이 때, **`Publisher`는 `Subscriber`에게 데이터를 일방적으로 전달하는 대신 우선 필요한 데이터의 수를 요청 받는 식으로 동작**한다.
+  * 이는 **두 구성 요소가 일반적으로 같은 스레드가 아닌 다른 스레드에서 비동기적으로 상호작용하기 때문**이다.
+  * 이는 **`Publisher`의 전달 속도가 `Subscriber`가 처리하는 속도가 빠른 경우에 데이터가 쌓여 시스템 부하로 이어지는 상황을 미연에 방지**한다.
