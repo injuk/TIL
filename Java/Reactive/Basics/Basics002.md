@@ -47,3 +47,9 @@
   2. `onNext`: `Publisher`가 전달한 데이터를 처리하기 위한 작업을 명시한다.
   3. `onError`: `Publisher`가 데이터를 전달하는 과정에서 예외가 발생한 경우, 이를 처리하기 위한 작업을 명시한다.
   4. `onComplete`: `Publisher`가 모든 데이터 전달을 완료했을 때, 후처리에 필요한 작업을 명시한다.
+
+## 2023-10-18 Wed
+### Subscription 인터페이스
+* `Subscription` 인터페이스는 크게 `request`와 `cancel` 메소드를 제공하며, 각각 다음과 같은 기능을 정의하게 된다.
+  1. `request`: Long 타입 값을 인자로 받아 동작하며, `Subscriber`가 `Publisher`에게 요청할 데이터의 개수를 의미한다.
+  2. `cancel`: `Publisher`에게 전달된 데이터의 요청 취소, 즉 구독을 해지하기 위한 기능을 정의한다.
