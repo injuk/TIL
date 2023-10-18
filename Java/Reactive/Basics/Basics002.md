@@ -53,3 +53,12 @@
 * `Subscription` 인터페이스는 크게 `request`와 `cancel` 메소드를 제공하며, 각각 다음과 같은 기능을 정의하게 된다.
   1. `request`: Long 타입 값을 인자로 받아 동작하며, `Subscriber`가 `Publisher`에게 요청할 데이터의 개수를 의미한다.
   2. `cancel`: `Publisher`에게 전달된 데이터의 요청 취소, 즉 구독을 해지하기 위한 기능을 정의한다.
+
+## 2023-10-19 Thu
+### Publisher와 Subscriber, Subscription의 상호 작용
+* 상술한 세 구성 요소는 다음과 같은 흐름을 거쳐 상호 작용할 수 있다.
+  1. `Publisher`가 제공하는 `subscribe` 메소드에 `Subscriber` 구현 객체를 전달하여 통신을 시작한다.
+  2. `Publisher`는 내부적으로 참조하는 구독자인 `Subscriber`의 `onSubscribe` 메소드를 호출하여 구독을 의미하는 `Subscription`을 전달한다.
+  3. `Subscriber`는 `Subscription` 구현 객체를 내부적으로 참조하며, `request` 메소드를 통해 `Publisher`에게 필요한 데이터의 개수를 요청한다.
+  4. `Publisher`는 `Subscriber`의 `onNext` 메소드를 호출하여 전달받은 요청 개수만큼 데이터를 전달한다.
+  5. `Publusher`는 요청 받은 개수 만큼의 데이터를 모두 통지한 경우, `Subscriber`의 `onComplete` 메소드를 호출하여 처리 종료를 전달한다.
