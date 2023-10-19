@@ -62,3 +62,12 @@
   3. `Subscriber`는 `Subscription` 구현 객체를 내부적으로 참조하며, `request` 메소드를 통해 `Publisher`에게 필요한 데이터의 개수를 요청한다.
   4. `Publisher`는 `Subscriber`의 `onNext` 메소드를 호출하여 전달받은 요청 개수만큼 데이터를 전달한다.
   5. `Publusher`는 요청 받은 개수 만큼의 데이터를 모두 통지한 경우, `Subscriber`의 `onComplete` 메소드를 호출하여 처리 종료를 전달한다.
+
+## 2023-10-20 Fri
+### Processor 인터페이스
+* `Processor` 인터페이스는 상술한 구성 요소들과 달리 정의된 메소드를 갖지 않으며, 다음과 같이 단지 `Subscriber`와 `Publisher`를 확장한다.
+  * 이는 단지 `Processor`가 두 구성 요소의 모든 기능을 갖기 때문이다.
+```java
+public interface Processor<T, R> extends Subscriber<T>, Publisher<R> {
+}
+```
