@@ -71,3 +71,13 @@
 public interface Processor<T, R> extends Subscriber<T>, Publisher<R> {
 }
 ```
+
+## 2023-10-21 Sat
+### 리액티브 스트림즈에서 사용되는 용어들 - Signal, Demand, Emit
+* **`Signal`(이하 '시그널')은 `Publisher`와 `Subscriber`가 서로 주고 받는 모든 상호작용을 일종의 신호로 표현한 용어에 해당**한다.
+  * 때문에 `onNext`와 같은 `Subscriber`의 메소드들에 더해 `request`와 같은 `Subscription`의 메소드 모두 시그널에 해당한다.
+  * 이 때, `Subscriber`가 제공하는 메소드들은 실제로는 `Publisher`가 호출하게 되므로 `Publisher`로부터 `Subscriber`에 향하는 시그널이다.
+  * 같은 논리에 의해 `Subscription`이 제공하는 메소드들은 `Subscriber`가 호출하므로 `Subscriber`가 `Publisher`에게 전달하는 시그널이다.
+* **`Demand`는 `Subscriber`가 `Publisher`에게 요청했으나, 아직 `Publisher`가 전달하지 않은 데이터를 의미**한다.
+* **`Emit`은 `Publisher`가 `Subscriber`에게 데이터를 전달하는 행위 자체를 의미**한다.
+  * 특히, `Publisher`가 `Emit`하는 시그널 중 데이터를 전달하기 위한 `onNext` 시그널은 `데이터를 emit한다`고 표현할 수 있다.
