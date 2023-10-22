@@ -81,3 +81,24 @@ public interface Processor<T, R> extends Subscriber<T>, Publisher<R> {
 * **`Demand`는 `Subscriber`가 `Publisher`에게 요청했으나, 아직 `Publisher`가 전달하지 않은 데이터를 의미**한다.
 * **`Emit`은 `Publisher`가 `Subscriber`에게 데이터를 전달하는 행위 자체를 의미**한다.
   * 특히, `Publisher`가 `Emit`하는 시그널 중 데이터를 전달하기 위한 `onNext` 시그널은 `데이터를 emit한다`고 표현할 수 있다.
+
+## 2023-10-22 Sun
+### 리액티브 스트림즈에서 사용되는 용어들 - Upstream/Downstream, Sequence, Operator, Source
+* 다음과 같은 코드를 예로 들어, 구성되는 메소드 체인은 각각의 메소드 호출이 모두 `Flux` 객체를 반환하기 때문에 가능하다.
+  * 이 때, 데이터 스트림의 관점에서 미루어 보았을 때 `just` 메소드로 반환된 `Flux`는 `filter`에 의해 반환된 `Flux`보다 상위에 위치한다.
+  * 이렇듯 **메소드 호출 흐름 중 더 상위에서 반환된 `Flux`는 `Upstream`, 더 하위에 있는 `Flux`는 `Downstream`이라고 지칭**한다.
+```kotlin
+public fun doSomething() 
+  = return Flux
+    .just(1, 2, 3)
+    .filter(n -> n % 2 == 0)
+    .map(n -> n * 3)
+    .subscribe(println)
+```
+* **`Sequence`는 `Publisher`가 `Emit`하는 데이터의 연속적인 흐름을 정의한 그 자체를 의미**한다.
+  * 다시 말해, **`Sequence`는 다양한 `Operator`를 활용하여 데이터의 연속적인 흐름을 메소드 체인 형태로 정의한 것을 의미**한다.
+  * 즉, 상술한 `doSomething()` 함수로부터 시작되는 메소드 호출 흐름 자체를 `Sequence`로 볼 수 있다.
+* 상술한 `doSomething` 함수에서 정의된 **`just` 등의 메소드들은 `Operator`라는 용어로 총칭**할 수 있다.
+  * **리액티브 프로그래밍은 `Operator`로 시작하여 끝난다고 해도 과언이 아니며, 이렇듯 `Operator`는 리액티브 프로그래밍의 핵심**과도 같다.
+* **`Source`, 또는 `Original`은 마치 원본처럼 최초로 생성된 '무언가'를 의미**한다.
+  * 예를 들어, 해당 용어는 `Data Source`나 `Source Flux`와 같은 방식으로 사용되곤 한다.
