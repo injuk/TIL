@@ -78,3 +78,16 @@
   * Reactor는 굉장히 많은 `Operator`를 지원하며, 각각의 `Operator`는 자신을 잘 설명하는 마블 다이어그램을 갖는다.
 * 마블 다이어그램을 완전히 이해하지 못했더라도 리액티브 프로그래밍을 지원할 수는 있으나, 여러 `Operator`를 이해하기엔 어려움이 따를 수 있다.
   * 때문에 처음 사용하는 `Operator`를 이해하고 사용하기에 앞서 우선 해당 `Operator`의 마블 다이어그램을 확인하는 습관을 들이는 것이 바람직하다.
+
+## 2023-11-08 Wed
+### Mono란?
+```
+> Mono는 0개 혹은 1개의 데이터만을 Emit하는 Publisher 타입이므로, HTTP 요청이나 응답에 매우 적합하다.
+```
+* **Mono는 Reactor가 제공하는 `Publisher` 타입의 하나로, 특히 0개 또는 1개의 데이터를 `Emit`하는 `Publisher`에 해당**한다.
+  * 이는 RxJava가 제공하는 `Publisher` 타입 중 한 건의 데이터를 `Emit`하는 Single과 0 또는 1개의 데이터를 `Emit`하는 Maybe와 유사하다.
+* Mono를 활용하여 0개 또는 1개의 데이터를 `Emit`하기 위해서는 다음과 같은 `Operator`를 활용해볼 수 있다.
+  1. `just()`: 단건 데이터를 `Emit`할 수 있는 반면, 둘 이상의 데이터를 전달했을 경우에는 내부적으로 `fromArray() Operator`를 활용한다.
+  2. `empty()`: 데이터를 하나도 `Emit`하지 않는 경우에 활용할 수 있는 `Operator`에 해당한다.
+* 특히, `empty() Operator`의 경우 데이터를 단 한 건도 `Emit`하지 않은 채로 `onComplete Signal`을 전송한다.
+  * 이렇듯 `empty() Operator`는 데이터를 전달받지 않았음에도 작업 종료를 알리고 적절한 후처리를 적용하고자 하는 경우에 활용할 수 있다.
