@@ -131,3 +131,16 @@
   * 때문에 **다수의 `Subscirber`가 임의의 `Publisher`를 구독하려 하지만 그 시점이 다른 경우에도 모든 `Subscriber`는 동일한 데이터를 수신**한다.
   * 이 때, 이러한 `Cold Sequence` 방식으로 동작하는 `Publisher`는 `Cold Publisher`라고도 지칭할 수 있다.
 * 마블 다이어그램 상에서 `Cold Sequence`를 표현할 경우, 시퀀스의 타임라인은 새로운 `Subscriber`가 구독을 시작할 때마다 새로이 추가된다.
+
+## 2023-11-13 Mon
+### Hot Sequence란?
+```
+> Hot Sequence란, Publisher가 데이터를 Emit하는 과정이 한 번만 발생하고, Subscriber는 구독한 이후에 Emit된 데이터만 전달받는 데이터 흐름이다.
+```
+* `Cold Sequence`의 경우, `Subscriber`의 구독이 발생한 시점과 관계 없이 항상 데이터를 처음부터 전달받을 수 있다.
+  * 반면, **`Hot Sequence`에서 `Subscriber`는 구독이 발생한 시점 이후에 `Emit`된 데이터만을 전달받을 수 있다**.
+* **`Cold Sequence` 기반의 원본 Flux를 `Hot Sequence`로 변환하고자 하는 경우, `share() Operator`를 활용**할 수 있다.
+  * 해당 **`Operator`는 호출시 최초로 반환된 원본 Flux를 여러 `Subscriber`가 공유할 수 있도록 지원**한다.
+* 반면, **`Cold Sequence` 기반의 원본 Mono를 `Hot Sequence`로 변환하고자 하는 경우에는 `cache() Operator`를 활용**할 수 있다.
+  * 해당 `Operator`의 경우, Mono가 1개 이하의 데이터만을 `Emit`하므로 `Emit`된 데이터를 캐싱한 후에 이후의 구독에 대해 캐시된 결과를 반환한다.
+  * 이 경우 `Subscriber`에 의한 매 구독마다 동일한 데이터가 반환되므로, 예를 들어 인증 토큰이 만료되기 전까지 캐시하는 등의 용도로 활용해볼 수 있다.
