@@ -144,3 +144,17 @@
 * 반면, **`Cold Sequence` 기반의 원본 Mono를 `Hot Sequence`로 변환하고자 하는 경우에는 `cache() Operator`를 활용**할 수 있다.
   * 해당 `Operator`의 경우, Mono가 1개 이하의 데이터만을 `Emit`하므로 `Emit`된 데이터를 캐싱한 후에 이후의 구독에 대해 캐시된 결과를 반환한다.
   * 이 경우 `Subscriber`에 의한 매 구독마다 동일한 데이터가 반환되므로, 예를 들어 인증 토큰이 만료되기 전까지 캐시하는 등의 용도로 활용해볼 수 있다.
+
+## 2023-11-14 Tue
+### Reactor에서 Hot이 갖는 의미
+* Reactor의 경우, Hot이라는 표현은 크게 다음과 같은 두 의미를 갖는다.
+  1. `Warm up`: 임의의 `Subscriber`로부터 최초의 **구독이 발생하기 전까지는 데이터를 `Emit`하지 않는 경우를 의미**한다.
+  2. `Hot`: `Subscriber`의 **구독 여부와 관계 없이 데이터가 `Emit`되는 경우를 의미**한다.
+
+### Cold Sequence와 Hot Sequence - 결론
+* `Cold Sequence`란, `Subscriber`의 구독 시점과 관계 없이 `Publisher`가 처음부터 데이터를 `Emit`하는 과정을 의미한다.
+  * 이 때, `Cold Sequence` 방식으로 동작하는 `Publisher`는 `Cold Publisher`라고도 지칭할 수 있다.
+* `Hot Sequence`란, `Publisher`가 데이터를 `Emit`하는 과정이 한 번만 발생하는 경우를 의미한다.
+  * 때문에 모든 `Subscriber`는 각자의 구독이 발생한 시점 이후에 `Emit`된 데이터만을 전달받을 수 있다.
+  * 또한, `Hot Sequence`는 다시 데이터가 `Emit`되기 위해 최초 구독이 필요한지 여부에 따라 `Warm up`과 `Hot`으로 구분된다.
+* `share() / cache() Operator` 등을 활용하여 `Cold Sequence`를 `Hot Sequence`로 변환할 수 있다.
