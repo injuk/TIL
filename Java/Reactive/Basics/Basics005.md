@@ -14,3 +14,21 @@
 * 예를 들어 `Publisher`가 데이터를 `Emit`하는 속도가 `Subscriber`의 처리 속도보다 너무 빠른 경우, 작업의 효율성은 떨어질 수 있다.
 * **`Backpressure`는 이렇듯 `Publisher`가 끊임없이 `Emit`하는 데이터를 적절히 제어하기 위해 사용되는 개념**이다.
   * 이러한 **배압이 없을 경우 `Publisher`가 계속해서 데이터를 `Emit`하는 것으로 오버플로우가 발생하거나, 최악의 경우에는 시스템 다운**될 수 있다.
+
+## 2023-11-17 Fri
+### Backpressure 처리 유형 구분하기
+* Reactor의 경우, 크게 다음과 같은 `Backpressure` 유형을 지원한다.
+  1. 데이터의 개수를 제어
+  2. `Backpressure` 전략 사용
+
+### 데이터의 개수 제어하기
+```
+> 데이터의 요청 개수를 직접적으로 제어하기 위해서는 BaseSubscriber<T> 클래스를 활용할 수 있다.
+```
+* **해당 처리 유형은 `Subscriber`가 자신이 적절히 처리할 수 있는 수준의 데이터 개수만을 `Publisher`에게 요청**한다.
+  * 다시 말해, `Subscriber`는 자신의 `request()` 메소드를 활용하여 `Publisher`에게 적절한 데이터의 개수를 요청한다.
+* `Subscriber`가 데이터의 요청 수를 제어하기 위해서는 `BaseSubscriber<T>` 클래스를 활용할 수 있으며, 이는 다음과 같은 메소드를 제공한다.
+  1. hookOnSubscribe: `Subscriber.onSubscribe()` 메소드를 대신하며, 구독 시점에 데이터의 최초 요청 개수를 제어한다.
+  2. hookOnNext: `Subscriber.onNext()` 메소드를 대신하며, `Publisher`가 전달한 데이터를 처리한 후에 새로운 데이터의 요청 개수를 제어한다.
+* 이 때, **hookOnSubscribe와 hookOnNext 메소드는 모두 내부적으로 `request()` 메소드를 활용하여 데이터의 요청 개수를 제어**한다.
+* 또한, **해당 유형의 배압을 활용하기 위해서는 `Publisher.subscribe()` 메소드에 람다 표현식 대신 `BaseSubscriber<T>` 구현체를 전달**한다. 
