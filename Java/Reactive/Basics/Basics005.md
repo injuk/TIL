@@ -32,3 +32,12 @@
   2. hookOnNext: `Subscriber.onNext()` 메소드를 대신하며, `Publisher`가 전달한 데이터를 처리한 후에 새로운 데이터의 요청 개수를 제어한다.
 * 이 때, **hookOnSubscribe와 hookOnNext 메소드는 모두 내부적으로 `request()` 메소드를 활용하여 데이터의 요청 개수를 제어**한다.
 * 또한, **해당 유형의 배압을 활용하기 위해서는 `Publisher.subscribe()` 메소드에 람다 표현식 대신 `BaseSubscriber<T>` 구현체를 전달**한다. 
+
+## 2023-11-18 Sat
+### Backpressure 전략 구분하기
+* Reactor의 경우, 크게 다음과 같은 `Backpressure` 전략을 지원한다.
+  1. IGNORE: 배압을 적용하지 않는 전략에 해당한다.
+  2. ERROR: `Downstream`으로 전달하기 위한 데이터가 버퍼에 가득찰 경우, 예외를 던지는 전략에 해당한다.
+  3. DROP: `Downstream`으로 전달하기 위한 데이터가 버퍼에 가득찰 경우, 버퍼 외부에서 대기 중인 데이터를 `Emit`된 순으로 버리는 전략에 해당한다.
+  4. LATEST: `Downstream`으로 전달하기 위한 데이터가 버퍼에 가득찰 경우, 버퍼 외부에 있고 최근에 `Emit`된 데이터부터 버퍼에 채우는 전략에 해당한다.
+  5. BUFFER: `Downstream`으로 전달하기 위한 데이터가 버퍼에 가득찰 경우, 버퍼 내부에 위치한 데이터부터 버리는 전략에 해당한다.
