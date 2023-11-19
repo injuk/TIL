@@ -41,3 +41,12 @@
   3. DROP: `Downstream`으로 전달하기 위한 데이터가 버퍼에 가득찰 경우, 버퍼 외부에서 대기 중인 데이터를 `Emit`된 순으로 버리는 전략에 해당한다.
   4. LATEST: `Downstream`으로 전달하기 위한 데이터가 버퍼에 가득찰 경우, 버퍼 외부에 있고 최근에 `Emit`된 데이터부터 버퍼에 채우는 전략에 해당한다.
   5. BUFFER: `Downstream`으로 전달하기 위한 데이터가 버퍼에 가득찰 경우, 버퍼 내부에 위치한 데이터부터 버리는 전략에 해당한다.
+
+## 2023-11-19 Sun
+### IGNORE 전략이란?
+* 해당 전략은 말그대로 배압을 적용하지 않으며, `Downstream`에서 배압 요청이 무시되므로 예외가 발생하기 쉽다.
+
+### ERROR 전략이란?
+* 해당 전략은 `Downstream`의 데이터 처리 속도가 느려져 `Upstream`의 `Emit` 속도를 따라가지 못하는 경우, `IllegalStateException`을 던진다.
+  * 이 때, 코드 상에서는 `onBackpressureError() Operator` 를 활용하여 해당 전략을 적용할 수 있다.
+  * 이 경우, `Publisher`는 `Error Signal`을 `Subscriber`에게 전송한 후 삭제한 데이터를 폐기한다.
