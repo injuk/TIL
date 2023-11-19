@@ -50,3 +50,11 @@
 * 해당 전략은 `Downstream`의 데이터 처리 속도가 느려져 `Upstream`의 `Emit` 속도를 따라가지 못하는 경우, `IllegalStateException`을 던진다.
   * 이 때, 코드 상에서는 `onBackpressureError() Operator` 를 활용하여 해당 전략을 적용할 수 있다.
   * 이 경우, `Publisher`는 `Error Signal`을 `Subscriber`에게 전송한 후 삭제한 데이터를 폐기한다.
+
+## 2023-11-20 Mon
+### DROP 전략이란?
+* 해당 전략은 `Downstream`으로 전달할 데이터가 버퍼에 가득 찬 경우, 버퍼 외부에서 대기 중인 데이터 중 더 오래된 데이터부터 버리는 전략에 해당한다.
+  * 이 때, 더 오래된 데이터는 결국 더 일찍 `Emit`된 데이터를 의미한다.
+* 또한, 해당 전략은 코드 상에서는 `onBackpressureDrop() Operator`를 활용하여 적용할 수 있다.
+  * 상술한 `onBackpressureError() Operator`는 아무런 인자를 사용하지 않는 반면, 해당 `Operator`는 버려진 데이터를 인자로 전달받을 수 있다.
+  * 때문에 **`onBackpressureDrop(dropped -> log.info(dropped))`와 같이 버려질 데이터에 대한 추가 작업을 진행할 수 있다**.
