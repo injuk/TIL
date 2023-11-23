@@ -76,3 +76,18 @@
   3. 버퍼가 가득 찬 경우, 예외를 던지는 전략
 * 예를 들어 DROP과 LATEST 전략이 버퍼가 가득 찬 경우 버퍼가 가용해질 때까지 외부의 데이터를 폐기한다면, BUFFER 전략은 내부의 데이터를 폐기한다.
   * 이 때, 해당 전략은 크게 DROP_LATEST와 DROP_OLDEST 전략으로 구분할 수 있다.
+
+## 2023-11-23 Thu
+### DROP_LATEST 전략이란?
+* **해당 전략은 `Publisher`가 `Downstream`에 전달할 데이터가 버퍼에 가득찬 경우, 가장 최근에 버퍼에 인입된 데이터를 버리는 전략을 의미**한다.
+  * 예를 들어 **버퍼가 가득 찬 상황에 추가적인 데이터가 인입될 경우 이는 버퍼 오버플로우에 해당하며, 해당 전략은 오버플로우를 일으킨 데이터를 버린다**.
+* 이 때, 해당 전략은 코드 상에서 아래와 같이 표현한다.
+```kotlin
+Flux.interval(Duration.ofMillis(100L))
+  .onBackpressureBuffer(10, dropped -> log.info(dropped), BufferOverflowStrategy.DROP_LATEST)
+// ...생략
+```
+* 상술한 코드에서, `onBackpressureBuffer() Operator`의 각 인자는 크게 다음과 같이 구분할 수 있다.
+  1. 첫 번째 인자로는 버퍼의 최대 용량을 설정한다.
+  2. 두 번째 인자로는 버퍼 오버플로우가 발생한 경우, 버려지는 데이터를 전달받아 후처리하는 경우에 사용되는 람다 표현식을 설정한다.
+  3. 세 번째 인자로는 적용할 BUFFER 전략을 선택한다.
