@@ -91,3 +91,14 @@ Flux.interval(Duration.ofMillis(100L))
   1. 첫 번째 인자로는 버퍼의 최대 용량을 설정한다.
   2. 두 번째 인자로는 버퍼 오버플로우가 발생한 경우, 버려지는 데이터를 전달받아 후처리하는 경우에 사용되는 람다 표현식을 설정한다.
   3. 세 번째 인자로는 적용할 BUFFER 전략을 선택한다.
+
+## 2023-11-24 Fri
+### DROP_OLDEST 전략이란?
+* **해당 전략은 `Publisher`가 `Downstream`에 전달할 데이터가 버퍼에 가득찬 경우, 가장 처음에 버퍼에 인입된 데이터를 버리는 전략을 의미**한다.
+  * 이 때, **가장 먼저 인입된 데이터를 버리는 과정에서 버퍼의 가용 용량이 확보되므로 오버플로우를 일으킨 데이터는 정상적으로 인입**될 수 있다.
+* 해당 전략은 코드 상에서 아래와 같이 표현되며, 세 번째 인자로 전달된 BUFFER 전략을 제외하고 사용법은 DROP_LATEST 전략과 크게 다르지 않다.
+```kotlin
+Flux.interval(Duration.ofMillis(100L))
+  .onBackpressureBuffer(10, dropped -> log.info(dropped), BufferOverflowStrategy.DROP_OLDEST)
+// ...생략
+```
