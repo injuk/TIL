@@ -102,3 +102,12 @@ Flux.interval(Duration.ofMillis(100L))
   .onBackpressureBuffer(10, dropped -> log.info(dropped), BufferOverflowStrategy.DROP_OLDEST)
 // ...생략
 ```
+
+## 2023-11-25 Sat
+### Backpressure 전략 - 결론
+* `Backpressure`란, `Publisher`가 끊임없이 `Emit`하는 데이터를 적절히 제어하여 처리 과정이 과부하되지 않도록 조절하는 데이터 처리 방식을 의미한다.
+* Reactor의 경우, `Backpressure`는 데이터의 요청 개수 자체를 제어하는 방식과 적절한 전략을 사용하는 방식으로 구분된다.
+* 특히, `Backpressure` 전략 중 BUFFER 전략은 크게 다음과 같이 구분된다.
+  1. 데이터를 버리지 않고 버퍼링한다.
+  2. 또는 버퍼가 가득 찬 경우, 버퍼 내부의 데이터 중 전략이 제시하는 조건에 맞는 것을 폐기한다.
+  3. 또는 버퍼가 가득 찬 경우, 예외를 던진다.
