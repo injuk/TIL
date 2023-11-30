@@ -39,3 +39,15 @@
   * 때문에 버려지는 데이터를 처리하기 위한 `FAIL_FAST` 등의 `EmitFailureHandler` 구현체를 활용할 수 있다.
   * 예를 들어, `FAIL_FAST`는 에러가 발생한 경우 재시도하지 않은 대신 즉시 실패 처리하여 빠르게 실패할 수 있도록 동작한다.
   * 이러한 빠른 실패 처리는 교착 상태 등을 미연에 방지하며, 결과적으로는 스레드 안전성을 보장하는 수단이 된다.
+
+## 2023-11-30 Thu
+### Sinks.Many란?
+* **`Sinks.Many`는 `Sinks.Many`가 아닌 `ManySpec` 인터페이스를 반환**한다.
+  * `Sinks.One`의 경우 단순히 하나의 데이터만을 `Emit`하므로 별도의 사양을 정의하는 대신 디폴트 스펙을 활용한다.
+  * 반면, `Sinks.Many`의 경우 데이터를 `Emit`할 수 있도록 여러 기능을 정의하는 `ManySpec`을 반환한다.
+* `Sinks.Many`에 의해 반환되는 `ManySpec`은 크게 다음과 같은 세 가지 기능을 별도의 스펙으로 정의한다.
+  1. `UnicastSpec`: **단 하나의 `Subscriber`에게만 데이터를 `Emit`하는 경우에 사용**할 수 있다.
+  2. `MulticastSpec`: **하나 이상의 `Subscriber`에게 데이터를 `Emit`하고자 하는 경우에 사용**할 수 있다.
+  3. `MulticastReplaySpec`: **하나 이상의 `Subscriber`에게 데이터를 `Emit`하며, 이미 `Emit`된 데이터를 다시 `Emit`할 수 있게 지원**한다.
+* 이 때, 상술한 **각자의 스펙은 모두 스펙 유형의 인스턴스를 반환하고 최종적으로 스펙에 정의된 기능을 사용**한다.
+  * 예를 들어, `Sinks.many().unicast()`를 호출할 경우 `UnicastSpec` 인스턴스가 반환된다.
