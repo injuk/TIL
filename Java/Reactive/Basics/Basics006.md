@@ -51,3 +51,10 @@
   3. `MulticastReplaySpec`: **하나 이상의 `Subscriber`에게 데이터를 `Emit`하며, 이미 `Emit`된 데이터를 다시 `Emit`할 수 있게 지원**한다.
 * 이 때, 상술한 **각자의 스펙은 모두 스펙 유형의 인스턴스를 반환하고 최종적으로 스펙에 정의된 기능을 사용**한다.
   * 예를 들어, `Sinks.many().unicast()`를 호출할 경우 `UnicastSpec` 인스턴스가 반환된다.
+
+## 2023-12-01 Fri
+### MulticastSpec과 MulticastReplaySpec의 특징
+* 또한, **`Sinks`는 `Publisher` 역할을 수행하는 경우 기본적으로 `Hot Publisher`와 같이 동작**한다.
+  * 때문에 `MulticastSpec`을 활용하더라도 구독 시점 이전에 이미 `Emit`된 데이터는 전달받을 수 없다.
+  * 대신, `MulticastReplaySpec`이 지원하는 `limit()` 또는 `all()` 등의 메소드를 활용하여 이미 `Emit`된 데이터를 다시 전달받을 수 있다.
+  * 이렇듯 **`MulticastReplaySpec`은 이미 `Emit`된 데이터 중 임의의 시점으로 되돌린 시점의 데이터부터 `Emit`하는 역할을 수행**한다.
