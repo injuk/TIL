@@ -58,3 +58,10 @@
   * 때문에 `MulticastSpec`을 활용하더라도 구독 시점 이전에 이미 `Emit`된 데이터는 전달받을 수 없다.
   * 대신, `MulticastReplaySpec`이 지원하는 `limit()` 또는 `all()` 등의 메소드를 활용하여 이미 `Emit`된 데이터를 다시 전달받을 수 있다.
   * 이렇듯 **`MulticastReplaySpec`은 이미 `Emit`된 데이터 중 임의의 시점으로 되돌린 시점의 데이터부터 `Emit`하는 역할을 수행**한다.
+
+## 2023-12-02 Sat
+### Sinks - 결론
+* `Sinks`는 `Publisher`와 `Subscriber`의 기능을 모두 갖는, 일종의 향상된 `Processor`와 같은 기능을 제공한다.
+* `Sinks`가 데이터를 `Emit`하는 사양을 정의한 것은 크게 `Sinks.One`과 `ManySpec`로 구분할 수 있다.
+* `Sinks.Many`의 `MulticastReplaySpec`은 이미 `Emit`된 데이터 중 임의의 시점으로 되돌린 시점의 데이터부터 `Emit`하는 역할을 수행한다.
+  * 반면, `MulticastSpec`은 단지 하나 이상의 `Subscriber`에게 데이터를 `Emit`하는 역할을 수행한다.
