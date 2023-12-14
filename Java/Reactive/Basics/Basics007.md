@@ -17,3 +17,16 @@
   * 예를 들어, `Operator` 체인 상에서는 `contextWrite(ctx -> ctx.put("name", ""))`와 같은 형태의 코드로 작성된다.
 * 또한, **Reactor는`context.put()` API로 컨텍스트에 데이터를 쓸 경우 매번 불변 객체를 다음 `contextWrite() Operator`에 전달**한다.
   * 이렇듯 **내부적으로는 불변 객체를 활용하는 Reactor의 특징으로 인해 컨텍스트에 데이터를 쓰는 동작은 스레드 안전성이 보장**된다.
+
+## 2023-12-15 Fri
+### Context로부터 읽기
+* Reactor의 경우, 컨텍스트로부터 데이터를 조회하는 방식은 크게 다음과 같이 구분된다.
+  1. 원본 데이터 소스 레벨로부터 읽기: `deferContextual() Operator`를 활용하여 조회한다.
+  2. `Operator` 체인의 중간에서 읽기:
+* 이 때, **`deferContextual() Operator`는 컨텍스트에 저장된 데이터와 원본 데이터 소스에 대한 처리를 지연**시킨다.
+  * 이 경우, 상술한 `contextWrite()`와 달리 `deferContextual() Operator`는 `ContextView` 타입 객체를 인자로 받는 람다 표현식을 사용한다.
+  * 이렇듯 Reactor는 **컨텍스트에 데이터를 쓸 때에는 `Context` 타입의 객체를 활용하되, 조회할 때에는 `ContextView` 타입 객체를 활용**한다.
+* 데이터를 조회하는 경우 역시, 코드상에서는 `ContextView`가 제공하는 API 중 `get()` 메소드를 활용한다.
+* 반면, **`Operator` 체인의 중간에서 컨텍스트의 데이터를 조회하는 경우에는 `transformDeferredContextual() Operator`를 활용**한다.
+* 또한, `subscribeOn()`이나 `publishOn() Operator`와 혼용하는 경우 서로 다른 스레드들이 컨텍스트에 저장된 데이터에 접근할 수 있다.
+  * 예를 들어, `Operator` 체인 상에서 `publishOn() Operator` 등을 활용하는 것으로 매번 다른 스레드가 컨텍스트의 데이터를 조회하도록 할 수 있다.
