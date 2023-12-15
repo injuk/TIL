@@ -30,3 +30,12 @@
 * 반면, **`Operator` 체인의 중간에서 컨텍스트의 데이터를 조회하는 경우에는 `transformDeferredContextual() Operator`를 활용**한다.
 * 또한, `subscribeOn()`이나 `publishOn() Operator`와 혼용하는 경우 서로 다른 스레드들이 컨텍스트에 저장된 데이터에 접근할 수 있다.
   * 예를 들어, `Operator` 체인 상에서 `publishOn() Operator` 등을 활용하는 것으로 매번 다른 스레드가 컨텍스트의 데이터를 조회하도록 할 수 있다.
+
+## 2023-12-16 Sat
+### 자주 사용되는 Context API
+* `Context`와 관련된 API는 여럿이 존재하지만, 그 중 특히 자주 사용되는 것은 크게 다음과 같다.
+  1. `put`: 키-값 형태로 컨텍스트에 값을 쓴다.
+  2. `of`: 최대 다섯 개의 데이터를 파라미터로 입력하여 여러 개의 값을 키-값 형태로 컨택스트에 쓴다.
+  3. `putAll`: 현재 `Context`와, 파라미터로 전달한 `ContextView`를 병합한다.
+  4. `delete`: 키를 인자로 전달 받아 현재 `Context`로부터 대응되는 값을 삭제한다.
+  5. `readOnly`: `Context`를 `ContextView`로 변환한다.
