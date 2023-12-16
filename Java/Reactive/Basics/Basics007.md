@@ -39,3 +39,17 @@
   3. `putAll`: 현재 `Context`와, 파라미터로 전달한 `ContextView`를 병합한다.
   4. `delete`: 키를 인자로 전달 받아 현재 `Context`로부터 대응되는 값을 삭제한다.
   5. `readOnly`: `Context`를 `ContextView`로 변환한다.
+
+## 2023-12-17 Sun
+### 자주 사용되는 ContextView API
+```
+> 컨텍스트에 데이터를 쓰기 위해서는 Context API를 사용하듯, 데이터를 조회하기 위해서는 ContextView API를 사용해야 한다.
+```
+* `ContextView` 역시 관련된 API는 여럿이 존재하지만, 그 중 특히 자주 사용되는 것은 크게 다음과 같다.
+  1. `get`: `ContextView`로부터 키에 대응되는 값을 반환한다.
+  2. `getOrEmpty`: `ContextView`로부터 키에 대응되는 값을 `Optional`로 래핑하여 반환한다.
+  3. `getOrDefault`: `ContextView`에서 키에 대응되는 값을 조회하되, 존재하지 않는 경우 디폴트 값을 반환한다.
+  4. `hasKey`: `ContextView`에 인자로 전달된 키가 존재하는지 확인한다.
+  5. `isEmpty`: `Context`가 비어 있는지 여부를 반환한다.
+  6. `size`: `Context` 내부의 키-값 개수를 반환한다.
+* 상술한 바와 같이, `Context`에 저장된 데이터를 조회하기 위한 `ContextView` API는 컬렉션 API의 `Map`과 사용방법이 크게 다르지 않다.
