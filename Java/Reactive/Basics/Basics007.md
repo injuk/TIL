@@ -80,3 +80,11 @@
 * 덧붙여 `Assembly`란 Reactor에서 자주 사용되는 용어로서, 임의의 `Operator`가 반환하는 새로운 `Mono` 또는 `Flux`가 선언된 지점을 지칭한다.
   * 이 때, 예외가 발생한 `Operator`의 스택트레이스를 캡쳐한 `Assembly` 정보를 `Traceback`이라는 용어로 지칭한다.
 * 반면, 사용 중인 IDE가 IntelliJ인 경우 개발 환경 차원에서 디버그 모드를 활성화하는 방법 역시 제공된다.
+
+## 2023-12-20 Wed
+### checkpoint() Operator 활용하기
+* 디버그 모드가 애플리케이션의 모든 `Operator`로부터 발생한 스택트레이스를 캡처한다면, 해당 연산자는 임의의 `Operator` 체인 내에서만 캡처를 시도한다.
+* 이 때, `checkpoint() Operator`를 활용하는 방식은 크게 다음과 같이 분류할 수 있다.
+  1. `Traceback` 출력하기: 에러가 발생한 `Assembly` 지점 또는 에러가 전파된 `Assembly` 지점의 `Traceback`을 추가한다.
+  2. `Traceback` 출력 없이 식별자를 포함한 설명을 출력하여 에러 발생 지점을 에상하기: 이 경우, `checkpoint(description)` 형태로 사용해야 한다.
+  3. `Traceback`과 `Description`을 모두 출력하기
