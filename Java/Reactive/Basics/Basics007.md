@@ -88,3 +88,11 @@
   1. `Traceback` 출력하기: 에러가 발생한 `Assembly` 지점 또는 에러가 전파된 `Assembly` 지점의 `Traceback`을 추가한다.
   2. `Traceback` 출력 없이 식별자를 포함한 설명을 출력하여 에러 발생 지점을 에상하기: 이 경우, `checkpoint(description)` 형태로 사용해야 한다.
   3. `Traceback`과 `Description`을 모두 출력하기
+
+## 2023-12-21 Thu
+### log() Operator 활용하기
+* 해당 연산자는 Reactor `Sequence` 동작을 로그 형태로 출력하며, 이렇게 출력된 로그를 기반으로 디버그를 시도할 수 있다.
+  * 이 때, **해당 연산자는 `Subscriber`에 전달되는 결과 외에도 `onSubsribe()`나 `onNext()`와 같은 `Signal`을 함께 출력**한다.
+  * **`checkpoint() Operator`가 특정 `Operator` 체인 내의 스택트레이스를 캡쳐한다면, 해당 연산자는 추가된 지점의 `Signal`을 출력**한다.
+  * 또한, 연산자의 인자에 `log(식별자, 로그레벨)` 형태로 전달하여 적절한 로그 레벨을 설정할 수도 있다.
+* 해당 연산자는 `Operator` 체인 상에서 사용되는 개수에 대한 제한이 없으므로 에러가 발생한 지점에 점진적으로 접근해나갈 수 있다.
