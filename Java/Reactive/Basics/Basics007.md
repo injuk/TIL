@@ -96,3 +96,13 @@
   * **`checkpoint() Operator`가 특정 `Operator` 체인 내의 스택트레이스를 캡쳐한다면, 해당 연산자는 추가된 지점의 `Signal`을 출력**한다.
   * 또한, 연산자의 인자에 `log(식별자, 로그레벨)` 형태로 전달하여 적절한 로그 레벨을 설정할 수도 있다.
 * 해당 연산자는 `Operator` 체인 상에서 사용되는 개수에 대한 제한이 없으므로 에러가 발생한 지점에 점진적으로 접근해나갈 수 있다.
+
+## 2023-12-22 Fri
+### Reactor 테스트 모듈
+```
+> Reactor의 가장 흔한 테스트 방식은 Flux나 Mono를 Sequence로 정의한 후, 구독 시점에 Operator 체인이 의도대로 동작하는지 검증하는 것이다.
+```
+* Reactor의 경우, 비동기적인 코드를 쉽게 테스트할 수 있도록 `reactor-test` 모듈을 제공한다.
+  * 이는 그래들 등을 통해 `testImplementation("io.projectreator:reactor-test")`와 같은 형태로 사용할 수 있다.
+* `Operator` 체인을 테스트할 경우, `Signal`이나 데이터의 `Emit` 여부 등을 단계적으로 테스트하는 것이 일반적이다.
+  * 이 때, **Reactor는 이러한 `Operator` 체인의 다양한 동작을 쉽게 테스트할 수 있도록 `StepVerifier API`를 제공**한다.
