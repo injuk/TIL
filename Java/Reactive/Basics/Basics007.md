@@ -106,3 +106,31 @@
   * 이는 그래들 등을 통해 `testImplementation("io.projectreator:reactor-test")`와 같은 형태로 사용할 수 있다.
 * `Operator` 체인을 테스트할 경우, `Signal`이나 데이터의 `Emit` 여부 등을 단계적으로 테스트하는 것이 일반적이다.
   * 이 때, **Reactor는 이러한 `Operator` 체인의 다양한 동작을 쉽게 테스트할 수 있도록 `StepVerifier API`를 제공**한다.
+
+## 2023-12-23 Sat
+### StepVerifier API 사용하기
+```
+> Reactor의 테스트는 verifyXXX() API를 통해 테스트 대상 Operator 체인을 구독한 후 expectXXX() API로 Emit된 데이터를 검증하는 과정이다.
+```
+* 해당 API의 경우, `Operator` 체인을 테스트하기 위해 다음과 같은 코드를 작성한다.
+  1. `create()`: 테스트 대상이 될 `Sequence`를 생성한다.
+  2. `expectNext()`: `Emit`된 데이터를 검증한다.
+  3. `expectComplete()`: `onComplete Signal`을 검증한다.
+  4. `verify()`: 상술한 테스트 스펙을 기반으로 실제 검증을 진행한다.
+```java
+public class Test {
+    @Test
+    public void reactorTest() {
+        StepVerifier.create(
+                Mono.just("테스트하기")
+        )    
+            .expectNext("테스트하기")
+            .expectComplete()
+            .verify();
+    }
+}
+```
+* 이렇듯 `StepVerifier API`를 활용한 테스트 방식은 `Sequence`를 생성한 후 `expectXXX() API`를 활용하여 `Signal`을 검증하는 식으로 진행된다.
+  * 이 때, 전체 `Operator` 체인에 대한 실제 테스트는 `verify()` 연산자에 의해 시작된다.
+* 나아가 `StepVerifier API`를 활용할 경우 시간 기반의 테스트는 물론 `Backpressure`와 `Context`에 관련된 내용 역시 테스트할 수 있다.
+  * 또는 `recordWith() API`를 활용한 레코드 기반의 테스트를 진행할 수도 있다.
