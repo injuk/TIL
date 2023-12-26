@@ -148,3 +148,11 @@ public class Test {
 * Reactor의 테스트 모듈이 제공하는 `PublisherProbe`를 활용할 경우, `Sequence`의 실행 경로를 테스트할 수 있다.
   * 때문에 `PublisherProbe`는 주로 **조건부로 `Sequence`가 분기되는 경우, 실행 경로를 추적하여 정상적으로 실행되었는지를 검증하기 위해 사용**된다.
   * 즉, **`PublisherProbe`는 `Publisher`가 `Emit`하는 데이터보다는 `Publisher`의 실행 경로 자체에 집중하는 테스트에 적합**하다.
+
+## 2023-12-26 Tue
+### Operator란?
+```
+> 리액티브 프로그래밍은 Operator에서 시작하고 Operator에서 끝난다.
+```
+* **Reactor는 수많은 `Operator`를 지원하며, 어떤 상황에 어떤 연산자를 활용할지에 대한 가이드 역시 제공**한다.
+  * 예를 들어, 상술한 `just()`부터 시작하여 `map()`, `create()` 따위의 모든 것은 `Operator`에 해당한다.
