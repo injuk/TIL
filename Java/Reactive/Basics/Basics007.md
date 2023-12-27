@@ -156,3 +156,12 @@ public class Test {
 ```
 * **Reactor는 수많은 `Operator`를 지원하며, 어떤 상황에 어떤 연산자를 활용할지에 대한 가이드 역시 제공**한다.
   * 예를 들어, 상술한 `just()`부터 시작하여 `map()`, `create()` 따위의 모든 것은 `Operator`에 해당한다.
+
+## 2023-12-27 Wed
+### Reactor Sequence 생성 Operator - justOrEmpty()부터 range()까지
+* `justOrEmpty()`의 경우, `Emit`될 데이터가 null이더라도 NPE를 던지지 않고 `onComplete() Signal`을 전송한다.
+  * 반면, `Emit`될 데이터가 null이 아니라면 해당 데이터를 `Emit`하는 `Mono`를 생성한다.
+* `fromIterable()`의 경우, 임의의 이터러블로부터 데이터를 `Emit`하는 `Flux`를 생성한다.
+* `fromStream()`의 경우, 임의의 스트림에 포함된 데이터를 `Emit`하는 `Flux`를 생성한다.
+* `range()`의 경우, 첫 번째 인자로 전달된 n부터 하나씩 증가되는 수를 두 번째 인자로 전달된 m개만큼 `Emit`하는 `Flux`를 생성한다.
+  * 이러한 특징으로 인해, 해당 연산자는 고전적인 for 반복문처럼 특정 횟수만큼 작업을 반복하고자 하는 경우에 유용하다.
