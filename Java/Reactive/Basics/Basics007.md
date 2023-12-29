@@ -173,3 +173,13 @@ public class Test {
 * `using()`의 경우, 인자로 전달받은 리소스를 `Emit`하는 `Flux`를 생성한다.
 * `generate()`의 경우, 프로그래밍 방식으로 `Signal`을 전송하므로 동기적으로 데이터를 하나씩 `Emit`하고자 하는 경우에 유용하다.
 * `create()`의 경우, `generate()`와 유사하지만 한 번에 여러 개의 데이터를 비동기적으로 `Emit`할 수 있다.
+
+## 2023-12-29 Fri
+### Reactor Sequence 필터링 Operator - filter()부터 next()까지
+* `filter()`의 경우, `Upstream`으로부터 `Emit`된 데이터 중 조건에 일치하는 데이터만 `Downstream`으로 전달한다.
+  * 즉, 해당 연산자의 인자로는 `Predicate`가 전달된다.
+* `skip()`의 경우, `Upstream`으로부터 `Emit`된 데이터 중 인자로 전달된 숫자만큼을 건너 뛴 후 나머지 데이터만을 `Downstream`으로 전달한다.
+* 반면, `take()`의 경우 `Upstream`으로부터 `Emit`된 데이터 중 인자로 전달된 숫자만큼의 데이터만 `Downstream`으로 전달한다.
+* 이 때, `skip()`과 `take()` 모두 인자로 시간을 지정하여 시간 내에 `Emit`된 데이터만을 `Downstream`으로 건너 뛰거나 전달할 수도 있다.
+* `next()`의 경우, `Upstream`으로부터 `Emit`된 데이터 중 첫 번째 데이터만을 `Downstream`으로 전달한다.
+  * 이 과정에서 `Upstream`으로부터 `Emit`된 데이터가 비어 있는 경우, `Downstream`에는 `Empty Mono`가 전달된다.
