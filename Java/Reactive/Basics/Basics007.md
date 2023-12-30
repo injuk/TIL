@@ -183,3 +183,11 @@ public class Test {
 * 이 때, `skip()`과 `take()` 모두 인자로 시간을 지정하여 시간 내에 `Emit`된 데이터만을 `Downstream`으로 건너 뛰거나 전달할 수도 있다.
 * `next()`의 경우, `Upstream`으로부터 `Emit`된 데이터 중 첫 번째 데이터만을 `Downstream`으로 전달한다.
   * 이 과정에서 `Upstream`으로부터 `Emit`된 데이터가 비어 있는 경우, `Downstream`에는 `Empty Mono`가 전달된다.
+
+## 2023-12-30 Sat
+### Reactor Sequence 변환 Operator - map()부터 merge()까지
+* `map()`의 경우, `Upstream`으로부터 `Emit`된 데이터를 임의의 매핑 함수로 데이터를 변환한 후에 `Downstream`으로 전달한다.
+* `flatMap()`의 경우, `Upstream`으로부터 `Emit`된 데이터를 `Inner Sequence`에서 평탄화하여 하나의 `Sequence`로 병합한다.
+* `concat()`의 경우, 인자로 전달된 `Publisher`들의 `Sequence`를 연결한 후 순차적으로 데이터를 `Emit`한다.
+* `merge()`의 경우, 인자로 전달된 `Publisher`들의 `Sequence`를 인터리빙 방식으로 병합한다.
+  * 다시 말해, 각각의 `Publisher`로부터 `Emit`되는 데이터들은 시간 순서대로 배치된다.
