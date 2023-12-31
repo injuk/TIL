@@ -191,3 +191,12 @@ public class Test {
 * `concat()`의 경우, 인자로 전달된 `Publisher`들의 `Sequence`를 연결한 후 순차적으로 데이터를 `Emit`한다.
 * `merge()`의 경우, 인자로 전달된 `Publisher`들의 `Sequence`를 인터리빙 방식으로 병합한다.
   * 다시 말해, 각각의 `Publisher`로부터 `Emit`되는 데이터들은 시간 순서대로 배치된다.
+
+## 2023-12-31 Sun
+### Reactor Sequence 변환 Operator - zip()부터 collectMap()까지
+* `zip()`의 경우, 인자로 전달된 `Publisher`들이 `Emit`하는 데이터를 하나씩 결합하여 튜플 형태의 데이터를 `Emit`한다.
+* `and()`의 경우, 임의의 `Mono`로부터 발생한 완료 `Signal`과 인자로 전달된 `Publisher`의 완료 `Signal`을 결합한 `Mono<Void>`를 반환한다.
+  * 즉, 해당 연산자를 활용할 경우 임의의 `Mono`와 인자로 전달된 `Publisher`의 `Sequence`가 모두 종료되었음을 `Subscriber`에게 전달할 수 있다.
+* `collectList()`의 경우, `Flux`가 `Emit`한 데이터를 모아 `List`로 변환한 후 이를 `Emit`하는 `Mono`를 반환한다.
+  * 이 때, `Upstream Sequence`가 비어 있는 경우에는 빈 `List`를 `Downstream`으로 `Emit`하게 된다.
+* `collectMap()`의 경우, `Flux`로부터 `Emit`된 데이터를 기반으로 키-값 형태의 `Map`을 `Emit`하는 `Mono`를 반환한다.
