@@ -200,3 +200,9 @@ public class Test {
 * `collectList()`의 경우, `Flux`가 `Emit`한 데이터를 모아 `List`로 변환한 후 이를 `Emit`하는 `Mono`를 반환한다.
   * 이 때, `Upstream Sequence`가 비어 있는 경우에는 빈 `List`를 `Downstream`으로 `Emit`하게 된다.
 * `collectMap()`의 경우, `Flux`로부터 `Emit`된 데이터를 기반으로 키-값 형태의 `Map`을 `Emit`하는 `Mono`를 반환한다.
+
+## 2024-01-01 Mon
+### Reactor Sequence 부수 효과 Operator - doOnXXX()
+* Reactor는 `Upstream Publisher`로부터 `Emit`된 데이터를 수정하지 않는, 오로지 부수 효과만을 위한 `Operator`들이 지원된다.
+  * 또한, 이러한 연산자들은 일반적으로 `doOnXXX()` 형태로 명명되며 함수형 인터페이스를 인자로 전달 받아 아무 것도 반환하지 않는 식으로 동작한다.
+  * 이러한 이유에서 `doOnXXX() Operator`들은 `Upstream Publisher`로부터 `Emit`된 데이터를 기반으로 내부 동작을 확인하는 등 디버그에 사용된다.
