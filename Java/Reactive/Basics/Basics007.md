@@ -206,3 +206,12 @@ public class Test {
 * Reactor는 `Upstream Publisher`로부터 `Emit`된 데이터를 수정하지 않는, 오로지 부수 효과만을 위한 `Operator`들이 지원된다.
   * 또한, 이러한 연산자들은 일반적으로 `doOnXXX()` 형태로 명명되며 함수형 인터페이스를 인자로 전달 받아 아무 것도 반환하지 않는 식으로 동작한다.
   * 이러한 이유에서 `doOnXXX() Operator`들은 `Upstream Publisher`로부터 `Emit`된 데이터를 기반으로 내부 동작을 확인하는 등 디버그에 사용된다.
+
+## 2024-01-02 Tue
+### Reactor Sequence 에러 처리 Operator - error()부터 retry()까지
+* `error()`의 경우, 인자로 전달된 예외로 종료하는 `Flux`를 생성한다.
+  * 이는 마치 `throw` 키워드를 활용하여 예외를 의도적으로 던지는 것과 유사한 역할을 수행하며, 일반적으로 `checked exception`을 던지는 데에 활용된다.
+* `onErrorReturn()`의 경우, 예외 이벤트가 발생한 경우 이를 `Downstream`으로 전달하는 대신 인자로 전달된 기본값을 `Emit`한다.
+* `onErrorResume()`의 경우, 예외 이벤트가 발생한 경우 이를 `Downstream`으로 전달하는 대신 인자로 전달된 `Publisher`를 반환하는 식으로 동작한다.
+* `onErrorContinue()`의 경우, 예외 이벤트가 발생한 경우 해당 데이터를 제거하여 `Upstream`으로부터 후속 데이터를 `Emit`하도록 지원한다.
+* `retry()`의 경우, `Publisher`가 데이터를 `Emit`하는 과정에서 예외가 발생한 경우 인자로 전달된 횟수만큼 원본 `Flux`를 다시 구독한다.
