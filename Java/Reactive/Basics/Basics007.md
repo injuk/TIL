@@ -215,3 +215,11 @@ public class Test {
 * `onErrorResume()`의 경우, 예외 이벤트가 발생한 경우 이를 `Downstream`으로 전달하는 대신 인자로 전달된 `Publisher`를 반환하는 식으로 동작한다.
 * `onErrorContinue()`의 경우, 예외 이벤트가 발생한 경우 해당 데이터를 제거하여 `Upstream`으로부터 후속 데이터를 `Emit`하도록 지원한다.
 * `retry()`의 경우, `Publisher`가 데이터를 `Emit`하는 과정에서 예외가 발생한 경우 인자로 전달된 횟수만큼 원본 `Flux`를 다시 구독한다.
+
+## 2024-01-03 Wed
+### Reactor Sequence 기타 Operator - elapsed() 부터 groupBy()까지
+* `elapsed()`는 Reactor `Sequence`의 동작 시간을 측정하기 위해 사용되며, 측정된 시간을 `Downstream`에 `Emit`한다.
+* `window()`는 `Upstream`으로부터 `Emit`된 첫 번째 데이터부터 인자로 전달된 수 만큼의 데이터를 포함하는 새로운 `Flux`를 생성한다.
+* `buffer()`는 `Upstream`으로부터 `Emit`된 첫 번째 데이터부터 인자로 전달된 수 만큼의 데이터를 List 버퍼로 한 번에 `Emit`한다.
+  * 반면, `bufferTimeout()`은 인자로 전달된 수 만큼 또는 `maxTime` 이내에 `Emit`된 모든 데이터를 List 버퍼로 한 번에 `Emit`한다.
+* `groupBy()`는 `Emit`된 데이터를 `keyMapper`로 생성된 `key`를 기준으로 그룹화한 `Flux`를 반환한다.
