@@ -223,3 +223,9 @@ public class Test {
 * `buffer()`는 `Upstream`으로부터 `Emit`된 첫 번째 데이터부터 인자로 전달된 수 만큼의 데이터를 List 버퍼로 한 번에 `Emit`한다.
   * 반면, `bufferTimeout()`은 인자로 전달된 수 만큼 또는 `maxTime` 이내에 `Emit`된 모든 데이터를 List 버퍼로 한 번에 `Emit`한다.
 * `groupBy()`는 `Emit`된 데이터를 `keyMapper`로 생성된 `key`를 기준으로 그룹화한 `Flux`를 반환한다.
+
+## 2024-01-04 Thu
+### Reactor Sequence 기타 Operator - publish() 부터 refCount()까지
+* `publish()`는 구독이 발생하더라도 구독 시점에 즉시 데이터를 `Emit`하는 대신 `connect()`를 호출하는 시점에서야 데이터를 `Emit`한다.
+  * 반면, `autoConnect()`는 인자로 지정한 숫자만큼의 구독이 발생하는 시점에 `Upstream`에 자동으로 연결되므로 `connect()`를 사용할 필요가 없다.
+  * `refCount()` 역시 인자만큼의 구독 발생 시 `Upstream`에 연결되나, 구독이 모두 취소되거나 `Upstream`의 `Emit`이 종료될 때 연결을 해제한다.
