@@ -102,3 +102,22 @@
   * 반면, **`WebFlux`의 경우 `WebFilter`를 통해 Spring Security와 통합**된다.
 * Spring MVC는 내부적으로 `Blocking I/O` 방식을 활용하는 Spring Data JDBC 또는 Spring Data JPA 등의 데이터 액세스 기술을 활용한다.
   * 반면, **`WebFlux`의 경우 데이터 액세스 계층까지 완벽하게 `Non-Blocking I/O`를 지원하는 Spring Data `R2DBC`를 활용**한다.
+
+## 2024-01-07 Sun
+### WebFlux의 요청 흐름
+```
+> Spring MVC와 마찬가지로, WebFlux 역시 정해진 흐름에 따라 각 컴포넌트가 클라이언트의 요청을 처리하게 된다.
+```
+* 클라이언트로부터의 요청이 최초로 발생했을 때, 요청은 Netty 등의 서버 엔진을 거쳐 `HttpHandler`에 전달된다.
+  * 이 때, **`HttpHandler`는 Netty 등의 여러 서버 엔진에서 지원하는 서버 API를 사용할 수 있도록 서버 API를 추상화하는 역할을 담당**한다.
+* 이를 통해 각 서버 엔진마다 주어지는 `ServerWebExchange`가 생성되고, 이는 `WebFilter` 체인에 전달된다.
+  * 이 때, `ServerWebExchange`는 각 서버마다 주어지는 `ServerHttpRequest`와 `ServerHttpResponse`를 포함한다.
+  * 이렇듯 **`ServerWebExchange`는 `WebFilter` 체인으로부터 전처리 과정을 거친 후 `WebHandler` 인터페이스의 구현체에게 전달**된다.
+* **`DispatcherHandler`는 일반적인 `WebHandler`의 구현체이며, 이는 Spring MVC의 `DispatcherServlet`과 유사한 역할**을 담당한다.
+  * 이 때, **`DispatcherHandler`에서는 `HandlerMapping List`를 원본 `Flux`의 소스로 전달**받는다.
+* 이후 **`ServerWebExchange`를 처리할 핸들러를 조회한 후, 조회된 핸들러의 호출은 `HandlerAdapter`에 위임**된다.
+  * 이윽고 `HandlerAdapter`는 `ServerWebExchange`를 처리하기 위한 핸들러를 호출한다.
+  * 예를 들어, **해당 요청은 `Controller` 또는 `HandlerFunction` 형태의 핸들러에서 처리된 후에 응답 값을 반환하는 식으로 처리**된다.
+* 핸들러로부터 **반환된 응답 값을 처리하기 위한 `HandlerResultHandler`가 조회되고, 조회된 객체는 응답 값을 처리한 후에 `response`로 반환**한다.
+  * 반면, **엄밀히 말해 핸들러에서 처리되어 반환되는 응답 값은 응답 값을 포함하는 `Flux` 또는 `Mono Sequence`를 의미**한다.
+  * 때문에 **반환된 Reactor `Sequence`는 반환된 즉시 어떠한 작업을 수행하는 식으로 동작하지는 않는 점에 유의**해야 한다.
