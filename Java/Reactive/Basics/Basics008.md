@@ -121,3 +121,9 @@
 * 핸들러로부터 **반환된 응답 값을 처리하기 위한 `HandlerResultHandler`가 조회되고, 조회된 객체는 응답 값을 처리한 후에 `response`로 반환**한다.
   * 반면, **엄밀히 말해 핸들러에서 처리되어 반환되는 응답 값은 응답 값을 포함하는 `Flux` 또는 `Mono Sequence`를 의미**한다.
   * 때문에 **반환된 Reactor `Sequence`는 반환된 즉시 어떠한 작업을 수행하는 식으로 동작하지는 않는 점에 유의**해야 한다.
+
+## 2024-01-08 Mon
+### WebFlux 핵심 컴포넌트 - HttpHandler
+* `HttpHandler`는 서로 다른 유형의 HTTP 서버 API를 활용하여 요청과 응답을 처리하기 위해 추상화된 `handle()` 메소드만을 제공한다.
+  * 이 때, 해당 메소드의 시그니쳐는 `Mono<Void> handle(ServerHttpRequest request, ServerHttpResponse response);`와 같다.
+* 예를 들어, `HttpWebHandlerAdapter` 구현체는 전달받은 요청과 응답을 활용하여 `ServerWebExchange`를 생성한 후 `WebHandler`를 호출한다.
