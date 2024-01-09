@@ -127,3 +127,13 @@
 * `HttpHandler`는 서로 다른 유형의 HTTP 서버 API를 활용하여 요청과 응답을 처리하기 위해 추상화된 `handle()` 메소드만을 제공한다.
   * 이 때, 해당 메소드의 시그니쳐는 `Mono<Void> handle(ServerHttpRequest request, ServerHttpResponse response);`와 같다.
 * 예를 들어, `HttpWebHandlerAdapter` 구현체는 전달받은 요청과 응답을 활용하여 `ServerWebExchange`를 생성한 후 `WebHandler`를 호출한다.
+
+## 2024-01-09 Tue
+### WebFlux 핵심 컴포넌트 - WebFilter
+```
+> WebFilter는 Spring MVC의 서블릿 필터와 유사하게 핸들러가 요청을 처리하기 전에 전처리 작업을 수행하는 역할을 담당한다.
+> 때문에 WebFilter를 통해 보안 또는 세션 타임아웃 처리 등의 애플리케이션 전반에 공통적으로 적용될 전처리 작업을 처리할 수 있다.
+```
+* `WebFilter` 역시 `filter()` 메소드만을 정의하며, 인자로 `ServerWebExchange`와 `WebFilterChain`을 전달받는다.
+  * 이 때, 전달받은 `WebFilterChain`을 활용하여 필터 체인을 형성하며, 원하는 만큼의 `WebFilter`를 추가할 수 있다.
+* 상술한 바와 같이, **Spring `WebFlux`는 일종의 긴 Reactor `Sequence`이므로 `WebFilter` 역시 `Sequence`의 일부로 이해**할 수 있다.
