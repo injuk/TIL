@@ -137,3 +137,14 @@
 * `WebFilter` 역시 `filter()` 메소드만을 정의하며, 인자로 `ServerWebExchange`와 `WebFilterChain`을 전달받는다.
   * 이 때, 전달받은 `WebFilterChain`을 활용하여 필터 체인을 형성하며, 원하는 만큼의 `WebFilter`를 추가할 수 있다.
 * 상술한 바와 같이, **Spring `WebFlux`는 일종의 긴 Reactor `Sequence`이므로 `WebFilter` 역시 `Sequence`의 일부로 이해**할 수 있다.
+
+## 2024-01-10 Wed
+### WebFlux 핵심 컴포넌트 - HandlerFilterFunction
+```
+> HandlerFilterFunction은 함수형 기반의 요청 핸들러에 연결할 수 있는 필터를 의미한다.
+```
+* `HandlerFilterFunction`은 함수형 기반의 요청 핸들러에 대해 적용할 수 있는 필터이며, `Mono`를 반환하는 `filter` 메소드를 제공한다.
+  * 이 때, `Mono<R> filter(ServerRequest request, HandlerFunction<T> next);` 형태로 정의되어 인자로 전달된 `next`에 연결된다.
+* **`WebFilter`의 구현체는 Spring의 빈으로 등록되는 반면, `HandlerFilterFunction` 구현체는 함수 형태로 사용되므로 빈에 등록되지 않는다**.
+  * 나아가 `WebFilter`는 정의된 모든 핸들러에 대해 공통으로 동작하는 특징이 있기에 어노테이션 기반 요청 핸들러와 함수형 기반 요청 핸들러 모두에 적용된다.
+  * 그러나 `HandlerFilterFunction`는 함수형 기반의 핸들러에 대해서만 동작하므로, 이러한 특징에 따라 두 필터를 적시에 활용할 수 있어야 한다.
