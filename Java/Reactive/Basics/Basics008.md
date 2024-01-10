@@ -148,3 +148,15 @@
 * **`WebFilter`의 구현체는 Spring의 빈으로 등록되는 반면, `HandlerFilterFunction` 구현체는 함수 형태로 사용되므로 빈에 등록되지 않는다**.
   * 나아가 `WebFilter`는 정의된 모든 핸들러에 대해 공통으로 동작하는 특징이 있기에 어노테이션 기반 요청 핸들러와 함수형 기반 요청 핸들러 모두에 적용된다.
   * 그러나 `HandlerFilterFunction`는 함수형 기반의 핸들러에 대해서만 동작하므로, 이러한 특징에 따라 두 필터를 적시에 활용할 수 있어야 한다.
+
+## 2024-01-11 Thu
+### WebFlux 핵심 컴포넌트 - DispatcherHandler
+```
+> DispatcherHandler는 Spring 빈으로 등록되도록 설계되었으며, ApplicationContext로부터 요청 처리를 위한 위임 컴포넌트를 찾아 활용한다.
+```
+* `DispatcherHandler`는 `WebHandler`의 구현체로서 마치 Spring MVC의 `DispatcherServlet`처럼 먼저 중앙에서 요청을 수신하는 역할을 담당한다.
+  * 이렇듯 **우선 요청을 수신한 이후에는 다른 컴포넌트에 적절한 요청 처리를 위임하는 식으로 동작**한다.
+  * `DispatcherHandler`는 요청 처리를 위해 위임 컴포넌트인 `HandlerMapping`과 `HandlerAdapter`, `HandlerResultHandler`를 활용한다.
+* 이 때, `DispatcherHandler`는 크게 다음과 같은 메소드들을 제공한다.
+  1. `initStrategies`: Spring의 `BeanFactoryUtils`를 활용하여 `ApplicationContext`로부터 필요한 빈을 검색한 후, 필요한 객체를 생성한다.
+  2. `handle`: 내부적으로는 필요한 핸들러를 검색한 후, 핸들러 호출과 응답에 대한 처리를 각각 적절한 객체에 위임한다.
