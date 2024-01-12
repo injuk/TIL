@@ -160,3 +160,11 @@
 * 이 때, `DispatcherHandler`는 크게 다음과 같은 메소드들을 제공한다.
   1. `initStrategies`: Spring의 `BeanFactoryUtils`를 활용하여 `ApplicationContext`로부터 필요한 빈을 검색한 후, 필요한 객체를 생성한다.
   2. `handle`: 내부적으로는 필요한 핸들러를 검색한 후, 핸들러 호출과 응답에 대한 처리를 각각 적절한 객체에 위임한다.
+
+## 2024-01-12 Fri
+### WebFlux 핵심 컴포넌트 - HandlerMapping
+```
+> HandlerMapping은 Spring MVC와 마찬가지로 요청과 핸들러 객체에 대한 매핑을 정의하는 인터페이스를 의미한다.
+```
+* 해당 인터페이스는 `RequestMappingHandlerMapping` 또는 `RouterFunctionMapping` 등의 구현체를 갖는다.
+* 이 때, 제공되는 `getHandler` 메소드는 인자로 전달된 `ServerWebExchange`에 대응되는 핸들러 객체를 반환하는 방식으로 동작한다.
