@@ -168,3 +168,9 @@
 ```
 * 해당 인터페이스는 `RequestMappingHandlerMapping` 또는 `RouterFunctionMapping` 등의 구현체를 갖는다.
 * 이 때, 제공되는 `getHandler` 메소드는 인자로 전달된 `ServerWebExchange`에 대응되는 핸들러 객체를 반환하는 방식으로 동작한다.
+
+## 2024-01-13 Sat
+### WebFlux 핵심 컴포넌트 - HandlerAdapter
+* 해당 인터페이스는 `HandlerMapping`을 통해 반환된 핸들러를 직접 호출하며, 결과로 `Mono<HandlerResult>`를 반환하는 `handle` 메소드를 제공한다.
+  * 즉, `handle` 메소드는 내부적으로 인자로 전달된 핸들러 객체의 핸들러 메소드를 호출하는 식으로 동작하게 된다.
+* 또한, 해당 인터페이스는 인자로 전달된 핸들러 객체를 지원할 수 있는지 검증하는 `supports` 메소드를 함께 제공한다.
