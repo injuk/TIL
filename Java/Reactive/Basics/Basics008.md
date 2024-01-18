@@ -229,3 +229,19 @@
   * 이는 무시할 수 있을만한 작업이지만, 그럼에도 `WebFlux`를 사용하는 이상 블로킹 요소는 최대한 제거하는 것이 바람직하다.
 * 예를 들어, 클라이언트의 요청을 그대로 `@RequestBody`에 매핑하는 방식 대신 `@RequestBody Mono<T> body`와 같이 매핑할 수 있다.
   * 이렇듯 **`WebFlux`는 인자로 `Reactive` 타입을 지원하므로, 모든 매핑 과정까지도 `Mono`나 `Flux` 내에서 처리되도록 구현하는 것이 권장**된다.
+
+## 2024-01-19 Fri
+### 함수형 엔드포인트란?
+* `WebFlux`는 익숙한 방식인 어노테이션 기반 방식과 함께 함수형 엔드포인트 기반 방식을 제공한다.
+  * **클라이언트의 요청을 처리하기 위해 어노테이션 매핑 기법을 사용하는 방식과 달리, 함수형 엔드포인트는 모든 과정을 하나의 함수 체인으로 처리**한다.
+* **`WebFlux`의 경우, 함수형 엔드포인트는 클라이언트의 요청을 처리하기 위해 다음과 같이 `HandlerFunction`이라는 함수형 핸들러를 사용**한다.
+```Java
+@FunctionalInterface
+public interface HandlerFunction<T extends ServerResponse> {
+    Mono<T> handle(ServerRequest request);
+}
+```
+* 상술한 바와 같이, `HandlerFunction`은 함수형 인터페이스이므로 `handle()` 메소드 하나만을 제공하며 다음과 같은 타입을 활용한다.
+  1. `ServerRequest`: **`HandlerFunction`에 의해 처리되는 HTTP 요청을 표현하며, 헤더나 HTTP 메소드 등의 정보를 포함**한다.
+  2. `ServerResponse`: **`HandlerFunction` 또는 `HandlerFilterFunction`에서 반환되는 HTTP 응답을 표현**한다.
+* 특히, `ServerRequest`의 경우 HTTP 요청 본문에 접근하기 위한 `body()`나 `bodyToMono()` 및 `bodyToFlux()` 등의 메소드를 제공한다.
