@@ -218,3 +218,14 @@
 * 이 중 어노테이션 기반의 프로그래밍 모델은 Spring MVC와 유사한 형태를 띄는, 상대적으로 익숙한 방식에 해당한다.
   * 또한, **어노테이션 기반의 `WebFlux` 컨트롤러는 `ResponseEntity` 대신 `Mono<T>`를 반환한다는 점 외에는 변경점이 거의 필요 없다**.
   * 이렇듯 `WebFlux`의 어노테이션 기반 방식을 활용할 경우, Spring MVC 방식의 컨트롤러를 쉽게 `Non-Blocking I/O` 방식의 핸들러로 수정할 수 있다.
+
+## 2024-01-18 Thu
+### 객체 매핑 과정에서 발생할 수 있는 약간의 블로킹
+```
+> Spring WebFlux는 Spring MVC에서 지원하는 @RequestBody나 ResponseEntity를 그대로 지원한다.
+> 반면, Spring MVC와는 달리 WebFlux는 리액티브 타입을 활용하므로 데이터를 비동기적으로 ResponseBody에 렌더링하는 방식으로 동작한다.
+```
+* **`@RequestBody` 로 전달된 DTO나, 서비스에서 반환된 엔티티를 응답 DTO로 매핑하는 과정은 약간이지만 스레드를 차단하는 블로킹 요소에 해당**한다.
+  * 이는 무시할 수 있을만한 작업이지만, 그럼에도 `WebFlux`를 사용하는 이상 블로킹 요소는 최대한 제거하는 것이 바람직하다.
+* 예를 들어, 클라이언트의 요청을 그대로 `@RequestBody`에 매핑하는 방식 대신 `@RequestBody Mono<T> body`와 같이 매핑할 수 있다.
+  * 이렇듯 **`WebFlux`는 인자로 `Reactive` 타입을 지원하므로, 모든 매핑 과정까지도 `Mono`나 `Flux` 내에서 처리되도록 구현하는 것이 권장**된다.
