@@ -245,3 +245,10 @@ public interface HandlerFunction<T extends ServerResponse> {
   1. `ServerRequest`: **`HandlerFunction`에 의해 처리되는 HTTP 요청을 표현하며, 헤더나 HTTP 메소드 등의 정보를 포함**한다.
   2. `ServerResponse`: **`HandlerFunction` 또는 `HandlerFilterFunction`에서 반환되는 HTTP 응답을 표현**한다.
 * 특히, `ServerRequest`의 경우 HTTP 요청 본문에 접근하기 위한 `body()`나 `bodyToMono()` 및 `bodyToFlux()` 등의 메소드를 제공한다.
+
+## 2024-01-20 Sat
+### RouterFunction이란?
+* **`RouterFunction`은 클라이언트의 요청을 적절한 `HandlerFunction`으로 라우팅하며, `@RequestMapping`과 동일한 역할을 수행**한다.
+  * 이 때, `RouterFunction` 역시 단일 메소드를 제공하는 함수형 인터페이스이며 `ServerRequest`를 받아 적절한 `HandlerFunction`을 반환한다.
+* `RouterFunction`을 사용하는 경우, 일반적으로는 `@Configuration`을 활용하여 `RouterFunction`을 빈으로 등록하여 활용하게 된다.
+  * 이 경우, **빈으로 등록될 해당 `RouterFunction`은 `@Component`로 등록된 요청 핸들러를 주입받아 동작**하게 된다.
