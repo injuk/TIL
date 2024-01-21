@@ -252,3 +252,14 @@ public interface HandlerFunction<T extends ServerResponse> {
   * 이 때, `RouterFunction` 역시 단일 메소드를 제공하는 함수형 인터페이스이며 `ServerRequest`를 받아 적절한 `HandlerFunction`을 반환한다.
 * `RouterFunction`을 사용하는 경우, 일반적으로는 `@Configuration`을 활용하여 `RouterFunction`을 빈으로 등록하여 활용하게 된다.
   * 이 경우, **빈으로 등록될 해당 `RouterFunction`은 `@Component`로 등록된 요청 핸들러를 주입받아 동작**하게 된다.
+
+## 2024-01-21 Sun
+### 함수형 엔드포인트 방식에서의 요청 유효성 검증
+* 함수형 엔드포인트를 활용할 경우, 크게 다음과 같은 방식 중 하나로 요청 본문에 대한 유효성을 검증할 수 있다.
+  1. Custom Validator: Spring의 Validator 인터페이스를 구현한 Custom Validator를 구현하여 유효성 검증을 처리한다.
+  2. 표준 Bean Validation: Spring MVC에서 사용하던 표준 Bean Validation을 활용하여 유효성 검증을 처리한다.
+* 이 중, **Custom Validator 방식은 비즈니스 로직과 유효성 검증 코드가 뒤섞이며 중복이 발생하기 쉬워 바람직하지 않은 방식에 해당**한다.
+* 반면, 표준 Bean Validation의 경우 Spring에서 지원하는 Validator 또는 javax에서 지원하는 Validator 인터페이스 중 하나를 활용한다.
+  * 다시 말해, **두 인터페이스 중 하나를 활용하여 Validator 구현체를 주입받아 요청 본문를 표현하는 DTO 객체에 대한 유효성 검증을 진행**하게 된다.
+  * **두 방식은 단지 어떤 인터페이스를 활용하여 유효성 검증 로직을 구현하느냐에 대한 차이만 존재하므로, 둘 중 익숙한 방식을 선택해도 무방**하다.
+  * 실제로는 두 방식 모두 내부적으로는 유효성 검증을 처리하기 위해 Validator 구현체인 Hibernate Validator를 사용한다.
