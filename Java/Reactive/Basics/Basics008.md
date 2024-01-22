@@ -263,3 +263,11 @@ public interface HandlerFunction<T extends ServerResponse> {
   * 다시 말해, **두 인터페이스 중 하나를 활용하여 Validator 구현체를 주입받아 요청 본문를 표현하는 DTO 객체에 대한 유효성 검증을 진행**하게 된다.
   * **두 방식은 단지 어떤 인터페이스를 활용하여 유효성 검증 로직을 구현하느냐에 대한 차이만 존재하므로, 둘 중 익숙한 방식을 선택해도 무방**하다.
   * 실제로는 두 방식 모두 내부적으로는 유효성 검증을 처리하기 위해 Validator 구현체인 Hibernate Validator를 사용한다.
+
+## 2024-01-22 Mon
+### R2DBC란?
+```
+> R2DBC는 관계형 DB에 리액티브 프로그래밍 API를 제공하기 위한 스펙이자, SPI에 해당한다.
+> 기존에는 몇몇 NoSQL만 리액티브 클라이언트를 제공했으나, R2DBC로 인해 관계형 DB를 사용하는 완전한 Non-Blocking 애플리케이션의 구현이 가능해졌다.
+```
+* **`JDBC API` 자체가 `Blocking API`이므로, `R2DBC`가 탄생하기 이전에는 완전한 `Non-Blocking` 애플리케이션을 제작하기가 불가능**했다.
