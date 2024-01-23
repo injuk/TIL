@@ -271,3 +271,9 @@ public interface HandlerFunction<T extends ServerResponse> {
 > 기존에는 몇몇 NoSQL만 리액티브 클라이언트를 제공했으나, R2DBC로 인해 관계형 DB를 사용하는 완전한 Non-Blocking 애플리케이션의 구현이 가능해졌다.
 ```
 * **`JDBC API` 자체가 `Blocking API`이므로, `R2DBC`가 탄생하기 이전에는 완전한 `Non-Blocking` 애플리케이션을 제작하기가 불가능**했다.
+
+## 2024-01-23 Tue
+### Spring Data R2DBC란?
+* Spring Data `R2DBC`는 `R2DBC` 기반의 리포지토리를 더욱 쉽게 구현할 수 있도록 지원하는, Spring Data Family 프로젝트의 일부이다.
+  * 때문에 Spring Data `R2DBC`는 Spring이 추구하는 여러 추상화 기법을 적용하며, 데이터 액세스 계층의 반복적인 코드를 크게 줄일 수 있도록 한다.
+  * 또한, **Spring Data `R2DBC`는 JPA 등의 프레임워크가 제공하는 캐싱 등의 특징이 제거되므로 더욱 단순한 사용이 가능**하다.
