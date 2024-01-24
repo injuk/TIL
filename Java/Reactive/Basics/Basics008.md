@@ -277,3 +277,11 @@ public interface HandlerFunction<T extends ServerResponse> {
 * Spring Data `R2DBC`는 `R2DBC` 기반의 리포지토리를 더욱 쉽게 구현할 수 있도록 지원하는, Spring Data Family 프로젝트의 일부이다.
   * 때문에 Spring Data `R2DBC`는 Spring이 추구하는 여러 추상화 기법을 적용하며, 데이터 액세스 계층의 반복적인 코드를 크게 줄일 수 있도록 한다.
   * 또한, **Spring Data `R2DBC`는 JPA 등의 프레임워크가 제공하는 캐싱 등의 특징이 제거되므로 더욱 단순한 사용이 가능**하다.
+
+## 2024-01-24 Wed
+### Spring Data R2DBC 초기 구성하기
+* **Spring Data `R2DBC`는 JPA처럼 엔티티에 정의된 매핑 정보로 테이블을 자동 생성하지 않으므로, 테이블 생성용 SQL을 직접 작성할 필요**가 있다.
+  * 이후에는 `application.yml` 등의 설정 파일에서 해당 SQL 파일을 조회하여 테이블을 생성하도록 추가적인 설정을 작성해줄 필요가 있다.
+* 또한, Spring 기반의 애플리케이션이 `R2DBC`용 리포지토리와 Auditing 기능을 사용할 수 있도록 아래와 같은 어노테이션을 애플리케이션 진입점에 명시한다.
+  1. `@EnableR2dbcRepositories`
+  2. `@EnableR2dbcAuditing`
