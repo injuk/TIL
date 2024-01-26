@@ -263,39 +263,3 @@ public interface HandlerFunction<T extends ServerResponse> {
   * 다시 말해, **두 인터페이스 중 하나를 활용하여 Validator 구현체를 주입받아 요청 본문를 표현하는 DTO 객체에 대한 유효성 검증을 진행**하게 된다.
   * **두 방식은 단지 어떤 인터페이스를 활용하여 유효성 검증 로직을 구현하느냐에 대한 차이만 존재하므로, 둘 중 익숙한 방식을 선택해도 무방**하다.
   * 실제로는 두 방식 모두 내부적으로는 유효성 검증을 처리하기 위해 Validator 구현체인 Hibernate Validator를 사용한다.
-
-## 2024-01-22 Mon
-### R2DBC란?
-```
-> R2DBC는 관계형 DB에 리액티브 프로그래밍 API를 제공하기 위한 스펙이자, SPI에 해당한다.
-> 기존에는 몇몇 NoSQL만 리액티브 클라이언트를 제공했으나, R2DBC로 인해 관계형 DB를 사용하는 완전한 Non-Blocking 애플리케이션의 구현이 가능해졌다.
-```
-* **`JDBC API` 자체가 `Blocking API`이므로, `R2DBC`가 탄생하기 이전에는 완전한 `Non-Blocking` 애플리케이션을 제작하기가 불가능**했다.
-
-## 2024-01-23 Tue
-### Spring Data R2DBC란?
-* Spring Data `R2DBC`는 `R2DBC` 기반의 리포지토리를 더욱 쉽게 구현할 수 있도록 지원하는, Spring Data Family 프로젝트의 일부이다.
-  * 때문에 Spring Data `R2DBC`는 Spring이 추구하는 여러 추상화 기법을 적용하며, 데이터 액세스 계층의 반복적인 코드를 크게 줄일 수 있도록 한다.
-  * 또한, **Spring Data `R2DBC`는 JPA 등의 프레임워크가 제공하는 캐싱 등의 특징이 제거되므로 더욱 단순한 사용이 가능**하다.
-
-## 2024-01-24 Wed
-### Spring Data R2DBC 초기 구성하기
-* **Spring Data `R2DBC`는 JPA처럼 엔티티에 정의된 매핑 정보로 테이블을 자동 생성하지 않으므로, 테이블 생성용 SQL을 직접 작성할 필요**가 있다.
-  * 이후에는 `application.yml` 등의 설정 파일에서 해당 SQL 파일을 조회하여 테이블을 생성하도록 추가적인 설정을 작성해줄 필요가 있다.
-* 또한, Spring 기반의 애플리케이션이 `R2DBC`용 리포지토리와 Auditing 기능을 사용할 수 있도록 아래와 같은 어노테이션을 애플리케이션 진입점에 명시한다.
-  1. `@EnableR2dbcRepositories`
-  2. `@EnableR2dbcAuditing`
-
-## 2024-01-25 Thu
-### Spring Data R2DBC 리포지토리 정의하기
-* Spring Data `R2DBC`는 여타 Spring Data Family 프로젝트와 마찬가지로, Spring에서 추상화한 데이터 액세스 기술을 쉽게 사용할 수 있도록 지원한다.
-  * 이렇듯 **데이터 액세스 계층을 손쉽게 사용할 수 있도록 지원되는 개념이 `Repository` 인터페이스에 해당**한다.
-* 이러한 Spring Data가 제공하는 리포지토리를 활용하여 사용자 정의 리포지토리를 정의하는 경우, 다음과 같은 코드를 작성할 수 있다.
-```Java
-public interface MyEntityRepository extends ReactiveCrudRepository<MyEntity, Long> {
-    Mono<MyEntity> findByName(String name);
-}
-```
-* 예를 들어 `MyEntity`에 대한 데이터 영속화를 활용하는 리포지토리는 상술한 바와 같이 작성할 수 있으며, 크게 다음과 같은 구성 요소를 갖는다.
-  1. `ReactiveCrudRepository`: `Reactive` 사양을 지원하는 리포지토리 인터페이스에 해당한다.
-  2. `Mono<MyEntity>`: **사용자 정의 메소드를 추가적으로 제공할 경우, 각 쿼리는 `Mono` 또는 `Flux` 유형의 반환형**을 갖는다.
