@@ -42,3 +42,13 @@ public interface MyEntityRepository extends ReactiveCrudRepository<MyEntity, Lon
 * 이러한 방식은 **마치 `Query DSL`과 같이 자연스러운 SQL 쿼리문을 작성하는 방식을 도입함으로써 코드의 가독성을 끌어올리도록 지원**한다.
   * 기존의 `JdbcTemplate` 역시 템플릿을 활용하는 것은 같으나, `JdbcTemplate`은 쿼리문을 실제로 템플릿에 전달했다는 점에서 명확한 차이가 있다.
   * 반면, **`R2dbcEntityTemplate`은 엔티티 객체와 쿼리 생성 메소드를 조합하여 템플릿에 전달하는 것으로 DB와 상호작용을 시도**한다.
+
+## 2024-01-27 Sat
+### WebFlux의 예외 처리 방식 - onErrorResume()
+* Spring MVC에서 자주 사용되는 `@ExceptionHandler`나 `@ControllerAdvice` 방식은 `WebFlux`에서도 적용이 가능하다.
+  * 반면, `WebFlux`는 이외에도 `onErrorResume()` 등의 `Operator`를 활용한 예외 처리 방식을 제공한다.
+* `onErrorResume() Operator`의 경우, 예외가 발생했을 때 이를 `Downstream`으로 전파하는 대신 다음의 동작을 수행할 수 있도록 지원한다.
+  1. 대체 `Publisher`를 통해 예외에 대한 대체 값을 `Emit`할 수 있다.
+  2. 또는 예외 이벤트를 래핑한 후, 다시 또 다른 예외 이벤트를 발생시킬 수 있다.
+* `onErrorResume() Operator`는 첫 번째 인자로 대응되는 예외 타입을, 두 번째 인자로는 대체 `Publisher Sequence`를 전달받아 동작한다.
+  * 반면, 예외 타입 인자를 생략한 경우에는 모든 예외에 대해 활용될 대체 `Publisher Sequence`를 전달받아 동작한다.
