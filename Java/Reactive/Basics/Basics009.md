@@ -52,3 +52,9 @@ public interface MyEntityRepository extends ReactiveCrudRepository<MyEntity, Lon
   2. 또는 예외 이벤트를 래핑한 후, 다시 또 다른 예외 이벤트를 발생시킬 수 있다.
 * `onErrorResume() Operator`는 첫 번째 인자로 대응되는 예외 타입을, 두 번째 인자로는 대체 `Publisher Sequence`를 전달받아 동작한다.
   * 반면, 예외 타입 인자를 생략한 경우에는 모든 예외에 대해 활용될 대체 `Publisher Sequence`를 전달받아 동작한다.
+
+## 2024-01-28 Sun
+### WebFlux의 예외 처리 방식 - ErrorWebExceptionHandler
+* 상술한 **`onErrorResume() Operator`의 경우, 사용법이 간단하지만 모든 `Sequence`에 대해 명시되어야 한다는 단점 역시 존재**한다.
+* 이러한 단점을 보완하기 위해 `WebFlux`는 `Global Exception Handler`를 작성할 수 있도록 지원한다.
+  * 이를 위해서는 **별도의 `@Configuration` 빈 클래스를 작성하고, 해당 클래스가 `ErrorWebExceptionHandler`를 확장하도록 구현**해주어야 한다.
