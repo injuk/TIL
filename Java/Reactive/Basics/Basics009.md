@@ -58,3 +58,10 @@ public interface MyEntityRepository extends ReactiveCrudRepository<MyEntity, Lon
 * 상술한 **`onErrorResume() Operator`의 경우, 사용법이 간단하지만 모든 `Sequence`에 대해 명시되어야 한다는 단점 역시 존재**한다.
 * 이러한 단점을 보완하기 위해 `WebFlux`는 `Global Exception Handler`를 작성할 수 있도록 지원한다.
   * 이를 위해서는 **별도의 `@Configuration` 빈 클래스를 작성하고, 해당 클래스가 `ErrorWebExceptionHandler`를 확장하도록 구현**해주어야 한다.
+
+## 2024-01-29 Mon
+### WebClient란?
+* **`WebClient`는 Spring 5버전부터 지원되는 `Non-Blocking` HTTP 요청을 위한 리액티브 웹 클라이언트를 지칭**한다.
+  * 이러한 `WebClient`는 내부적으로 HTTP 클라이언트 라이브러리에 HTTP 요청을 위힘하며, 기본 HTTP 클라이언트 라이브러리는 Reactor Netty로 설정된다.
+* Spring MVC의 경우, 외부 API에 대한 HTTP 요청을 위해 RestTemplate을 사용했으나 이는 `Blocking` HTTP 요청만을 지원한다.
+  * 반면, **`WebClient`는 `Blocking` 방식과 `Non-Blocking` HTTP 요청까지 모두 지원하므로 점차 RestTemplate을 대체할 것으로 기대**된다.
