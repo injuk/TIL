@@ -84,6 +84,7 @@
 ### MVC 1
 ### 2024.03.22 ~ 2024.00.00
 * [MVC001](https://github.com/injuk/TIL/blob/master/Java/Spring/MVC1/MVC001.md)
+* [MVC002](https://github.com/injuk/TIL/blob/master/Java/Spring/MVC1/MVC002.md)
 
 ### DB I
 ### 2024.01.30 ~ 2024.03.21
