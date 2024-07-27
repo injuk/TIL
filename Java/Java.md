@@ -94,6 +94,7 @@
 * [MVC001](https://github.com/injuk/TIL/blob/master/Java/Spring/MVC2/MVC001.md)
 * [MVC002](https://github.com/injuk/TIL/blob/master/Java/Spring/MVC2/MVC002.md)
 * [MVC003](https://github.com/injuk/TIL/blob/master/Java/Spring/MVC2/MVC003.md)
+* [MVC004](https://github.com/injuk/TIL/blob/master/Java/Spring/MVC2/MVC004.md)
 
 ### DB I
 ### 2024.01.30 ~ 2024.03.21
