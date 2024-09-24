@@ -206,3 +206,81 @@
   * 즉, 프록시용 코드를 하나만 작성하고도 동적 프록시 기술을 기반으로 많은 프록시 객체를 생성할 수 있게 된다.
 * 이 중 Java가 제공하는 JDK 동적 프록시를 이해하기 위해서는 리플렉션에 대한 이해가 선행될 필요가 있다.
 * 리플렉션은 쉽게 말해 클래스나 메소드가 갖는 메타데이터를 동적으로 획득하고, 이를 기반으로 코드를 동적으로 호출할 수 있도록 지원하는 기능을 의미한다.
+
+## 2024-09-25 Wed
+### 리플렉션을 활용한 메소드 호출
+* 예를 들어 아래와 같은 로직에서, 로직 1이 여기 저기에 중복되는 반면 중간에 위치한 `callX()` 메소드만 변경되는 경우가 발생할 수 있다.
+  * 즉, 템플릿 메소드 패턴의 예시와 유사하게 중간 과정만 변경되는 경우를 의미한다.
+```kotlin
+class ReflectionTest {
+    companion object {
+        private val logger = LoggerFactory.getLogger(ReflectionTest::class.java)
+    }
+
+    @Test
+    fun reflection0() {
+        val hello = Hello()
+
+        // 로직 1 시작
+        logger.info("start")
+        val result1 = hello.callA() // 여기만 다르다!
+        logger.info("result = {}", result1)
+        // 로직 1 종료
+
+        // 로직 2 시작
+        logger.info("start")
+        val result2 = hello.callB() // 여기만 다르다!
+        logger.info("result = {}", result2)
+        // 로직 2 종료
+    }
+
+    class Hello {
+        companion object {
+            private val logger = LoggerFactory.getLogger(Hello::class.java)
+        }
+
+        fun callA(): String {
+            logger.info("call A!")
+            return "A"
+        }
+
+        fun callB(): String {
+            logger.info("call B~")
+            return "B"
+        }
+    }
+}
+```
+* 이러한 코드는 언뜻 공통화하기 쉬워 보이지만, 중간 단계만이 달라지기 때문에 이러한 동적인 변경 사항을 공통화하기 어려운 경우가 많다.
+* 리플렉션은 이러한 경우에 적합하며, 클래스나 메소드의 메타데이터를 활용할 수 있도록 지원하므로 호출 대상 메소드에 대한 동적인 변경을 적용하기 쉽다.
+  * 반면, 실무에서는 리플렉션 대신 람다식을 사용하는 경우도 많지만 이 경우에는 리플렉션에만 집중하기로 한다.
+```kotlin
+class ReflectionTest {
+    // ...생략
+
+    @Test
+    fun reflection2() {
+        val hello = Hello()
+
+        // 패키지명을 포함한 클래스 이름을 기반으로 클래스 메타데이터를 획득한다. 
+        // 이 때, 임의의 클래스에 포함된 inner class의 경우에는 $ 표시를 명시한다.
+        val clazz = Class.forName("ga.injuk.spring.study.advanced.proxy.jdkdynamic.ReflectionTest\$Hello")
+
+        // 아래 코드를 별도의 메소드로 추출하여 메소드 메타데이터와 인자만을 전달하도록 구현하는 것도 가능하다.
+        listOf("callA", "callB").forEach { methodName ->
+            // 호출 대상 메소드의 이름을 기반으로 메소드 메타데이터를 획득한다. 
+            val method = clazz.getMethod(methodName)
+
+            // 공통 로직 시작
+            logger.info("start")
+            // 획득한 메소드 메타데이터를 기반으로 인자를 전달하여 호출한다.
+            val result = method.invoke(hello)
+            // val result = method(hello) // kotlin은 infix function인 invoke를 활용하므로 이렇게도 가능하다!
+            logger.info("result = {}", result)
+            // 공통 로직 종료
+        }
+    }
+
+    // ...후략
+}
+```
