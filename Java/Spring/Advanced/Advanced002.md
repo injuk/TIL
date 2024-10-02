@@ -196,3 +196,38 @@ class JdkDynamicProxyTest {
   * 때문에 스프링을 사용하는 상황에서는 별도의 라이브러리 추가 없이 CGLIB를 사용할 수 있다.
 * 반면, **일반적인 경우에서 CGLIB를 사용해야할 상황은 거의 발생하지 않으며 대부분의 경우 후술할 스프링의 `ProxyFactory`를 사용**하게 된다.
   * 이 때, `ProxyFactory`는 CGLIB를 편리하게 사용할 수 있도록 지원하는 기능으로 이해할 수 있다.
+
+## 2024-10-02 Wed
+### CGLIB와 MethodInterceptor
+* JDK 동적 프록시가 동적 프록시의 로직 실행을 위해 `InvocationHandler`를 제공하듯, CGLIB 측은 `MethodInterceptor`를 제공한다.
+  * 이는 **동적 프록시 객체가 생성되는 것과는 별개로 각 동적 프록시 객체가 실행할 로직을 작성하기 위한 공간에 해당**한다.
+* 이 때, `MethodInterceptor`는 다음과 같은 구조를 갖으며 각 인자의 의미는 `InvocationHandler`와 유사하다.
+```java
+public interface MethodInterceptor extends Callback {
+    public Object intercept(Object obj, java.lang.reflect.Method method, Object[] args, MethodProxy proxy) throws Throwable;
+}
+```
+* 이러한 인터페이스를 확장하는 `MethodInterceptor`의 예시는 다음과 같다.
+```kotlin
+class TimeMethodInterceptor(
+    private val target: Any, // 해당 동적 프록시가 실제로 호출할 서버 객체에 해당한다.
+) : MethodInterceptor {
+    companion object {
+        private val logger = LoggerFactory.getLogger(TimeMethodInterceptor::class.java)
+    }
+
+    override fun intercept(obj: Any?, method: Method?, args: Array<out Any>?, proxy: MethodProxy?): Any {
+        logger.info("TimeInvocationHandler invoked!")
+
+        val startTime = System.currentTimeMillis()
+
+        val result = proxy!!.invoke(target, args) // 실제 대상 서버 객체를 동적으로 호출하며, 이 과정에서 method.invoke를 사용해도 되지만 CGLIB는 성능상 MethodProxy의 사용을 권장한다.
+
+        val endTime = System.currentTimeMillis()
+
+        logger.info("TimeInvocationHandler ended, time: {}ms", endTime - startTime)
+
+        return result
+    }
+}
+```
