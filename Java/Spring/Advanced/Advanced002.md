@@ -231,3 +231,34 @@ class TimeMethodInterceptor(
     }
 }
 ```
+
+## 2024-10-03 Thu
+### CGLIB을 활용한 동적 프록시 객체 생성
+* 상술했듯, CGLIB은 동적 프록시 핸들러 작성을 위한 `MethodInterceptor` 클래스를 제공하며 이를 활용한 동적 프록시 객체 생성 코드는 다음과 같다.
+```kotlin
+class CglibTest {
+    companion object {
+        private val logger = LoggerFactory.getLogger(CglibTest::class.java)
+    }
+
+    @Test
+    fun cglib() {
+        val target = ConcreteService() // kotlin의 경우, 대상 구현체 클래스는 open이어야 한다는 점에 주의한다.
+      
+        val proxy: ConcreteService = Enhancer().run {
+            setSuperclass(ConcreteService::class.java)
+            setCallback(TimeMethodInterceptor(target))
+            create() as ConcreteService
+        }
+
+        proxy.call() // call!!!
+        // kotlin의 경우, 대상 구현체 클래스의 메소드는 open이어야 한다는 점에 주의한다.
+
+        logger.info("targetClass = {}", target.javaClass) // targetClass = class ga.injuk.spring.study.advanced.proxy.common.service.ConcreteService
+        logger.info("proxyClass = {}", proxy.javaClass) // proxyClass = class ga.injuk.spring.study.advanced.proxy.common.service.ConcreteService$$EnhancerByCGLIB$$4d438e28
+    }
+}
+```
+* 이 때, CGLIB은 `Enhancer`를 활용하여 부모 클래스와 `MethodInterceptor`를 할당한 후 동적 프록시 객체를 생성하는 방식으로 동작한다.
+  * 이 경우, 인터페이스를 확장하여 동적 프록시 객체를 생성하던 JDK 동적 프록시와 달리 CGLIB는 구체 클래스를 상속하는 것으로 프록시 객체를 생성한다.
+* 추가적으로 CGLIB에 의해 생성된 동적 프록시 객체의 이름은 `패키지.대상클래스$$EnhancerByCGLIB$$임의코드` 형태가 된다.
