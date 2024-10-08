@@ -32,3 +32,31 @@ public interface MethodInterceptor extends Interceptor {
   * 즉, 기존에는 파라미터로 전달하던 모든 데이터를 포함하는 요청 객체에 해당한다.
 * 해당 인터페이스는 CGLIB의 `MethodInterceptor`와 동일한 이름을 가져 혼동되기 쉽지만, 스프링이 제공하는 AOP 모듈에 포함된다는 점에서 차이가 있다.
   * 또한, 상술한 `MethodInterceptor`는 `Advice`로부터 시작되는 상속 계층도에 위치한다.
+
+## 2024-10-08 Tue
+### MethodInterceptor 확장하기
+* 상술한 `MethodInterceptor` 인터페이스는 다음과 같은 구체 클래스 형태로 작성이 가능하다.
+```kotlin
+class TimeAdvice : MethodInterceptor {
+    companion object {
+        private val logger = LoggerFactory.getLogger(TimeAdvice::class.java)
+    }
+    
+    override fun invoke(invocation: MethodInvocation): Any? {
+        logger.info("TimeAdvice invoked!")
+
+        val startTime = System.currentTimeMillis()
+
+        val result: Any? = invocation.proceed() // 알아서 target을 찾아 인자를 넘겨 실행한다.
+
+        val endTime = System.currentTimeMillis()
+
+        logger.info("TimeAdvice ended, time: {}ms", endTime - startTime)
+
+        return result
+    }
+}
+```
+* 상술한 코드 중 `invocation.proceed()` 메소드 호출 과정에서 `target` 클래스가 호출되어 원본 결과가 반환된다.
+  * 반면, **기존 예시들과는 달리 `target`은 `invocation` 내부에 포함되므로 그 처리 과정이 캡슐화**된다.
+  * 이는 **프록시 팩토리를 생성하는 과정에서 `target` 정보가 팩토리의 인자로 전달되기 때문**이다.
