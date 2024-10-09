@@ -60,3 +60,40 @@ class TimeAdvice : MethodInterceptor {
 * 상술한 코드 중 `invocation.proceed()` 메소드 호출 과정에서 `target` 클래스가 호출되어 원본 결과가 반환된다.
   * 반면, **기존 예시들과는 달리 `target`은 `invocation` 내부에 포함되므로 그 처리 과정이 캡슐화**된다.
   * 이는 **프록시 팩토리를 생성하는 과정에서 `target` 정보가 팩토리의 인자로 전달되기 때문**이다.
+
+## 2024-10-09 Wed
+### 프록시 팩토리 활용하기
+* 상술한 `Advice`를 기반으로 프록시 팩토리를 활용하여 프록시를 생성하는 경우, 아래와 같은 코드를 작성할 수 있다.
+```kotlin
+class ProxyFactoryTest {
+    companion object {
+        private val logger = LoggerFactory.getLogger(ProxyFactory::class.java)
+    }
+
+    @Test
+    fun `인터페이스가_있으면_JDK_동적프록시를_사용`() {
+        // given
+        val target: ServiceInterface = ServiceImpl()
+        val factory = ProxyFactory(target) // target 정보를 ProxyFactory에 넘겨주므로 MethodInterceptor에서 target 정보를 명시하지 않는다.
+        // factory.isProxyTargetClass = true // 해당 코드가 작성된 경우, 인터페이스를 확장하는 클래스에 대해서도 CGLIB를 적용한다.
+        factory.addAdvice(TimeAdvice())
+
+        // when
+        val proxy = factory.proxy as ServiceInterface
+        logger.info("targetClass={}", target.javaClass) // targetClass=class ga.injuk.spring.study.advanced.proxy.common.service.ServiceImpl
+        logger.info("proxyClass={}", proxy.javaClass) // proxyClass=class jdk.proxy3.$Proxy16, target이 인터페이스 기반인 경우 JDK 동적 프록시가 적용된다.
+        proxy.save()
+
+        // then
+        Assertions.assertThat(AopUtils.isAopProxy(proxy)).isTrue() // 프록시 팩토리를 활용하여 생성한 proxy는 AopUtils로 검증할 수 있다.
+        Assertions.assertThat(AopUtils.isJdkDynamicProxy(proxy)).isTrue() // 또한 JDK 동적 프록시를 기반으로 생성되었는지까지 확인 가능하다.
+        Assertions.assertThat(AopUtils.isCglibProxy(proxy)).isFalse() // 당연스레 CGLIB 기반의 프록시 객체인지도 확인이 가능하다.
+    }
+}
+```
+* 상술한 코드와 같이 `ProxyFactory(target)` 형태로 프록시 대상을 함께 전달하며, 프록시 팩토리는 해당 인스턴스 정보를 기반으로 프록시를 생성한다.
+  * 예를 들어 해당 인스턴스가 인터페이스를 확장한 클래스의 객체인 경우 JDK 동적 프록시를 적용하며, 그렇지 않다면 CGLIB를 활용한다.
+* **프록시 팩토리가 제공하는 `addAdvice()` 메소드를 활용하는 것으로 프록시가 제공할 부가 기능을 명시**할 수 있다.
+* 코틀린에서는 `proxy` 접근자로 호출되는 `getProxy()` 메소드는 프록시 객체를 동적으로 생성하기 위해 호출할 수 있다.
+* 또한, 프록시 팩토리로 생성된 프록시 객체들은 `AopUtils`를 활용한 여러 검증이 가능하다.
+  * 이 때, **`AopUtils`를 활용한 프록시 객체의 검증은 프록시 팩토리를 기반으로 생성된 프록시 객체에 대해서만 검증이 가능한 점에 주의**를 기울여야 한다.
