@@ -121,3 +121,36 @@ class ProxyFactoryTest {
   * `Advisor`: **하나의 포인트컷과 하나의 어드바이스를 갖는, 단순한 묶음으로 이해**할 수 있다.
 * 즉, **부가 기능을 어디에(=`Pointcut`) 어떤 로직(=`Advice`)으로 적용할지 결정해야 하며 이를 모두 알고 있는 것이 `Advisor`에 해당**한다.
   * **이러한 설계는 역할과 책임을 명확히 분리한 것에 해당하며, 포인트컷과 어드바이스는 각각 필터링 역할과 부가 기능 로직 역할을 담당**한다.
+
+## 2024-10-12 Sat
+### 프록시 팩토리에 어드바이저의 관계
+* 어드바이저는 하나의 포인트컷과 어드바이스를 가지므로, 프록시 팩토리를 활용하는 과정에서 제공되는 어드바이저를 통해 어디에 어떤 기능을 적용할지 알 수 있다.
+```kotlin
+class AdvisorTest {
+    @Test
+    fun advisor() {
+        // given
+        val target: ServiceInterface = ServiceImpl()
+
+        // when
+        val proxy = ProxyFactory(target).run {
+            // DefaultPointcutAdvisor는 가장 일반적인 Advisor 구현체로, 생성자를 통해 포인트컷과 어드바이스를 전달받는다.
+            // 이 때, Pointcut.TRUE는 항상 true를 반환하는 포인트컷을 의미한다.
+            val advisor = DefaultPointcutAdvisor(Pointcut.TRUE, TimeAdvice())
+          
+            // 기생성된 advisor를 프록시 팩토리에 명시하며, 이를 통해 추후 팩토리로부터 생성될 프록시 인스턴스가 어디에 어떤 부가 기능을 적용할지 이해할 수 있다.
+            addAdvisor(advisor)
+
+            proxy as ServiceInterface
+        }
+
+        // then
+        proxy.save()
+        proxy.find()
+    }
+}
+```
+* 이 경우 `factory.addAdvisor()` 메소드를 활용하지만 이러한 방식은 이전에 사용했던 `factory.addAdvice()` 메소드와 유사해보일 수 있다.
+  * 이는 `factory.addAdvice()` 메소드가 편의 메소드이기 때문으로, 해당 메소드는 내부적으로 `addAdvisor()` 메소드를 호출하는 방식으로 동작한다.
+  * 때문에 `factory.addAdvice()` 메소드를 호출하더라도 해당 메소드 내부적으로는 상술한 테스트 코드와 같은 어드바이저가 생성되어 호출된다.
+* 결국 **구조상 프록시 팩토리는 어드바이저를 인식하고 있으며, 어드바이저가 포인트컷과 어드바이스 정보를 갖게 되므로 이를 활용할 수 있는 것에 해당**한다.
