@@ -163,3 +163,20 @@ class AdvisorTest {
     1. `true`가 반환된 경우, 어드바이스를 적용한다.
     2. `false`가 반환된 경우, 어드바이스를 적용하지 않는다.
   3. **어드바이스의 적용 여부와 관계 없이 서버 인스턴스의 메소드를 호출하여 결과를 반환**한다.
+
+## 2024-10-14 Mon
+### Pointcut 인터페이스 분석하기
+* 스프링 차원에서 제공되는 `Pointcut` 인터페이스는 다음과 같은 구조를 갖는다.
+```java
+public interface Pointcut {
+    Pointcut TRUE = TruePointcut.INSTANCE;
+
+    ClassFilter getClassFilter();
+
+    MethodMatcher getMethodMatcher();
+}
+```
+* `getClassFilter()` 메소드는 대상이 임의의 클래스가 맞는지 여부를 확인하기 위해 사용된다.
+  * 반면, `getMethodMatcher()` 메소드는 대상이 임의의 메소드가 맞는지 여부를 확인하기 위해 사용된다.
+* 이 때, 포인트컷은 두 메소드가 모두 `true`를 반환한 경우에 대해서만 어드바이스를 적용할 수 있도록 하는 정책을 갖는다.
+* **일반적으로는 스프링이 이미 작성해둔 구현체를 활용하는 것으로 무방하지만, 자신이 원하는 포인트컷 구현체를 직접 정의해볼 수도** 있다.
