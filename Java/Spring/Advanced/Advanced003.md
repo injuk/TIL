@@ -180,3 +180,59 @@ public interface Pointcut {
   * 반면, `getMethodMatcher()` 메소드는 대상이 임의의 메소드가 맞는지 여부를 확인하기 위해 사용된다.
 * 이 때, 포인트컷은 두 메소드가 모두 `true`를 반환한 경우에 대해서만 어드바이스를 적용할 수 있도록 하는 정책을 갖는다.
 * **일반적으로는 스프링이 이미 작성해둔 구현체를 활용하는 것으로 무방하지만, 자신이 원하는 포인트컷 구현체를 직접 정의해볼 수도** 있다.
+
+## 2024-10-15 Tue
+### 포인트컷 정의하기
+* 예를 들어 서버 인스턴스가 제공하는 임의의 메소드에 대해서만 어드바이스를 적용하지 않고자 하는 경우, 다음과 같은 포인트컷을 정의해볼 수 있다.
+  * 물론 **이전의 방식과 유사하게 메소드의 이름을 기반으로 분기를 작성해도 무방하지만, 포인트컷은 이러한 용도에 특화되므로 보다 유용하게 사용**할 수 있다.
+```kotlin
+class AdvisorTest {
+  @Test
+  fun `직접_만든_커스텀_포인트컷`() {
+    // given
+    val target: ServiceInterface = ServiceImpl()
+
+    // when
+    val proxy = ProxyFactory(target).run {
+      // DefaultPointcutAdvisor의 인자에 자신이 개발한 포인트컷 구현체를 전달할 수 있다.
+      val advisor = DefaultPointcutAdvisor(MyCustomPointcut(), TimeAdvice())
+      addAdvisor(advisor)
+
+      proxy as ServiceInterface
+    }
+
+    // then
+    proxy.save() // 부가 기능 적용됨
+    proxy.find() // 부가 기능 적용되지 않음
+  }
+
+  // 직접 주현한 MyCustomPointcut 구현체는 모든 클래스에 대해 true를 반환하는 반면, 메소드에 대해서는 직접 구현한 MethodMatcher 구현체를 활용한다.
+  class MyCustomPointcut: Pointcut {
+    override fun getClassFilter(): ClassFilter
+            = ClassFilter.TRUE
+
+    override fun getMethodMatcher(): MethodMatcher
+            = MyCustomMethodMatcher()
+  }
+
+  class MyCustomMethodMatcher: MethodMatcher {
+    companion object {
+      private val WHITE_LIST = setOf("save")
+      private val logger = LoggerFactory.getLogger(MyCustomMethodMatcher::class.java)
+    }
+
+    // MethodMatcher 구현체의 matches 메소드는 화이트리스트에 허용된 메소드 이름만을 허용하며, 이외의 경우 false를 반환하여 어드바이스가 적용될 수 없도록 동작한다.
+    override fun matches(method: Method, targetClass: Class<*>): Boolean
+        = WHITE_LIST.contains(method.name)
+            .also { isMatched -> logger.info("is method(${method.name}) matched? :$isMatched") }
+
+    override fun matches(method: Method, targetClass: Class<*>, vararg args: Any?): Boolean {
+      return false
+    }
+
+    override fun isRuntime(): Boolean {
+      return false
+    }
+  }
+}
+```
