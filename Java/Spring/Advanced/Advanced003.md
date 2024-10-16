@@ -236,3 +236,25 @@ class AdvisorTest {
   }
 }
 ```
+
+## 2024-10-16 Wed
+### MethodMatcher 인터페이스 분석하기
+* 상술한 과정에서 활용했던 `MethodMatcher`는 다음과 같은 인터페이스를 갖는다.
+```java
+public interface MethodMatcher {
+    MethodMatcher TRUE = TrueMethodMatcher.INSTANCE;
+
+    boolean matches(Method method, Class<?> targetClass);
+
+    boolean isRuntime();
+
+    boolean matches(Method method, Class<?> targetClass, Object... args);
+}
+```
+* 이 때, `MethodMatcher`는 다음과 같은 방식으로 동작한다.
+  1. `isRuntime()`의 반환값이 `true`인 경우, `matches(Method method, Class<?> targetClass, Object... args)` 메소드를 사용한다.
+  2. 그렇지 않은 경우, `matches(Method method, Class<?> targetClass)` 메소드를 사용한다.
+* 이를 통해 런타임에서 동적으로 전달되는 매개변수를 기반으로 판단할 수 있다.
+  * 또한, `isRuntime()`이 `false`를 반환하는 경우 클래스의 정적 정보만을 사용하므로 스프링 내부적인 캐싱을 활용한 성능 향상이 가능하다.
+  * 반면, `true`를 반환하는 경우에는 매개변수가 동적으로 변경될 것을 가정하기에 캐싱을 적용하지 않는다.
+  * 그러나 **실무에서는 대부분의 경우 이미 제공된느 포인트컷을 활용하므로, 이러한 성능 향상과 관련된 이점을 기억해둘 필요까지는 없다**.
