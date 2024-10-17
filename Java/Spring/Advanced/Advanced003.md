@@ -258,3 +258,31 @@ public interface MethodMatcher {
   * 또한, `isRuntime()`이 `false`를 반환하는 경우 클래스의 정적 정보만을 사용하므로 스프링 내부적인 캐싱을 활용한 성능 향상이 가능하다.
   * 반면, `true`를 반환하는 경우에는 매개변수가 동적으로 변경될 것을 가정하기에 캐싱을 적용하지 않는다.
   * 그러나 **실무에서는 대부분의 경우 이미 제공된느 포인트컷을 활용하므로, 이러한 성능 향상과 관련된 이점을 기억해둘 필요까지는 없다**.
+
+## 2024-10-17 Thu
+### 스프링의 빌트인 포인트컷 활용하기
+* 스프링은 이미 대부분의 경우에 활용 가능한 포인트컷을 제공하고 있으며, 그 예로 아래와 같은 `NameMatchMethodPointcut`이 있다.
+```kotlin
+class AdvisorTest {
+    @Test
+    fun `스프링이_제공하는_빌트인_포인트컷`() {
+        // given
+        val target: ServiceInterface = ServiceImpl()
+
+        // when
+        val proxy = ProxyFactory(target).run {
+            val pointcut = NameMatchMethodPointcut()
+            pointcut.setMappedNames("save") // 부가 기능을 적용할 메소드 이름을 포인트컷에 제공한다.
+
+            val advisor = DefaultPointcutAdvisor(pointcut, TimeAdvice())
+            addAdvisor(advisor)
+
+            proxy as ServiceInterface
+        }
+
+        // then
+        proxy.save()
+        proxy.find()
+    }
+}
+```
