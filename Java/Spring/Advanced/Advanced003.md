@@ -286,3 +286,14 @@ class AdvisorTest {
     }
 }
 ```
+
+## 2024-10-18 Fri
+### 스프링의 빌트인 포인트컷
+* 이렇듯 **스프링은 유용한 포인트컷을 이미 제공하고 있으며, 상술한 포인트컷 외에도 다음과 같은 여러 빌트인 포인트컷을 제공**한다.
+  1. `NameMatchMethodPointcut`: 상술한 예시의 포인트컷으로, 내부적으로 `PatternMatchUtils`를 활용하여 메소드 이름을 기반으로 결과를 판단한다.
+  2. `JdkRegexpMethodPointcut`: JDK 정규 표현식을 기반으로 포인트컷 결과를 판단한다.
+  3. `TruePointcut`: 항상 `true`를 반환하는 방식으로 동작한다.
+  4. `AnnotationMatchingPointcut`: 어노테이션을 기반으로 결과를 판단한다.
+  5. `AspectJExpressionPointcut`: `aspectJ` 표현식을 기반으로 결과를 판단한다.
+* **실무를 기준으로 이 중 가장 중요한 것은 `AspectJExpressionPointcut`으로, 사실상 다른 포인트컷을 크게 중요하지 않다고 이해해도 무방**하다.
+  * 이는 **해당 포인트컷의 사용성이 좋을 뿐만 아니라 기능도 가장 많은 `aspectJ` 표현식을 기반으로 동작하기 때문**이다.
