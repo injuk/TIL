@@ -79,10 +79,14 @@ class AdvisorTest {
 * 이 때, 4.의 **등록 과정에서 반환된 빈은 처음에 전달된 원본 객체일 수도 있는 반면 빈 후처리기에 의해 교체된 객체일 수도 있다**.
 
 ## 2024-10-24 Thu
-### 빈 후처리기의 동작 과정
-* 스프링이 빈을 등록하는 과정에 빈 후처리기가 개입하는 경우, 동작 과정은 크게 다음과 같은 흐름을 띈다.
-  1. 생성: 스프링은 빈 대상이 되는 객체를 생성하며, 이 경우 `@Bean` 어노테이션이 할당된 대상과 컴포넌트 스캔으로 조회된 대상이 모두 생성된다.
-  2. 전달: **생성된 객체를 빈 저장소에 등록하기 직전에 빈 후처리기에 전달**한다.
-  3. 처리: 빈 후처리기는 자신에게 전달된 스프링 빈 객체를 조작하거나, 다른 객체로 바꿔치는 등의 동작을 적용한다.
-  4. 등록: 빈 후처리기는 동작을 마무리한 후 해당 빈 객체를 반환하며, 이렇게 반환된 객체가 빈 저장소에 등록된다.
-* 이 때, 4.의 **등록 과정에서 반환된 빈은 처음에 전달된 원본 객체일 수도 있는 반면 빈 후처리기에 의해 교체된 객체일 수도 있다**.
+### BeanPostProcessor 인터페이스 살펴보기
+* 빈 후처리기를 구현하기 위해서는 다음과 같이 정의된 `BeanPostProcessor` 인터페이스를 구현한 후 이를 스프링 빈으로 등록해야 한다.
+```java
+public interface BeanPostProcessor {
+    Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException
+    Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException
+}
+```
+* 이 때, 각 메소드는 다음과 같은 동작을 의미한다.
+  * `postProcessBeforeInitialization`: 객체 생성 이후에 `@PostConstructor`와 같은 초기화가 발생하기 전에 호출되는 후처리기를 의미한다.
+  * `postProcessAfterInitialization`: 객체 생성 이후에 `@PostConstructor`와 같은 초기화가 발생한 후에 호출되는 후처리기를 의미한다.
