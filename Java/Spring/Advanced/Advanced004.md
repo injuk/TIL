@@ -90,3 +90,43 @@ public interface BeanPostProcessor {
 * 이 때, 각 메소드는 다음과 같은 동작을 의미한다.
   * `postProcessBeforeInitialization`: 객체 생성 이후에 `@PostConstructor`와 같은 초기화가 발생하기 전에 호출되는 후처리기를 의미한다.
   * `postProcessAfterInitialization`: 객체 생성 이후에 `@PostConstructor`와 같은 초기화가 발생한 후에 호출되는 후처리기를 의미한다.
+
+## 2024-10-25 Fri
+### 스프링의 빈 등록 과정
+* 스프링이 빈을 등록하는 과정을 코드로 표현할 경우, 다음과 같이 간단한 코드로 작성해볼 수 있다.
+  * 이 경우, `@Configuration` 클래스가 `ApplicationContext`에 등록되므로 클래스 `A`만이 스프링 빈으로 등록된다.
+```kotlin
+class BasicTest {
+    @Test
+    fun basicConfig() {
+        val context: ApplicationContext = AnnotationConfigApplicationContext(BasicConfig::class.java)
+
+        // A는 빈으로 등록되어 있다.
+        val a: A = context.getBean("beanA", A::class.java)
+        a.hello()
+
+        // B는 빈으로 등록되지 않는다.
+        Assertions.assertThrows(NoSuchBeanDefinitionException::class.java) {
+            context.getBean(B::class.java)
+        }
+    }
+
+    @Configuration
+    class BasicConfig {
+        @Bean(name = ["beanA"])
+        fun a(): A = A()
+    }
+
+    class A {
+        fun hello() {
+            println("hello from A")
+        }
+    }
+
+    class B {
+        fun hello() {
+            println("hello from B")
+        }
+    }
+}
+```
