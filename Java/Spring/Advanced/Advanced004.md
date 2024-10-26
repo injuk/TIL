@@ -130,3 +130,16 @@ class BasicTest {
     }
 }
 ```
+
+## 2024-10-26 Sat
+### BeanPostProcessor 인터페이스 살펴보기
+* 빈 후처리기를 구현하기 위해서는 다음과 같이 정의된 `BeanPostProcessor` 인터페이스를 구현한 후 이를 스프링 빈으로 등록해야 한다.
+```java
+public interface BeanPostProcessor {
+    Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException
+    Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException
+}
+```
+* 이 때, 각 메소드는 다음과 같은 동작을 의미한다.
+  * `postProcessBeforeInitialization`: 객체 생성 이후에 `@PostConstructor`와 같은 초기화가 발생하기 전에 호출되는 후처리기를 의미한다.
+  * `postProcessAfterInitialization`: 객체 생성 이후에 `@PostConstructor`와 같은 초기화가 발생한 후에 호출되는 후처리기를 의미한다.
