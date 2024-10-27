@@ -132,14 +132,46 @@ class BasicTest {
 ```
 
 ## 2024-10-26 Sat
-### BeanPostProcessor 인터페이스 살펴보기
-* 빈 후처리기를 구현하기 위해서는 다음과 같이 정의된 `BeanPostProcessor` 인터페이스를 구현한 후 이를 스프링 빈으로 등록해야 한다.
-```java
-public interface BeanPostProcessor {
-    Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException
-    Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException
+### BeanPostProcessor를 활용한 빈 바꿔치기
+* 상슬한 로직과 같은 빈 등록 흐름에서 빈 후처리기를 활용할 경우, 등록되는 빈을 바꿔치기하는 것이 가능하다.
+  * 이 경우, 상술한 로직의 예로 들어 등록된 빈의 이름은 여전히 `beanA`이나 실제 객체는 클래스 A가 아니게 된다.
+* **빈 후처리기를 활용하기 위해서는 단순히 `BeanPostProcessor`를 구현하는 구현체를 다음과 같이 빈으로 등록**하기만 하면 된다. 
+```kotlin
+class MyPostProcessor : BeanPostProcessor {
+    override fun postProcessAfterInitialization(bean: Any, beanName: String): Any? {
+        println("beanName: $beanName, bean: $bean")
+        return if(bean is A) {
+            B()
+        } else {
+            bean
+        }
+    }
 }
 ```
-* 이 때, 각 메소드는 다음과 같은 동작을 의미한다.
-  * `postProcessBeforeInitialization`: 객체 생성 이후에 `@PostConstructor`와 같은 초기화가 발생하기 전에 호출되는 후처리기를 의미한다.
-  * `postProcessAfterInitialization`: 객체 생성 이후에 `@PostConstructor`와 같은 초기화가 발생한 후에 호출되는 후처리기를 의미한다.
+* 이렇게 구현되어 등록된 **빈 후처리기는 내부적으로 높은 우선 순위를 갖기에 다른 빈들이 등록되기 전에 동작하므로 후처리의 역할을 담당**할 수 있다.
+
+## 2024-10-27 Sun
+### BeanPostProcessor의 동작 확인
+* 상술한 빈 후처리기의 동작을 확인하기 위해서는 다음과 같은 테스트 코드를 작성해볼 수 있다.
+```kotlin
+class BeanPostProcessorTest {
+    @Test
+    fun basicConfig() {
+        val context: ApplicationContext = AnnotationConfigApplicationContext(BeanPostProcessorConfig::class.java)
+
+        // B가 빈으로 등록되어 있다.
+        val a: B = context.getBean("beanA", B::class.java)
+        a.hello()
+
+        // 이제는 A가 빈으로 등록되지 않는다.
+        Assertions.assertThrows(NoSuchBeanDefinitionException::class.java) {
+            context.getBean(A::class.java)
+        }
+    }
+}
+```
+* 이 경우, 등록된 빈 후처리기인 `MyPostProcessor` 클래스의 내부 동작 과정에 의해 아래와 같은 로그가 출력된다.
+  * 이를 통해 빈 후처리기에 전달된 빈은 `BeanPostProcessorTest$A`였으나, 실제로 반환된 것은 클래스 `B`임을 확인할 수 있다.
+```
+beanName: beanA, bean: ga.injuk.spring.study.advanced.proxy.postprocessor.BeanPostProcessorTest$A@4315e9af
+```
