@@ -71,3 +71,12 @@
 * `ProceedingJoinPoint`는 어드바이스에서 활용되는 `MethodInvocation`과 유사한 개념에 해당한다.
   * 때문에 해당 객체는 내부적으로 실제 호출 대상과 전달될 인자, 호출된 메소드 정보 등을 포함한다.
   * 예를 들어 `joinPoint.proceed()` 메소드는 실제 호출 대상을 호출하는 `methodInvocation.processd()`와 유사하게 동작한다.
+
+## 2024-11-08 Fri
+### @Aspect 프록시 II
+```
+> 자동 프록시 생성기는 @Aspect 어노테이션을 감지하여 Advisor로 저장하고, 이러한 Advisor를 기반으로 프록시를 생성하는 두 가지 역할을 담당한다.
+```
+* 앞서 다룬 바와 같이, `AnnotationAwareAspectJAutoProxyCreator`는 `Advisor`를 모두 찾아 필요한 곳에 프록시를 생성하여 적용한다.
+* 추가적으로, 이러한 **자동 프록시 생성기는 `@Aspect` 어노테이션을 감지하여 이를 `Advisor`로 등록**한다.
+  * 즉, 앞서 다룬 기능들에 더해 `@Aspect`가 할당된 클래스를 `Advisor`로 변환하여 저장하는 기능을 함께 담당한다.
