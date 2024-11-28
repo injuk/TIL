@@ -255,3 +255,23 @@ dependencies {
 ```
 * 또한, `@Aspect`와 같은 어노테이션을 사용하기 위해서는 `@EnableAspectJAutoProxy`와 같은 스프링 설정이 전제되어야 한다.
   * 그러나, 스프링 부트를 사용할 경우 이러한 설정은 자동으로 추가된다.
+
+## 2024-11-28 Thu
+### 간단한 AOP 구현하기
+* 스프링 AOP를 구현하는 가장 일반적인 방법은 `@Aspect`를 사용하는 것이며, 예를 들어 다음과 같은 코드를 작성해볼 수 있다.
+```kotlin
+@Aspect
+class AspectV1 {
+    @Around("execution(* ga.injuk.aop.order..*(..))")
+    fun doLog(joinPoint: ProceedingJoinPoint): Any {
+        println("${joinPoint.signature}") // join point 시그니쳐 확인
+        
+        return joinPoint.proceed()
+    }
+}
+```
+* `@Around` 어노테이션의 경우, 인자로 전달된 값에 대한 포인트컷 역할을 수행한다.
+  * 이 때, `execution...`으로 시작하는 인자는 `ga.injuk.aop.order` 패키지 및 그 하위 모든 패키지를 지칭하는 `AspectJ` 포인트컷 표현식이다.
+  * 또한, **해당 어노테이션이 명시된 메소드인 `doLog`는 일종의 어드바이스로서 기능**하게 된다.
+* 이를 통해 `ga.injuk.aop.order` 및 그 하위 패키지에 위치한 모든 클래스가 AOP 적용 대상이 될 수 있다. 
+  * 또한, **프록시 방식의 AOP를 사용하는 스프링 특성상 프록시를 통하는 메소드만 AOP의 적용 대상**이 된다.
