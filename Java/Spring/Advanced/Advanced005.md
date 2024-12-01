@@ -287,3 +287,28 @@ class AspectV1 {
 * 또한, **`@Aspect`는 어디까지나 어노테이션일 뿐 컴포넌트 스캔의 대상인 것은 아니다**.
   * 이로 인해 `@Aspect` 어노테이션이 할당된 클래스를 AOP로 활용하고자 하는 경우에는 반드시 스프링 빈으로 등록할 필요가 있다.
   * 스프링 빈 등록 방법은 크게 `@Bean` 또는 컴포넌트 스캔 및 임의의 설정 파일을 명시적으로 등록하기 위한 `@Import` 등이 있다.
+
+## 2024-12-01 Sun
+### 포인트컷 분리하기
+* `@Aspect`의 포인트컷은 아래와 같은 형태로 별도의 메소드로 분리하는 것이 가능하다.
+```kotlin
+@Aspect
+class AspectV2 {
+
+    @Pointcut("execution(* ga.injuk.aop.order..*(..))")
+    private fun allOrder() {} // pointcut signature
+
+    @Around("allOrder()")
+    fun doLog(joinPoint: ProceedingJoinPoint): Any {
+        println("${joinPoint.signature}") // join point 시그니쳐 확인
+
+        val result =  joinPoint.proceed()
+
+        return result
+    }
+}
+```
+* 상술한 바와 같이 **`@Pointcut`의 인자에 포인트컷 표현식을 명시하며, 이렇듯 메소드 명과 인자를 합쳐 포인트컷 시그니쳐라고 지칭**한다.
+  * 이 때, **중요한 것은 메소드의 반환 타입이 `void`여야 하며 메소드 본문은 비어 있어야 한다는 점**이다.
+  * 또한, 메소드의 접근 제어자는 일반 메소드와 마찬가지로 메소드 사용 범위에 따라 `private` 또는 `public`을 명시한다.
+* **포인트컷을 분리할 경우 `AspectV1`과 동일한 기능을 수행하지만, 여러 어드바이스로부터 하나의 포인트컷 표현식을 공유할 수 있다는 이점**을 얻는다.
