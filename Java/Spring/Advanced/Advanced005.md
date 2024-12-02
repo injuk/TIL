@@ -312,3 +312,45 @@ class AspectV2 {
   * 이 때, **중요한 것은 메소드의 반환 타입이 `void`여야 하며 메소드 본문은 비어 있어야 한다는 점**이다.
   * 또한, 메소드의 접근 제어자는 일반 메소드와 마찬가지로 메소드 사용 범위에 따라 `private` 또는 `public`을 명시한다.
 * **포인트컷을 분리할 경우 `AspectV1`과 동일한 기능을 수행하지만, 여러 어드바이스로부터 하나의 포인트컷 표현식을 공유할 수 있다는 이점**을 얻는다.
+
+## 2024-12-02 Mon
+### 복합적인 포인트컷 적용하기
+* `@Around` 어노테이션의 경우, 인자에 다음과 같이 여러 포인트컷을 참조하는 것으로 복합적인 포인트컷의 적용이 가능하다.
+```kotlin
+@Aspect
+class AspectV3 {
+
+    @Pointcut("execution(* ga.injuk.aop.order..*(..))")
+    fun allOrder() {}
+
+    @Pointcut("execution(* *..*Service.*(..))")
+    fun allService() {}
+
+    @Around("allOrder()")
+    fun doLog(joinPoint: ProceedingJoinPoint): Any {
+        println("${joinPoint.signature}") // join point 시그니쳐 확인
+
+        val result =  joinPoint.proceed()
+
+        return result
+    }
+
+    @Around("allOrder() && allService()") // allOrder와 allService가 갖는 각 포인트컷 조건을 모두 충족하는 경우에만 어드바이스를 적용한다.
+    fun doTransaction(joinPoint: ProceedingJoinPoint): Any {
+        try {
+            println("트랜잭션 시작! ${joinPoint.signature}")
+            val result = joinPoint.proceed()
+            println("트랜잭션 커밋! ${joinPoint.signature}")
+
+            return result
+        } catch (e: Exception) {
+            println("트랜잭션 롤백... ${joinPoint.signature}")
+            throw e
+        } finally {
+            println("리소스 릴리즈... ${joinPoint.signature}")
+        }
+    }
+}
+```
+* 상술한 예시의 경우, `doTransaction()` 메소드는 `allOrder()`와 `allService()` 포인트컷의 모든 조건을 만족하는 경우에만 어드바이스를 실행한다.
+  * 이러한 **포인트컷의 조합은 크게 `&&`, `||`, `!` 세가지 연산자를 활용하여 표현**하게 된다.
