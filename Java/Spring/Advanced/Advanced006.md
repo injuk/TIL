@@ -201,12 +201,12 @@ class AspectV5 {
 * 상술한 `@Around`와 같은 어드바이스를 포함해서, 스프링 AOP는 다음과 같은 다양한 어드바이스를 제공한다.
   * `@Around`: 메소드 호출 전후에 수행된다.
   * `@Before`: 조인 포인트 실행 이전에 수행된다.
-  * `@After Returning`: 조인 포인트가 정상적으로 처리된 후에 수행된다.
-  * `@After Throwing`: 메소드가 예외를 던진 경우에 대해 실행된다.
+  * `@AfterReturning`: 조인 포인트가 정상적으로 처리된 후에 수행된다.
+  * `@AfterThrowing`: 메소드가 예외를 던진 경우에 대해 실행된다.
   * `@After`: 조인 포인트가 정상적으로 실행되거나, 예외를 던진 것과 관계 없이 실행된다.
 * 이 때, **`@Around` 어드바이스는 조인 포인트의 실행 여부를 선택하거나 반환 값을 변환하고, 예외를 번역할 수 있는 등 가장 강력**한 축에 속한다.
   * 극단적으로 말해서, 실무에서는 `@Around` 어드바이스만으로도 대부분의 상황을 처리할 수 있다.
-* `@After` 어드바이스의 경우, 마치 `try-catch` 문에서 사용되는 `finally`처럼 동작하는 것으로 이해할 수 있다.
+* `@After` 어드바이스의 경우, 마치 `try-catch` 문에서 사용되는 `finally` 절처럼 동작하는 것으로 이해할 수 있다.
 
 ## 2024-12-06 Fri
 ### @Around와 그 외 어드바이스의 차이
@@ -222,12 +222,12 @@ class MyAspect {
             println("[doTransaction] 트랜잭션 시작! ${joinPoint.signature}")
             val result = joinPoint.proceed()
           
-            // @After Returning 어드바이스로 아래 두 줄을 처리할 수 있다.
+            // @AfterReturning 어드바이스로 아래 두 줄을 처리할 수 있다.
             println("[doTransaction] 트랜잭션 커밋! ${joinPoint.signature}")
 
             return result
         } catch (e: Exception) {
-            // @After Throwing 어드바이스로 아래 두 줄을 처리할 수 있다.
+            // @AfterThrowing 어드바이스로 아래 두 줄을 처리할 수 있다.
             println("[doTransaction] 트랜잭션 롤백... ${joinPoint.signature}")
             throw e
         } finally {
@@ -238,3 +238,15 @@ class MyAspect {
 }
 ```
 * 즉, **기본적으로 `@Around`로 모든 것을 처리할 수 있으며 나머지 어드바이스들은 `@Around`를 구성하는 기능 일부를 담당하는 조각**과도 같다.
+
+## 2024-12-07-Sat
+### 어드바이스 타입 별 참고 정보 획득하기
+* `@Around`를 제외한 모든 어드바이스는 메소드의 첫 번째 인자에 `JoinPoint`를 사용하는 것으로 추가 정보를 획득할 수 있다.
+* 이 때, `JoinPoint` 클래스는 추가 정보 획득을 위해 다음과 같은 여러 유용한 메소드를 제공한다.
+  * `getArgs()`: 어드바이스 대상 메소드에 전달된 인자를 반환한다.
+  * `getThis()`: 어드바이스를 적용하기 위해 생성된 프록시 객체를 반환한다.
+  * `getTarget()`: 어드바이스 대상 객체를 반환한다.
+  * `getSignature()`: 어드바이스 대상 메소드에 대한 설명을 반환한다. 
+  * `toString()`: 어드바이스 방법에 대한 유용한 설명을 의미하는 문자열을 반환한다.
+* 반면, `@Around` 어드바이스의 경우 `JoinPoint`의 하위 클래스인 `ProceedingJoinPoint`를 사용해야 한다.
+  * 이 때, `ProceedingJoinPoint` 클래스는 다음 어드바이스 또는 대상 객체를 호출하는 `proceed()` 메소드를 추가적으로 제공한다.
