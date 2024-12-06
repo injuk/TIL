@@ -155,13 +155,86 @@ class AspectV4Pointcut {
 ```
 
 ## 2024-12-04 Wed
-### @Aspect 대상을 빈으로 등록하기
-* 또한, **`@Aspect`는 어디까지나 어노테이션일 뿐 컴포넌트 스캔의 대상인 것은 아니다**.
-  * 이로 인해 `@Aspect` 어노테이션이 할당된 클래스를 AOP로 활용하고자 하는 경우에는 반드시 스프링 빈으로 등록할 필요가 있다.
-  * 스프링 빈 등록 방법은 크게 `@Bean` 또는 컴포넌트 스캔 및 임의의 설정 파일을 명시적으로 등록하기 위한 `@Import` 등이 있다.
+### 어드바이스의 적용 순서 조절하기
+* 어드바이스는 기본적으로 순서를 보장하지 않으며, 순서를 명시하고자 하는 경우에는 `@Aspect` 단위마다 `@Order` 어노테이션을 사용해야 한다.
+  * 즉, **`@Aspect`라는 애스팩트 클래스 단위마다 하나씩 적용되므로 단일 애스팩트에 여러 어드바이스가 적용된 경우에는 순서를 명시할 수 없다**.
+* **여러 어드바이스에 대해 명확한 순서를 조절하고자 하는 경우, 각각의 어드바이스를 아래와 같이 별도의 애스팩트 클래스로 분리해줄 필요**가 있다.
+  * 이 역시도 **`@Order` 어노테이션을 활용하는 방법에 해당하며, 해당 어노테이션의 인자로 전달된 수가 낮은 애스팩트가 더 높은 우선 순위**를 갖는다.
+```kotlin
+class AspectV5 {
+
+    @Aspect
+    @Order(2)
+    class LogAspect {
+        @Around("ga.injuk.aop.order.aop.Pointcuts.allOrder()")
+        fun doLog(joinPoint: ProceedingJoinPoint): Any {
+            println("[doLog] ${joinPoint.signature}")
+
+            return joinPoint.proceed()
+        }
+    }
+
+    @Aspect
+    @Order(1)
+    class TransactionAspect {
+        @Around("ga.injuk.aop.order.aop.Pointcuts.orderAndService()")
+        fun doTransaction(joinPoint: ProceedingJoinPoint): Any {
+            try {
+                println("[doTransaction] 트랜잭션 시작! ${joinPoint.signature}")
+                val result = joinPoint.proceed()
+                println("[doTransaction] 트랜잭션 커밋! ${joinPoint.signature}")
+
+                return result
+            } catch (e: Exception) {
+                println("[doTransaction] 트랜잭션 롤백... ${joinPoint.signature}")
+                throw e
+            } finally {
+                println("[doTransaction] 리소스 릴리즈... ${joinPoint.signature}")
+            }
+        }
+    }
+}
+```
 
 ## 2024-12-05 Thu
-### 스프링 부트와 AspectJ의 관계
-* `@Aspect`와 같이 `org.aspectj` 패키지에 포함되는 기능들은 모두 `aspectjweaver.jar` 라이브러리로부터 제공된다.
-* 반면, **스프링의 경우 `AspectJ`의 어노테이션이나 그와 관련된 인터페이스만 사용하는 것으로, 실제 `AspectJ`가 제공하는 위버를 사용하지는 않는다**.
-  * 상술했듯, 스프링은 프록시 방식의 AOP를 사용한다.
+### 어드바이스의 종류
+* 상술한 `@Around`와 같은 어드바이스를 포함해서, 스프링 AOP는 다음과 같은 다양한 어드바이스를 제공한다.
+  * `@Around`: 메소드 호출 전후에 수행된다.
+  * `@Before`: 조인 포인트 실행 이전에 수행된다.
+  * `@After Returning`: 조인 포인트가 정상적으로 처리된 후에 수행된다.
+  * `@After Throwing`: 메소드가 예외를 던진 경우에 대해 실행된다.
+  * `@After`: 조인 포인트가 정상적으로 실행되거나, 예외를 던진 것과 관계 없이 실행된다.
+* 이 때, **`@Around` 어드바이스는 조인 포인트의 실행 여부를 선택하거나 반환 값을 변환하고, 예외를 번역할 수 있는 등 가장 강력**한 축에 속한다.
+  * 극단적으로 말해서, 실무에서는 `@Around` 어드바이스만으로도 대부분의 상황을 처리할 수 있다.
+* `@After` 어드바이스의 경우, 마치 `try-catch` 문에서 사용되는 `finally`처럼 동작하는 것으로 이해할 수 있다.
+
+## 2024-12-06 Fri
+### @Around와 그 외 어드바이스의 차이
+* 예를 들어 아래와 같은 애스팩트 클래스의 경우, 실제로 작성된 어드바이스는 `@Around` 하나에 해당한다.
+  * 반면, 용도에 따라서는 표시된 부분만을 담당하는 별도의 어드바이스를 사용할 수 있다.
+```kotlin
+@Aspect
+class MyAspect {
+    @Around("ga.injuk.aop.order.aop.Pointcuts.orderAndService()")
+    fun doTransaction(joinPoint: ProceedingJoinPoint): Any {
+        try {
+            // @Before 어드바이스로 아래 한 줄을 처리할 수 있다.
+            println("[doTransaction] 트랜잭션 시작! ${joinPoint.signature}")
+            val result = joinPoint.proceed()
+          
+            // @After Returning 어드바이스로 아래 두 줄을 처리할 수 있다.
+            println("[doTransaction] 트랜잭션 커밋! ${joinPoint.signature}")
+
+            return result
+        } catch (e: Exception) {
+            // @After Throwing 어드바이스로 아래 두 줄을 처리할 수 있다.
+            println("[doTransaction] 트랜잭션 롤백... ${joinPoint.signature}")
+            throw e
+        } finally {
+            // @After 어드바이스로 아래 한 줄을 처리할 수 있다.
+            println("[doTransaction] 리소스 릴리즈... ${joinPoint.signature}")
+        }
+    }
+}
+```
+* 즉, **기본적으로 `@Around`로 모든 것을 처리할 수 있으며 나머지 어드바이스들은 `@Around`를 구성하는 기능 일부를 담당하는 조각**과도 같다.
