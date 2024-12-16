@@ -15,3 +15,24 @@
   9. `@args`: 전달된 실제 인수의 런타임 타입이 주어진 어노테이션을 갖는 경우에 매칭되는 조인 포인트에 해당한다.
   10. `bean`: 스프링의 전용 포인트컷 지시자로, 빈의 이름을 기반으로 포인트컷을 지정한다.
 * 이 중 대부분의 경우에 `execution`이 사용되며, 그 이외의 경우는 필요할 때에 이해를 해도 무방하다.
+
+## 2024-12-16 Mon
+### execution의 매칭 대상
+* 예를 들어 아래와 같은 코드를 작성할 경우, 클래스의 메소드 정보를 출력할 수 있다.
+```kotlin
+class ExecutionTest {
+    var helloMethod: Method? = null
+
+    @BeforeEach
+    fun init() {
+        helloMethod = MemberServiceImpl::class.java.getMethod("hello", String::class.java)
+        // helloMethod public java.lang.String ga.injuk.aop.member.MemberServiceImpl.hello(java.lang.String) 출력됨
+    }
+
+    @Test
+    fun printMethod() {
+        println("helloMethod ${helloMethod}")
+    }
+}
+```
+* 이 때, **`execution` 포인트컷 지시자는 출력된 정보와 유사한 메소드 정보를 토대로 매칭하여 포인트컷 대상을 결정**한다.
