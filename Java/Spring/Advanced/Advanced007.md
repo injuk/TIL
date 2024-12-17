@@ -36,3 +36,44 @@ class ExecutionTest {
 }
 ```
 * 이 때, **`execution` 포인트컷 지시자는 출력된 정보와 유사한 메소드 정보를 토대로 매칭하여 포인트컷 대상을 결정**한다.
+
+## 2024-12-17 Tue
+### 상세하게 작성된 execution의 예시
+* `execution` 포인트컷 지시자는 다음과 같은 형태를 갖는다.
+```
+execution(modifiers-pattern? ret-type-parttern declaring-type-pattern?name-pattern(param-pattern) throws-pattern?)
+```
+* 이를 한글로 풀어쓸 경우 `execution(접근제어자? 반환타입 선언타입?메소드명(파라미터) 예외?)` 형태가 된다.
+  * 이 때, `?` 가 붙은 키워드는 생략할 수 있으며 `*`과 같은 패턴을 명시하는 것으로 메소드의 실행 조인 포인트를 자유로이 매칭할 수 있다.
+* 이러한 조건에 맞추어 다음과 같이 원하는 지점에 매칭될 수 있도록 `execution` 포인트컷 지시자를 직접 작성해볼 수도 있다.
+```kotlin
+class ExecutionTest {
+    val pointcut: AspectJExpressionPointcut = AspectJExpressionPointcut()
+    var helloMethod: Method? = null
+
+    @BeforeEach
+    fun init() {
+        helloMethod = MemberServiceImpl::class.java.getMethod("hello", String::class.java)
+    }
+
+    @Test
+    fun printMethod() {
+        println("helloMethod $helloMethod")
+    }
+
+    @Test
+    fun exactMatch() {
+        // MemberServiceImpl 클래스에 명시된 hello 메소드 중 접근 제어자가 public이고 인자와 반환형이 모두 String인 대상을 찾는다.
+        pointcut.expression = "execution(public String ga.injuk.aop.member.MemberServiceImpl.hello(String))"
+
+        Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isTrue()
+    }
+}
+```
+* 상술한 예시에서, `pointcut.expression`에 초기화된 포인트컷 지시자는 각 부분 별로 다음과 같은 의미를 갖는다.
+  * `접근제어자?`: `public`을 명시한다.
+  * `반환타입`: 메소드의 반환형인 `String`을 명시한다.
+  * `선업타입?`: 대상 메소드를 포함하는 클래스를 `ga.injuk.aop.member.MemberServiceImpl` 형태로 패키지 경로까지 포함하여 작성한다.
+  * `메소드명`: `hello`와 같이 메소드 이름을 명시한다. 
+  * `파라미터`: 해당 메소드의 인자 타입을 명시한다.
+  * `예외?`: 해당 메소드는 던지는 예외가 없기에 예외를 작성할 필요가 없으며, `?`로 인해 생략 가능하므로 생략되었다.
