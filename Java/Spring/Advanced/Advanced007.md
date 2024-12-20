@@ -109,3 +109,24 @@ class ExecutionTest {
 * 이를 응용할 경우, `ga.injuk.aop.member.*.*(..)`와 같이 입력하는 것으로 해당 패키지의 모든 클래스와 모든 메소드에 대해 매칭할 수 있다.
 * 반면, **임의의 클래스의 직계 자손 뿐만 아니라 그 하위에 위치한 모든 클래스를 매칭하고자 하는 경우 `.`이 아닌 `..`을 활용**할 수 있다.
   * 예를 들어, `ga.injuk.aop..*.*(..)`는 `ga.injuk.aop` 패키지의 모든 하위 클래스가 갖는 모든 메소드에 대해 매칭된다.
+
+## 2024-12-20 Fri
+### execution의 매칭 대상
+* 예를 들어 아래와 같은 코드를 작성할 경우, 클래스의 메소드 정보를 출력할 수 있다.
+```kotlin
+class ExecutionTest {
+    var helloMethod: Method? = null
+
+    @BeforeEach
+    fun init() {
+        helloMethod = MemberServiceImpl::class.java.getMethod("hello", String::class.java)
+        // helloMethod public java.lang.String ga.injuk.aop.member.MemberServiceImpl.hello(java.lang.String) 출력됨
+    }
+
+    @Test
+    fun printMethod() {
+        println("helloMethod ${helloMethod}")
+    }
+}
+```
+* 이 때, **`execution` 포인트컷 지시자는 출력된 정보와 유사한 메소드 정보를 토대로 매칭하여 포인트컷 대상을 결정**한다.
