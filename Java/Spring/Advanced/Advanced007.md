@@ -111,22 +111,74 @@ class ExecutionTest {
   * 예를 들어, `ga.injuk.aop..*.*(..)`는 `ga.injuk.aop` 패키지의 모든 하위 클래스가 갖는 모든 메소드에 대해 매칭된다.
 
 ## 2024-12-20 Fri
-### execution의 매칭 대상
-* 예를 들어 아래와 같은 코드를 작성할 경우, 클래스의 메소드 정보를 출력할 수 있다.
+### execution 기반 표현식 예시 - 하나 또는 전체
+* 가장 기본적인 `execution` 표현식에는 정확히 해당하는 클래스의 특정 메소드를 명시하는 것과, 모든 클래스에 대해 동작하는 종류가 있다.
+  * 아래의 예시에서도 알 수 있듯, `*` 및 `**` 기호와 `..` 기호가 혼용되어 원하는 효과를 얻을 수 있다.
 ```kotlin
 class ExecutionTest {
+    val pointcut: AspectJExpressionPointcut = AspectJExpressionPointcut()
     var helloMethod: Method? = null
 
     @BeforeEach
     fun init() {
         helloMethod = MemberServiceImpl::class.java.getMethod("hello", String::class.java)
-        // helloMethod public java.lang.String ga.injuk.aop.member.MemberServiceImpl.hello(java.lang.String) 출력됨
+    }
+  
+    @Test
+    fun exactMatch() {
+        pointcut.expression = "execution(public String ga.injuk.aop.member.MemberServiceImpl.hello(String))"
+
+        Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isTrue()
     }
 
     @Test
-    fun printMethod() {
-        println("helloMethod ${helloMethod}")
+    fun allMatch() {
+        pointcut.expression = "execution(* *(..))"
+
+        Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isTrue()
     }
 }
 ```
-* 이 때, **`execution` 포인트컷 지시자는 출력된 정보와 유사한 메소드 정보를 토대로 매칭하여 포인트컷 대상을 결정**한다.
+
+## 2024-12-21 Sat
+### execution 기반 표현식 예시 - 이름 기반 매칭
+* 대상 클래스 또는 메소드의 이름을 기반으로 매칭할 수도 있으며, 이 경우 `*`기호를 활용하여 이름 일부만 일치하는 경우를 표현할 수도 있다. 
+```kotlin
+class ExecutionTest {
+    val pointcut: AspectJExpressionPointcut = AspectJExpressionPointcut()
+    var helloMethod: Method? = null
+
+    @BeforeEach
+    fun init() {
+        helloMethod = MemberServiceImpl::class.java.getMethod("hello", String::class.java)
+    }
+
+    @Test
+    fun nameMatch() {
+        pointcut.expression = "execution(* hello(..))"
+
+        Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isTrue()
+    }
+
+    @Test
+    fun nameMatchWithStar1() {
+        pointcut.expression = "execution(* hel*(..))"
+
+        Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isTrue()
+    }
+
+    @Test
+    fun nameMatchWithStar2() {
+        pointcut.expression = "execution(* *el*(..))"
+
+        Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isTrue()
+    }
+
+    @Test
+    fun nameMatchFailed() {
+        pointcut.expression = "execution(* nono(..))"
+
+        Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isFalse()
+    }
+}
+```
