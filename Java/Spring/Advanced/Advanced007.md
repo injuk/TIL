@@ -182,3 +182,53 @@ class ExecutionTest {
     }
 }
 ```
+
+## 2024-12-22 Sun
+### execution 기반 표현식 예시 - 패키지 기반 매칭
+* 대상 클래스가 포함되는 패키지 경로에 대응되는 표현식도 사용 가능하며, 전체적인 활용 방식은 상술한 경우와 동일하다.
+```kotlin
+class ExecutionTest {
+  val pointcut: AspectJExpressionPointcut = AspectJExpressionPointcut()
+  var helloMethod: Method? = null
+
+  @BeforeEach
+  fun init() {
+    helloMethod = MemberServiceImpl::class.java.getMethod("hello", String::class.java)
+  }
+
+  @Test
+  fun packageExactMatch1() {
+    pointcut.expression = "execution(* ga.injuk.aop.member.MemberServiceImpl.hello(..))"
+
+    Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isTrue()
+  }
+
+  @Test
+  fun packageExactMatch2() {
+    pointcut.expression = "execution(* ga.injuk.aop.member.*.*(..))"
+
+    Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isTrue()
+  }
+
+  @Test
+  fun packageMatchFailed() {
+    pointcut.expression = "execution(* ga.injuk.aop.*.*(..))"
+
+    Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isFalse()
+  }
+
+  @Test
+  fun subpackageMatch1() {
+    pointcut.expression = "execution(* ga.injuk.aop.member..*.*(..))"
+
+    Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isTrue()
+  }
+
+  @Test
+  fun subpackageMatch2() {
+    pointcut.expression = "execution(* ga.injuk.aop..*.*(..))"
+
+    Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isTrue()
+  }
+}
+```
