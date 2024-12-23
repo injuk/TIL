@@ -232,3 +232,41 @@ class ExecutionTest {
   }
 }
 ```
+
+## 2024-12-23 Mon
+### execution 기반 표현식 예시 - 타입 기반 매칭
+* 타입 기반의 매칭 역시 가능하며, 이 경우 **인터페이스 등 상위 타입을 명시한 경우 그 자식 타입 모두가 매칭 대상**이 된다.
+  * 이 때, **상위 타입을 표현하는 표현식에 메소드를 함께 명시하게 되는 경우 반드시 상위 타입의 메소드만이 매칭 가능한 것에 주의**해야 한다.
+```kotlin
+class ExecutionTest {
+    val pointcut: AspectJExpressionPointcut = AspectJExpressionPointcut()
+    var helloMethod: Method? = null
+
+    @BeforeEach
+    fun init() {
+        helloMethod = MemberServiceImpl::class.java.getMethod("hello", String::class.java)
+    }
+
+    @Test
+    fun typeExactMatch() {
+        pointcut.expression = "execution(* ga.injuk.aop.member.MemberServiceImpl.*(..))"
+
+        Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isTrue()
+    }
+
+    @Test
+    fun superTypeMatch() {
+        pointcut.expression = "execution(* ga.injuk.aop.member.MemberService.*(..))"
+
+        Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isTrue()
+    }
+
+    @Test
+    fun superTypeMatchFailed() {
+        pointcut.expression = "execution(* ga.injuk.aop.member.MemberService.*(..))"
+        val internalMethod: Method = MemberServiceImpl::class.java.getMethod("internal", String::class.java)
+
+        Assertions.assertThat(pointcut.matches(internalMethod, MemberServiceImpl::class.java)).isFalse()
+    }
+}
+```
