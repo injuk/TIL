@@ -270,3 +270,60 @@ class ExecutionTest {
     }
 }
 ```
+
+## 2024-12-24 Tue
+### execution 기반 표현식 예시 - 인자 기반 매칭
+* 임의의 메소드에 포함된 인자를 기반으로 매칭하는 것 역시 가능하며, 이 경우 인자의 개수 및 타입에 주의해야 한다.
+* 이 때, 인자를 기반으로 매칭하는 각각의 경우는 다음과 같이 요약할 수 있다.
+  1. `(String)`: 정확하게 문자열 유형의 인자를 하나만 전달 받는 메소드에 매칭한다.
+  2. `()`: 아무 인자도 전달 받지 않는 메소드에 매칭한다.
+  3. `(*)`: 정확히 하나의 인자를 전달 받는 메소드에 매칭되되, 인자의 유형에 무관하게 매칭한다.
+  4. `(*, *)`: 정확히 두 개의 인자를 전달 받는 메소드에 매칭되되, 인자의 유형에 무관하게 매칭한다.
+  5. `..`: 0을 포함하여 인자의 개수와 무관하고, 메소드에 전달되는 인자의 유형에 무관하게 매칭한다.
+  6. `(String, ..)`: 첫 번째 인자는 반드시 문자열로 시작하되, 그 이후로는 인자의 유형에 관계 없이 0개 이상의 인자를 전달 받는 메소드에 대해 매칭한다.
+```kotlin
+class ExecutionTest {
+    val pointcut: AspectJExpressionPointcut = AspectJExpressionPointcut()
+    var helloMethod: Method? = null
+
+    @BeforeEach
+    fun init() {
+        helloMethod = MemberServiceImpl::class.java.getMethod("hello", String::class.java)
+    }
+  
+    @Test
+    fun allStringTypeArgsMatching() {
+        pointcut.expression = "execution(* *(String))"
+
+        Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isTrue()
+    }
+
+    @Test
+    fun onlyNoArgsMatching() {
+        pointcut.expression = "execution(* *())"
+
+        Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isFalse()
+    }
+
+    @Test
+    fun onlyOneArgsButAcceptEveryTypeMatching() {
+        pointcut.expression = "execution(* *(*))"
+
+        Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isTrue()
+    }
+
+    @Test
+    fun allArgsMatching() {
+        pointcut.expression = "execution(* *(..))"
+
+        Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isTrue()
+    }
+
+    @Test
+    fun allArgsButOnlyStartsWithStringMatching() {
+        pointcut.expression = "execution(* *(String, ..))"
+
+        Assertions.assertThat(pointcut.matches(helloMethod!!, MemberServiceImpl::class.java)).isTrue()
+    }
+}
+```
