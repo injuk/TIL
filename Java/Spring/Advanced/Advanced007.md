@@ -375,3 +375,19 @@ class ExecutionTest {
 * **`bean`은 스프링 전용의 포인트컷 지시자로, 빈의 이름을 기반으로 AOP 적용 여부를 결정**한다.
   * 다시 말해, 스프링 전용의 포인트컷 지시자이기에 `AspectJ` 스펙에는 포함되지 않는다.
 * 해당 포인트컷 지시자 역시 `*` 기호 등을 활용할 수 있으며, 예를 들어 `bean(*Repository)`는 접미사 `Repository`를 갖는 모든 빈에 대해 매칭된다.
+
+## 2024-12-31 Tue
+### 매개변수를 전달할 수 있는 포인트컷 표현식
+* `this`에 더해 `target`과 `args` 등의 포인트컷 표현식은 어드바이스에 매개변수를 전달할 수 있도록 지원한다.
+  * 추가적으로 이러한 기능을 포함하는 또다른 포인트컷 표현식으로는 `@target`과 `@within`, `@annotation`과 `@args`가 있다.
+* 예를 들어, 아래와 같이 작성된 클래스는 `args` 포인트컷 표현식에 명시된 `arg` 라는 이름의 인자를 메소드 내에서 사용할 수 있다.
+  * 이 경우 **`args` 포인트컷 표현식에 명시된 인자의 이름인 `arg`와 메소드의 인자명은 동일**해야 한다.
+  * 또한, **인자의 타입 역시 메소드에 명시한 것과 동일하게 제한되기에 아래 `arg` 포인트컷 표현식에 명시된 인자 `arg`의 타입은 `String`**이 된다.
+```java
+class Temp {
+    @Before("allMember() && args(arg,..)")
+    public void logArgs(String arg) {
+        System.out.println("[logArgs] arg" + arg);
+    }
+}
+```
