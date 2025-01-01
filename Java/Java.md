@@ -108,6 +108,7 @@
 * [Advanced005](https://github.com/injuk/TIL/blob/master/Java/Spring/Advanced/Advanced005.md)
 * [Advanced006](https://github.com/injuk/TIL/blob/master/Java/Spring/Advanced/Advanced006.md)
 * [Advanced007](https://github.com/injuk/TIL/blob/master/Java/Spring/Advanced/Advanced007.md)
+* [Advanced008](https://github.com/injuk/TIL/blob/master/Java/Spring/Advanced/Advanced008.md)
 
 ### DB I
 ### 2024.01.30 ~ 2024.03.21
