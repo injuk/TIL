@@ -29,9 +29,64 @@ class Temp {
   * 이러한 특징으로 인해 두 지시자는 각각 단독으로 사용되기보다는 파라미터 바인딩에 활용되는 경우가 많다.
 
 ## 2025-01-03 Fri
-### AOP 실무 예시
-* `@annotation`은 표현식의 인자로 주어진 어노테이션을 명시하고 있는 메소드에 대해 조인 포인트를 매칭한다.
-  * 예를 들어, `@annotation(패키지명.MyAnnotation)`의 경우 `MyAnnotation` 타입의 어노테이션이 명시된 메소드에 대해 매칭된다.
-  * **해당 표현식의 경우 단지 메소드에 어노테이션만 명시하면 되므로 사용이 간단하며, 이로 인해 실무에서도 자주 사용되는 방식**에 속한다.
-* `@args`는 인자로 전달된 인스턴스의 런타임 타입이 표현식의 인자로 주어진 어노테이션을 갖는 경우에 조인 포인트를 매칭한다.
-  * 예를 들어, `@args(패키지명.MyAnnotation)`의 경우 조인 포인트로 매칭된 메소드에 `MyAnnotation` 타입의 어노테이션이 명시된 경우에만 매칭된다.
+### AOP 실무 예시 I
+* 예를 들어 임의의 메소드에 특정한 어노테이션이 명시된 경우, 해당 메소드의 인자를 모두 로그로 출력하는 부가 기능은 다음과 같이 AOP로 구현할 수 있다.
+```kotlin
+/* 아래와 같은 어노테이션을 별도로 정의했다고 가정했을 때,
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Trace
+*/
+
+// 로그를 남기는 부가 기능은 아래와 같은 Aspect로 정의할 수 있다.
+@Aspect
+class TraceAspect {
+  companion object {
+    private val logger = LoggerFactory.getLogger(TraceAspect::class.java)
+  }
+
+  @Before("@annotation(ga.injuk.aop.exam.annotation.Trace)")
+  fun log(joinPoint: JoinPoint) {
+    val args = joinPoint.args
+    logger.info("[trace] {} args = {}", joinPoint.signature, args)
+  }
+}
+```
+
+## 2025-01-04 Sat
+### AOP 실무 예시 II
+* 예를 들어 임의의 메소드에 특정한 어노테이션이 명시된 경우, 해당 메소드에서 예외가 발생한 경우 재시도하는 부가 기능 역시 다음과 같이 AOP로 구현할 수 있다.
+```kotlin
+/* 아래와 같이 value에 기본 값을 갖는 어노테이션을 별도로 정의했다고 가정했을 때,
+@Target(AnnotationTarget.FUNCTION)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Retry(val value: Int = 3)
+*/
+
+// 재시도 부가 기능은 아래와 같은 Aspect로 정의할 수 있다.
+@Aspect
+class RetryAspect {
+  companion object {
+    private val logger = LoggerFactory.getLogger(RetryAspect::class.java)
+  }
+
+  @Around("@annotation(retry)") // retry 메소드의 두 번째 인자로 전달된 어노테이션 인자를 @Around 어노테이션에 활용한다.
+  fun retry(joinPoint: ProceedingJoinPoint, retry: Retry): Any? {
+    logger.info("[retry] {} retryAnnotation = {}", joinPoint.signature, retry)
+
+    val maxRetry = retry.value
+
+    lateinit var exHolder: Exception // 마지막에 예외를 던져주기 위해 예외를 일시적으로 저장하는 exHolder를 사용한다.
+    for (i in 1..maxRetry) {
+      try {
+        logger.info("[retry] try count={}/{}", i, maxRetry)
+        return joinPoint.proceed()
+      } catch (e: Exception) {
+        exHolder = e
+      }
+    }
+
+    throw exHolder // 재시도 횟수 이내에서 성공하지 못한 경우 일시적으로 저장해둔 예외를 던진다.
+  }
+}
+```
