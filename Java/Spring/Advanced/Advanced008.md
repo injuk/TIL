@@ -154,3 +154,56 @@ class RetryAspect {
 * 때문에 스프링이 프록시를 위해 제공하는 `ProxyFactory`에 `proxyTargetClass` 옵션을 적절히 사용할 경우 두 기술 중 하나를 선택할 수 있다.
   * 예를 들어, 해당 옵션에 `true`를 할당할 경우 CGLIB을 사용하여 구체 클래스 기반의 프록시를 생성한다.
   * 반면, **해당 옵션과 무관하게 인터페이스가 없는 구체 클래스에 대해서는 JDK 동적 프록시를 적용조차 할 수 없으므로 CGLIB만을 사용**한다.
+
+## 2025-01-12 Sun
+### JDK 동적 프록시의 한계점
+```
+> JDK 동적 프록시는 대상 객체인 구체 클래스로 타입 캐스팅이 불가능하다.
+> 반면, CGLIB 프록시는 대상 객체인 구체 클래스로 타입 캐스팅이 가능하다.
+```
+* **JDK 동적 프록시의 경우 인터페이스를 기반으로 프록시를 생성하므로, 구체 클래스로 타입캐스팅을 할 수 없는 명확한 한계**를 갖는다.
+* 예를 들어, `MemberService` 인터페이스를 구현하는 `MemberServiceImpl`에 대해 프록시를 생성하는 경우, 해당 현상을 아래와 같이 확인할 수 있다.
+```kotlin
+class ProxyCastingTest {
+  @Test
+  fun jdkProxy() {
+    val target: MemberServiceImpl = MemberServiceImpl()
+
+    val proxyFactory: ProxyFactory = ProxyFactory(target)
+      .apply { isProxyTargetClass = false } // JDK 동적 프록시 사용을 강제. 생략하더라도 기본 값은 false!
+
+    // 프록시를 인터페이스로 캐스팅할 수는 있다.
+    val memberServiceProxy = proxyFactory.proxy as MemberService
+    println(memberServiceProxy) // ga.injuk.aop.member.MemberServiceImpl@68df9280
+
+    // JDK 동적 프록시를 구현 클래스로 캐스팅할 수는 없다.
+    assertThrows(ClassCastException::class.java) {
+      proxyFactory.proxy as MemberServiceImpl // java.lang.ClassCastException: class jdk.proxy3.$Proxy16 cannot be cast to class ga.injuk.aop.member.MemberServiceImpl
+    }
+  }
+}
+```
+* 이는 **JDK 동적 프록시가 내부적으로 `MemberService` 인터페이스를 구현한 프록시를 사용하기 때문**이다.
+  * 즉, 또 다른 구현체인 `MemberServiceImpl`과는 직접적인 관계가 없기에 캐스팅이 불가능하다.
+* 반면, 아래와 같이 **`CGLIB` 프록시 사용을 강제할 경우 `MemberServiceImpl` 자체에 대한 프록시가 생성되므로 해당 문제는 발생하지 않는다**.
+  * 즉, 이 경우 `MemberService` <- `MemberServiceImpl` <- `CGLIB Proxy` 와 같은 일종의 상속 계층도가 구성되는 것으로 이해할 수 있다.
+```kotlin
+class ProxyCastingTest {
+    @Test
+    fun cglibProxy() {
+        val target: MemberServiceImpl = MemberServiceImpl()
+
+        val proxyFactory: ProxyFactory = ProxyFactory(target)
+            .apply { isProxyTargetClass = true } // CGLIB 프록시 사용을 강제
+
+        // 프록시를 인터페이스로 캐스팅할 수 있다.
+        val memberServiceProxy = proxyFactory.proxy as MemberService
+        println(memberServiceProxy)
+
+        // CGLIB 프록시를 구현 클래스로 캐스팅하더라도 성공한다.
+        val castingMemberServiceImpl = proxyFactory.proxy as MemberServiceImpl
+        println(castingMemberServiceImpl)
+    }
+}
+```
+* 실제로는 **프록시를 캐스팅할 일이 없을 것처럼 느껴질 수 있으나, 상술한 모든 내용은 하술할 의존 관계 주입과 관련된 문제를 유발**할 수 있다.
