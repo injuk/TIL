@@ -100,7 +100,7 @@
 * [MVC007](https://github.com/injuk/TIL/blob/master/Java/Spring/MVC2/MVC007.md)
 
 ### Advanced
-### 2024.09.04 ~ 2024.00.00
+### 2024.09.04 ~ 2025.01.15
 * [Advanced001](https://github.com/injuk/TIL/blob/master/Java/Spring/Advanced/Advanced001.md)
 * [Advanced002](https://github.com/injuk/TIL/blob/master/Java/Spring/Advanced/Advanced002.md)
 * [Advanced003](https://github.com/injuk/TIL/blob/master/Java/Spring/Advanced/Advanced003.md)
