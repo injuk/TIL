@@ -90,3 +90,35 @@
 * 스프링 부트를 최근에 학습한 개발자들은 WAR로 빌드하여 WAS에 배포하는 방식에 익숙하지 않지만, 이러한 방식을 알아둘 가치는 충분하다.
 * 과거의 개발 프로세스를 이해하는 것은 곧 현재의 방식이 어떻게 발전해왔고, 이를 왜 사용해야하는지에 대해 더 깊이 있게 이해할 수 있도록 하는 초석이 된다.
   * 예를 들어, 서블릿 컨테이너를 설정하고 스프링 컨테이너와 디스패처 서블릿을 각각 생성하여 스프링 MVC와 연결하는 작업 등을 경험해볼 필요가 있다.
+
+## 2025-01-26 Sun
+### 톰캣용 서블릿 기반 웹 애플리케이션 작성하기
+* 서블릿과 WAR를 활용하여 톰캣에서 동작할 수 있는 웹 애플리케이션을 개발하는 경우, 아래와 같이 gradle을 설정해줄 필요가 있다.
+```groovy
+plugins {
+  id 'java'
+  id 'war'
+}
+
+// ...중략
+
+dependencies {
+  implementation 'jakarta.servlet:jakarta.servlet-api:6.0.0' // 서블릿 의존성
+}
+```
+* 이 떄, **웹 애플리케이션에서 사용할 메인 페이지인 `index.html`은 `src/main/webapp` 경로에 작성**한다.
+* 반면, 아무리 간단한 HTML 파일이더라도 이를 톰캣과 같은 WAS의 서블릿에서 동작시키기 위해서는 서블릿 스펙에 맞추어 개발할 필요가 있다.
+  * 이러한 **서블릿은 `src/main/java` 하위의 임의의 패키지에 `HttpServlet` 클래스를 아래와 같이 확장하는 것으로 작성**할 수 있다.
+```java
+/**
+ * http://localhost:8080/test 호출시 아래 서블릿이 동작하도록 구현  
+ */
+@WebServlet(urlPatterns = "/test")
+public class MyServlet extends HttpServlet {
+  @Override
+  protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    System.out.println("MyServlet.service");
+    resp.getWriter().println("test"); // 클라이언트의 요청에 대해 'test' 라는 문자열로 응답한다.
+  }
+}
+```
