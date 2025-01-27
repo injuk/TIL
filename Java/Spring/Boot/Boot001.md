@@ -122,3 +122,14 @@ public class MyServlet extends HttpServlet {
   }
 }
 ```
+
+## 2025-01-27 Mon
+### WAR의 구조
+* 사용 중인 빌드 도구에 따라 애플리케이션을 WAR로 빌드해야 하며, 상술한 설정의 경우 gradle의 `war` 플러그인에 의해 빌드가 가능하다.
+  * 예를 들어 래퍼를 사용하는 경우, `./gradlew build` 명령어를 통해 WAR를 빌드할 수 있다.
+  * 이 때, 빌드 결과물은 IntelliJ를 기준으로 `build/libs` 폴더 하위에 `.war` 확장자를 갖는 WAR 파일로 생성된다.
+  * 반면, gradle의 `war` 플러그인은 해당 프로젝트를 빌드할 때 결과물을 WAR 파일로 생성하도록 동작한다. 
+* 생성된 WAR 파일은 필요한 경우 `jar -xvf [파일명].war` 명령어로 풀어볼 수 있으며, 다음과 같은 파일을 포함한다.
+  1. `index.html`: 메인 페이지 역할을 담당할 HTML로, 앞서 `webapp` 폴더에 작성한 HTML과 같다.
+  2. `META-INF`: Java의 설정과 관련된 파일들이 위치한다.
+  3. `WEB-INF`: `WEB-INF/classes` 경로에 패키지 구조에 따라 바이트코드로 변환된 소스 코드가, `WEB-INF/lib`에는 라이브러리용 JAR가 위치한다.
