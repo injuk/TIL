@@ -167,3 +167,17 @@ public class MyServlet extends HttpServlet {
   * 예를 들어, 스프링을 사용하는 경우 스프링 컨테이너를 생성한 후 서블릿과 스프링을 연결하는 디스패쳐 서블릿을 등록해야 한다.
 * WAS는 이러한 작업을 위해 초기화 기능을 제공하며, 이를 활용하는 것으로 WAS 실행 시점에 필요한 초기화 과정을 진행할 수 있다.
   * 기존에는 이러한 작업을 `web.xml`을 활용하여 진행하였으나, 최근에는 서블릿 스펙 자체적으로 Java 코드를 활용한 초기화 기능을 지원한다.
+
+## 2025-01-31 Fri
+### ServletContainerInitializer 인터페이스
+* 서블릿은 `ServletContainerInitializer`라는 서블릿 컨테이너 초기화 기능을 위한 인터페이스를 다음과 같이 제공한다.
+  * 이 때, 서블릿 컨테이너는 실행 시점에 초기화용 메소드인 `onStartup()`을 호출한다.
+  * 이를 통해 애플리케이션에 필요한 기능들을 사전에 초기화하거나 등록할 수 있게 된다.
+```java
+public interface ServletContainerInitializer {
+	public void onStartup(Set<Class<?>> c, ServletContext ctx) throws ServletException;
+}
+```
+* 이 때, `ServletContainerInitializer` 인터페이스의 `onStartUp()`메소드의 인자는 각각 다음과 같은 의미를 갖는다.
+  1. `Set<Class<?>> c`: 더 유연한 초기화 기능을 제공하며, `@HandleTypes` 어노테이션과 함께 사용된다.
+  2. `ServletContext ctx`:  서블릿 컨테이너 자체의 기능을 제공하며, 이를 통해 필터 또는 서블릿 등을 등록할 수 있다.
