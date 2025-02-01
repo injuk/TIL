@@ -174,6 +174,8 @@ public class MyServlet extends HttpServlet {
   * 이 때, 서블릿 컨테이너는 실행 시점에 초기화용 메소드인 `onStartup()`을 호출한다.
   * 이를 통해 애플리케이션에 필요한 기능들을 사전에 초기화하거나 등록할 수 있게 된다.
 ```java
+package jakarta.servlet;
+
 public interface ServletContainerInitializer {
 	public void onStartup(Set<Class<?>> c, ServletContext ctx) throws ServletException;
 }
@@ -181,3 +183,15 @@ public interface ServletContainerInitializer {
 * 이 때, `ServletContainerInitializer` 인터페이스의 `onStartUp()`메소드의 인자는 각각 다음과 같은 의미를 갖는다.
   1. `Set<Class<?>> c`: 더 유연한 초기화 기능을 제공하며, `@HandleTypes` 어노테이션과 함께 사용된다.
   2. `ServletContext ctx`:  서블릿 컨테이너 자체의 기능을 제공하며, 이를 통해 필터 또는 서블릿 등을 등록할 수 있다.
+
+## 2025-02-01 Sat
+### ServletContainerInitializer 등록하기
+> ServletContainerInitializer 인터페이스를 구현하는 초기화 클래스를 생성했더라도 톰캣은 인식할 수 없으므로, 이를 등록해줄 필요가 있다.
+* `src/main/resources/META-INF/services` 경로에 `jakarta.servlet.ServletContainerInitializer` 라는 이름의 파일을 생성한다.
+  * 이 때, `jakarta.servlet.ServletContainerInitializer`은 `ServletContainerInitializer`의 패키지 경로를 의미한다.
+  * 이러한 명명법은 사실상 규약이라고 이해할 수 있으며, 때문에 `META-INF`나 `services` 등의 경로에 대해 오타가 있을 경우 톰캣은 이를 인식할 수 없다. 
+* 생성된 파일에는 다음과 같이 개발자가 직접 작성한 `ServletContainerInitializer`의 이름을 패키지 경로와 함께 작성한다.
+```text
+ga.injuk.study.container.MyInitializerV1
+```
+* 톰캣이 실행될 때 해당 경로의 파일을 읽어들이며, 개발자가 작성한 `ServletContainerInitializer` 구현체의 `onStartup()` 메소드를 호출한다.
