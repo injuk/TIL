@@ -195,3 +195,25 @@ public interface ServletContainerInitializer {
 ga.injuk.study.container.MyInitializerV1
 ```
 * 톰캣이 실행될 때 해당 경로의 파일을 읽어들이며, 개발자가 작성한 `ServletContainerInitializer` 구현체의 `onStartup()` 메소드를 호출한다.
+
+## 2025-02-02 Sun
+### 프로그래밍 방식의 서블릿 등록
+* 서블릿 컨테이너는 `애플리케이션 초기화`라는 용어로 지칭할 수 있는, 더 유연한 초기화 기능을 지원한다.
+  * 이 때, 해당 용어는 정식 용어가 아님에 주의해야 한다.
+* 이러한 애플리케이션 초기화 기능을 활용하기 위해서는 아래와 같은 인터페이스의 작성이 필수적이다.
+```java
+public interface ApplicationInit {
+    void onStartup(ServletContext servletContext);
+}
+```
+* 이제 상술한 인터페이스를 기반으로 아래와 같은 구현체 클래스를 작성하는 것으로 서블릿을 수동으로 등록한 후 적절히 매핑할 수 있다.
+```java
+public class ApplicationInitServlet implements ApplicationInit {
+    @Override
+    public void onStartup(ServletContext servletContext) {
+        // 순수 서블릿 코드 등록하기
+        ServletRegistration.Dynamic myServlet = servletContext.addServlet("myServlet", new MyServlet());
+        myServlet.addMapping("/my-servlet");
+    }
+}
+```
