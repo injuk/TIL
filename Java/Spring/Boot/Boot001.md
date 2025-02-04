@@ -226,3 +226,26 @@ public class ApplicationInitServlet implements ApplicationInit {
 * 어노테이션 방식은 편리하다는 장점을 갖지만, 마치 하드코딩된 것처럼 동작하기에 애플리케이션에 유연성을 부여하기 어렵다.
 * 반면, 프로그래밍 방식의 등록은 더 많은 코드 작성이 필요하므로 번거롭고 불편하지만 유연성 측면에서 훨씬 더 큰 이점을 갖는다.
   * 예를 들어, 서블릿의 매핑 경로 등록하는 과정에서 필요에 따라 외부 설정을 읽어들이거나, `if` 분기를 활용한 매핑이 가능하다.
+
+## 2025-02-04 Tue
+### 프로그래밍 방식의 서블릿 컨테이너 초기화 로직 호출하기
+* 상술한 바와 같이 `ApplicationInit` 인터페이스를 구현한 경우, 아래와 같이 `@HandleTypes` 어노테이션을 활용하여 구현체를 인자로 전달받을 수 있다.
+  * 아래 예시의 경우, 인자 `c`에 `ApplicationInit` 인터페이스를 구현한 모든 클래스의 정보가 전달된다.
+  * 이 때, 클래스 정보가 전달될 뿐 실제 인스턴스가 전달되는 것이 아님에 주의해야 한다.
+```java
+@HandleTypes(ApplicationInit.class)
+public class MyContainerInitializer implements ServletContainerInitializer {
+    @Override
+    public void onStartup(Set<Class<?>> c, ServletContext ctx) throws ServletException {
+        for (Class<?> clazz : c) {
+            try {
+              ApplicationInit applicationInit = (ApplicationInit) clazz.getDeclaredConstructor().newInstance();
+              applicationInit.onStartup(ctx);
+            } catch (Exception e) {
+                throw e;
+            }
+        }
+    }
+}
+```
+* 또한, 이렇게 작성한 `MyContainerInitializer` 클래스의 이름은 `jakarta.servlet.ServletContainerInitializer` 파일에 추가해주어야 한다.
