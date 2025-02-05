@@ -249,3 +249,12 @@ public class MyContainerInitializer implements ServletContainerInitializer {
 }
 ```
 * 또한, 이렇게 작성한 `MyContainerInitializer` 클래스의 이름은 `jakarta.servlet.ServletContainerInitializer` 파일에 추가해주어야 한다.
+
+## 2025-02-05 Wed
+### 서블릿 컨테이너의 초기화 과정
+* 상술한 코드에서, `@HandleTypes` 어노테이션에 애플리케이션 초기화 인터페이스를 명시하는 것으로 필요한 모든 구현체의 클래스 정보를 활용할 수 있다.
+  * 예를 들어, `Set<Class<?>> c` 인자에는 해당 애플리케이션 초기화 인터페이스를 구현하는 모든 구현체의 클래스 정보가 전달된다.
+  * 이렇듯 서블릿 컨테이너 초기화를 위한 `ServletContainerInitializer`는 필요한 클래스 정보를 모두 인자로 전달 받는 것을 기반으로 동작한다.
+* 이 때, 전달되는 정보는 구현체 인스턴스가 아닌 클래스 정보에 불과하므로 의도한 동작을 위해서는 반드시 명시적인 인스턴스화 과정이 전제되어야 한다.
+  * 상술한 코드에서, `clazz.getDeclaredConstructor().newInstance()`는 리플렉션을 활용한 객체 생성 과정에 해당한다.
+* 상술한 코드에서, `applicationInit.onStartup(ctx)`와 같이 애플리케이션 초기화 코드를 명시적으로 호출하는 과정에서 `ctx` 인자를 함께 전달한다.
