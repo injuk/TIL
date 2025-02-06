@@ -258,3 +258,11 @@ public class MyContainerInitializer implements ServletContainerInitializer {
 * 이 때, 전달되는 정보는 구현체 인스턴스가 아닌 클래스 정보에 불과하므로 의도한 동작을 위해서는 반드시 명시적인 인스턴스화 과정이 전제되어야 한다.
   * 상술한 코드에서, `clazz.getDeclaredConstructor().newInstance()`는 리플렉션을 활용한 객체 생성 과정에 해당한다.
 * 상술한 코드에서, `applicationInit.onStartup(ctx)`와 같이 애플리케이션 초기화 코드를 명시적으로 호출하는 과정에서 `ctx` 인자를 함께 전달한다.
+
+## 2025-02-06 Thu
+### WAS의 실행과 서블릿 컨테이너 초기화
+* WAS가 실행되는 과정에서 서블릿 컨테이너가 초기화되며, 이 때 초기화되는 기준은 다음의 조건을 모두 충족하는 구현체에 해당한다.
+  1. `ServletContainerInitializer` 인터페이스를 확장하는 클래스
+  2. `resources/META-INF/services/jakarta.servlet.ServletContainerInitializer`에 작성된 클래스
+* 또한, 이 과정에서 `@HandleTypes` 어노테이션에 명시된 인터페이스의 모든 구현체가 조회되어 상술한 조건에 맞는 구현체에 전달된다.
+  * 일반적으로, 이렇게 전달된 구현체를 활용하여 애플리케이션 초기화에 필요한 기능들을 호출하도록 애플리케이션을 개발하게 된다.
