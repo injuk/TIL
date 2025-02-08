@@ -164,7 +164,7 @@ public class MyServlet extends HttpServlet {
 ## 2025-01-30 Thu
 ### 서블릿 컨테이너 초기화의 필요성
 * WAS를 실행하는 시점에 필터와 서블릿을 등록하거나, 스프링 관련 설정을 처리하는 등 여러 초기화 작업이 필요할 수 있다.
-  * 예를 들어, 스프링을 사용하는 경우 스프링 컨테이너를 생성한 후 서블릿과 스프링을 연결하는 디스패쳐 서블릿을 등록해야 한다.
+  * 예를 들어, 스프링을 사용하는 경우 스프링 컨테이너를 생성한 후 서블릿과 스프링을 연결하는 디스패처 서블릿을 등록해야 한다.
 * WAS는 이러한 작업을 위해 초기화 기능을 제공하며, 이를 활용하는 것으로 WAS 실행 시점에 필요한 초기화 과정을 진행할 수 있다.
   * 기존에는 이러한 작업을 `web.xml`을 활용하여 진행하였으나, 최근에는 서블릿 스펙 자체적으로 Java 코드를 활용한 초기화 기능을 지원한다.
 
@@ -276,3 +276,33 @@ public class MyContainerInitializer implements ServletContainerInitializer {
 * 또한, 애플리케이션 초기화를 위한 인터페이스는 서블릿 컨테이너라는 기술과 완전히 분리된 별도의 개념으로 개발될 수 있다는 점에서의 장점 역시 무시할 수 없다.
   * 상술한 예시의 `ApplicationInit` 인터페이스는 `onStartup()` 메소드로부터 서블릿이라는 구체적인 기술에 의존한다.
   * 반면, 원하는 경우 인자를 제거하여 서블릿 등의 구체적인 기술에 의존하지 않는 애플리케이션 초기화 인터페이스 역시 얼마든지 정의할 수 있다. 
+
+## 2025-02-08 Sat
+### WAS와 스프링 컨테이너 통합하기
+* 상술한 서블릿 컨테이너 초기화 및 애플리케이션 초기화를 활용할 경우, 스프링 컨테이너와 간단히 통합하는 것 역시 가능하다.
+  * 이 경우 스프링 컨테이너를 생성한 후 스프링 컨트롤러를 이에 등록하고, 스프링 컨트롤러를 호출하기 위한 디스패처 서블릿을 서블릿 컨테이너에 등록하게 된다.
+* 이러한 기능을 위한 애플리케이션 초기화 로직은 상술한 `ApplicationInit` 인터페이스를 구현하는 구현체를 아래와 같이 추가하는 것으로 작성할 수 있다.
+  * 이렇듯 애플리케이션 초기화 기능을 서블릿 컨테이너 초기화 기능과 분리하는 것으로 개방 폐쇄 원칙을 준수하기 쉬워진다.
+```java
+public class SpringInitializer implements ApplicationInit {
+    @Override
+    public void onStartup(ServletContext servletContext) {
+        // 명시적인 스프링 컨테이너 생성
+        AnnotationConfigWebApplicationContext appCtx = new AnnotationConfigWebApplicationContext();
+        
+        // 스프링 컨테이너에 컨트롤러 등록 로직을 포함하는 Configuration을 등록
+        appCtx.register(MyConfiguration.class);
+        
+        // 스프링 MVC 디스패처 서블릿을 생성하고, 스프링 컨테이너 연결
+        DispatcherServlet dispatcher = new DispatcherServlet(appCtx);
+        
+        // 디스패처 서블릿을 서블릿 컨테이너에 등록
+        ServletRegistration.Dynamic servlet = servletContext.addServlet("myDispatcher", dispatcher);
+      
+        // /spring/* 요청은 이제 디스패처 서블릿에 의해 처리된다.
+        servlet.addMapping("/spring/*");
+    }
+}
+```
+* **서블릿은 필터 등의 특수한 용도 클래스를 제외하고 WAS 환경에서 사용자의 요청을 최초로 수신하는 역할을 담당**한다.
+  * 특히, **디스패처 서블릿은 상술한 코드에서 확인할 수 있듯 애플리케이션 컨텍스트를 인지하고 있으므로, 빈으로 등록된 컨트롤러를 찾아 매핑**할 수 있다. 
