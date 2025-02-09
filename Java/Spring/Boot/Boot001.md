@@ -320,3 +320,15 @@ public class SpringInitializer implements ApplicationInit {
 * 이후 **`/spring` 하위 경로를 향해 HTTP 요청이 발생한 경우, 디스패처 서블릿이 실행되고 디스패처 서블릿은 적절한 컨트롤러에 처리를 위임**한다.
   * 이 때, 디스패처 서블릿은 `/spring` 이후의 경로를 기반으로 매핑된 컨트롤러를 조회하여 실행한다.
   * 예를 들어, **`/spring/my-api`를 호출한 경우 디스패처 서블릿은 `/my-api`를 처리하는 컨트롤러의 메소드를 호출**한다.
+
+## 2025-02-10 Mon
+### 스프링 MVC의 서블릿 컨테이너 초기화 지원
+* 상술한 과정은 `ServletContainerInitializer` 인터페이스에 대한 구현체를 직접 작성하는 등 복잡하고 번거로운 부분이 있다.
+  * 이러한 서블릿 컨테이너 초기화 과정은 번거롭고, 복잡성이 높기에 휴먼 에러가 발생하기 쉬운 축에 속한다.
+* 스프링 MVC는 이러한 상황에 대비하여 서블릿 컨테이너 초기화 과정을 자동화하며, 개발자는 이러한 과정을 생략하고 애플리케이션 초기화 코드에만 집중할 수 있다.
+* 이 때, 스프링이 지원하는 애플리케이션 초기화 인터페이스는 다음과 같은 `WebApplicationInitializer`에 해당한다.
+```java
+public interface WebApplicationInitializer {
+    void onStartup(ServletContext servletContext) throws ServletException;
+}
+```
