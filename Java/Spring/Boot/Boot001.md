@@ -297,7 +297,7 @@ public class SpringInitializer implements ApplicationInit {
         DispatcherServlet dispatcher = new DispatcherServlet(appCtx);
         
         // 디스패처 서블릿을 서블릿 컨테이너에 등록
-        ServletRegistration.Dynamic servlet = servletContext.addServlet("myDispatcher", dispatcher);
+        ServletRegistration.Dynamic servlet = servletContext.addServlet("myDispatcherV1", dispatcher);
       
         // /spring/* 요청은 이제 디스패처 서블릿에 의해 처리된다.
         servlet.addMapping("/spring/*");
@@ -332,3 +332,33 @@ public interface WebApplicationInitializer {
     void onStartup(ServletContext servletContext) throws ServletException;
 }
 ```
+
+## 2025-02-11 Tue
+### WebApplicationInitializer 구현하기
+* `WebApplicationInitializer` 인터페이스를 사용하더라도 기존의 스프링 컨테이너 통합 코드와 유사한 코드를 작성할 수 있다.
+  * 반면, 기존 코드와의 충돌을 감안하여 디스패처 서블릿의 이름을 다르게 등록해주어야 하는 점에 유의해야 한다.
+```java
+public class SpringMvcApplicationInitializer implements WebApplicationInitializer {
+    @Override
+    public void onStartup(ServletContext servletContext) throws ServletException {
+        // 명시적인 스프링 컨테이너 생성
+        AnnotationConfigWebApplicationContext appCtx = new AnnotationConfigWebApplicationContext();
+        
+        // 스프링 컨테이너에 컨트롤러 등록 로직을 포함하는 Configuration을 등록
+        appCtx.register(MyConfiguration.class);
+        
+        // 스프링 MVC 디스패처 서블릿을 생성하고, 스프링 컨테이너 연결
+        DispatcherServlet dispatcher = new DispatcherServlet(appCtx);
+        
+        // 디스패처 서블릿을 서블릿 컨테이너에 등록
+        ServletRegistration.Dynamic servlet = servletContext.addServlet("myDispatcherV2", dispatcher);
+        
+        // 모든 요청이 디스패처 서블릿에 의해 처리된다.
+        servlet.addMapping("/");        
+    }
+}
+```
+* 이렇듯 **각자 다른 경로를 처리하는 여러 서블릿을 등록할 경우, 사용자의 요청을 더 구체적으로 처리할 수 있는 서블릿이 우선 동작**한다.
+  * 예를 들어, `/spring` 형태의 접두사를 갖는 경로는 여전히 이전의 서블릿이 처리한다.
+* 반면, 상술한 예시와 같은 코드를 작성하는 것으로 동일한 웹 애플리케이션에 스프링 컨테이너와 디스패처 서블릿이 각각 둘 씩 존재하게 된다.
+  * 그러나 **일반적으로는 스프링 컨테이너와 디스패처 서블릿 각각 하나씩 생성하여 연결하고, 디스패처 서블릿에 `/` 경로를 매핑하여 모든 요청을 처리**한다.
