@@ -371,3 +371,10 @@ public class SpringMvcApplicationInitializer implements WebApplicationInitialize
 * 정확히는 스프링은 `ServletContainerInitializer`를 구현하는 `SpringServletContainerInitializer` 클래스를 활용한다.
   * 또한, 해당 클래스는 `@HandleTypes` 어노테이션에 `WebApplicationInitializer`를 명시한다.
   * 이로 인해 상술한 `SpringMvcApplicationInitializer` 구현체가 자동으로 등록되어 애플리케이션 초기화 로직을 호출할 수 있게 된다.
+
+## 2025-02-13 Thu
+### 스프링 부트와 내장 톰캣
+* 상술한 과정을 통해 서블릿 컨테이너를 초기화하여 필요한 서블릿을 등록하거나, 스프링 컨테이너와 디스패처 서블릿을 연결해볼 수 있다.
+* 반면, 이러한 방식은 모두 서블릿 컨테이너 상에서 동작하는 방식이므로 언제나 서블릿 컨테이너 위에 배포를 해야 애플리케이션을 동작시킬 수 있다.
+  * 즉, 물리 서버 상에 톰캣을 구성한 후 서블릿 컨테이너 스펙에 맞춘 WAR 기반 애플리케이션을 개발한 후에야 배포가 가능했다.
+* 이러한 복잡하고 번거로운 배포 절차는 스프링 부트가 제안되고, 톰캣이 스프링 부트에 포함됨에 따라 상당 부분 개선되어 더욱 편리한 사용성을 지니게 되었다. 
