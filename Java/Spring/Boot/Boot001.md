@@ -362,3 +362,12 @@ public class SpringMvcApplicationInitializer implements WebApplicationInitialize
   * 예를 들어, `/spring` 형태의 접두사를 갖는 경로는 여전히 이전의 서블릿이 처리한다.
 * 반면, 상술한 예시와 같은 코드를 작성하는 것으로 동일한 웹 애플리케이션에 스프링 컨테이너와 디스패처 서블릿이 각각 둘 씩 존재하게 된다.
   * 그러나 **일반적으로는 스프링 컨테이너와 디스패처 서블릿 각각 하나씩 생성하여 연결하고, 디스패처 서블릿에 `/` 경로를 매핑하여 모든 요청을 처리**한다.
+
+## 2025-02-12 Wed
+### 스프링 MVC가 제공하는 서블릿 컨테이너 초기화 과정
+* 스프링 역시 상술한 바와 같이 서블릿 컨테이너의 요구사항을 모두 충족하는 코드를 미리 작성해두어 애플리케이션 초기화를 지원하는 것에 지나지 않는다.
+  * 예를 들어, `spring-web` 라이브러리에는 상술한 `META-INF` 하위 경로에 이미 서블릿 컨테이너 초기화를 위한 등록 파일이 포함되어 있다.
+  * 특히, `jakarta.servlet.ServletConainerInitializer` 파일에 `SpringServletContainerInitializer` 인터페이스 경로를 포함한다.
+* 정확히는 스프링은 `ServletContainerInitializer`를 구현하는 `SpringServletContainerInitializer` 클래스를 활용한다.
+  * 또한, 해당 클래스는 `@HandleTypes` 어노테이션에 `WebApplicationInitializer`를 명시한다.
+  * 이로 인해 상술한 `SpringMvcApplicationInitializer` 구현체가 자동으로 등록되어 애플리케이션 초기화 로직을 호출할 수 있게 된다.
