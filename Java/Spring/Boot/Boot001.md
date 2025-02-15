@@ -390,3 +390,24 @@ public class SpringMvcApplicationInitializer implements WebApplicationInitialize
 * 이러한 불편한 방식을 개선하기 위해 톰캣을 마치 일종의 라이브러리처럼 제공하는 내장 톰캣의 아이디어가 고안되었다.
   * 이는 마치 `main()` 메소드만 호출하면 애플리케이션이 시작되는 것과 유사하며, 톰캣을 라이브러리 형태로 애플리케이션에 포함시키게 된다.
   * 덧붙여 톰캣 역시 Java를 기반으로 작성되었기에 이러한 방식이 가능했다고도 볼 수 있다.
+  * 이를 활용할 경우 WAS에 빌드된 WAR를 배포하는 것이 아닌, 톰캣 자체를 일종의 라이브러리로 취급하는 JAR를 빌드하여 활용할 수 있게 된다.
+
+## 2025-02-15 Sat
+### 내장 톰캣 의존성
+* `build.gradle`의 `dependencies` 블록을 다음과 같이 입력하는 것으로 내장 톰캣을 활용할 수 있다.
+  * 해당 의존성을 명시할 경우, 애플리케이션 시작 시점에 해당 라이브러리에 접근하여 톰캣을 동작시킬 수 있다.
+  * 즉, 별도의 톰캣 서버 설치 과정이 생략되고 `main()` 메소드로부터 톰캣을 실행할 수 있게 된다. 
+```groovy
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  // 스프링 MVC
+  implementation 'org.springframework:spring-webmvc:6.0.4'
+  
+  // 내장 톰캣
+  implementation'org.apache.tomcat.embed:tomcat-embed-core:10.1.5'
+}
+```
+* 또한, 톰캣 의존성 내부에는 서블릿과 관련된 여러 코드가 포함되기에 서블릿과 관련된 기능을 바로 사용할 수도 있다.
