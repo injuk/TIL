@@ -411,3 +411,29 @@ dependencies {
 }
 ```
 * 또한, 톰캣 의존성 내부에는 서블릿과 관련된 여러 코드가 포함되기에 서블릿과 관련된 기능을 바로 사용할 수도 있다.
+
+## 2025-02-16 Sun
+### 내장 톰캣을 코드로 제어하기
+* 내장 톰캣은 톰캣 자체를 라이브러리로 포함하고, Java 코드로 이를 제어할 수 있게 하기에 아래와 같은 코드를 통해 톰캣을 명시적으로 제어할 수 있다.
+```java
+public class EmbedTomcatServletMain {
+  public static void main(String[] args) throws LifecycleException {
+    System.out.println("main");
+    
+    // 톰캣 설정하기
+    Connector connector = new Connector();
+    connector.setPort(8080); // 톰캣이 제공하는 커넥터를 활용하여 8080 포트에 연결한다.
+    
+    Tomcat tomcat = new Tomcat();
+    tomcat.setConnector(connector);
+    
+    // 서블릿 등록하기
+    Context context = tomcat.addContext("", "/");
+    tomcat.addServlet("", "myServlet", new MyServlet());
+    context.addServletMappingDecoded("/my-servlet", "myServlet"); // /my-servlet 경로 호출에 대해 myServlet을 실행한다.
+    
+    // 설정된 톰캣을 시작하기
+    tomcat.start();
+  }
+}
+```
