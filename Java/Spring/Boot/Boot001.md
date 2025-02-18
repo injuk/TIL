@@ -444,3 +444,40 @@ public class EmbedTomcatServletMain {
   * 물론, 톰캣 서버를 별도로 설치하여 유지보수하는 작업 역시 불필요한 점에서도 큰 이점을 얻을 수 있다.
 * 그러나 스프링 부트 차원에서 톰캣과 관련된 대부분의 작업을 자동화하므로, 실무에서 내장 톰캣을 위와 같이 직접 제어할 일은 사실상 없다고 볼 수 있다.
 * 때문에 내장 톰캣의 세부적인 동작 원리까지 자세하게 이해할 필요는 없으며, 단순히 어떤 방식으로 동작하는지 개괄적으로 이해하기만 해도 무방하다.
+
+## 2025-02-18 Tue
+### 내장 톰캣과 스프링 컨테이너의 통합
+* 상술한 코드와 앞서 다룬 프로그래밍적인 스프링 컨테이너 설정을 다음과 같이 조합할 경우 내장 톰캣 라이브러리와 스프링 컨테이너를 통합할 수 있다.
+```java
+public class EmbedTomcatWithSpringtMain {
+  public static void main(String[] args) throws LifecycleException {
+    System.out.println("main");
+    
+    // 톰캣 설정하기
+    Connector connector = new Connector();
+    connector.setPort(8080); // 톰캣이 제공하는 커넥터를 활용하여 8080 포트에 연결한다.
+    
+    Tomcat tomcat = new Tomcat();
+    tomcat.setConnector(connector);
+    
+    // 스프링 컨테이너 생성하기
+    AnnotationConfigWebApplicationContext appCtx = new AnnotationConfigWebApplicationContext();
+    
+    // 스프링 컨테이너에 컨트롤러를 포함하는 Configuration 빈 등록하기
+    appCtx.register(MyConfiguration.class);
+    
+    // 스프링 MVC 디스패처 서블릿 생성 및 스프링 컨테이너와 연결
+    DistpatcherServlet dispatcher = DistpatcherServlet(appCtx);
+    
+    // 디스패처 서블릿 등록하기
+    Context context = tomcat.addContext("", "/");
+    tomcat.addServlet("", "dispatcher", dispatcher);
+    context.addServletMappingDecoded("/", "dispatcher"); // / 경로 호출에 대해 디스패처 서블릿을 실행한다.
+    
+    // 설정된 톰캣을 시작하기
+    tomcat.start();
+  }
+}
+```
+* 상술한 코드의 경우 서블릿 컨테이너 초기화 코드와 거의 유사한 것을 알 수 있다.
+  * 다만, 큰 차이가 있다면 개발자가 명시적으로 `main()` 메소드를 실행하는지 또는 서블릿 컨테이너가 제공하는 초기화 메소드를 활용하는지 여부가 다르다.
