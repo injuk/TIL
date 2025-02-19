@@ -449,7 +449,7 @@ public class EmbedTomcatServletMain {
 ### 내장 톰캣과 스프링 컨테이너의 통합
 * 상술한 코드와 앞서 다룬 프로그래밍적인 스프링 컨테이너 설정을 다음과 같이 조합할 경우 내장 톰캣 라이브러리와 스프링 컨테이너를 통합할 수 있다.
 ```java
-public class EmbedTomcatWithSpringtMain {
+public class EmbedTomcatWithSpringMain {
   public static void main(String[] args) throws LifecycleException {
     System.out.println("main");
     
@@ -481,3 +481,21 @@ public class EmbedTomcatWithSpringtMain {
 ```
 * 상술한 코드의 경우 서블릿 컨테이너 초기화 코드와 거의 유사한 것을 알 수 있다.
   * 다만, 큰 차이가 있다면 개발자가 명시적으로 `main()` 메소드를 실행하는지 또는 서블릿 컨테이너가 제공하는 초기화 메소드를 활용하는지 여부가 다르다.
+
+## 2025-02-19 Wed
+### 내장 톰캣을 활용하는 애플리케이션의 배포
+* Java 애플리케이션의 `main()` 메소드를 실행하기 위해서는 우선 JAR 형태로 빌드할 필요가 있으며, `META-INF/MANIFEST.MF`에 이를 지정해주어야 한다.
+  * 정확히는 해당 파일에 `main()` 메소드를 포함하는 클래스가 다음과 같이 명시되어야 한다.
+```
+Manifest-Version: 1.0
+Main-Class: ga.injuk.embed.EmbedTomcatWithSpringMain
+```
+* 반면, 이러한 작업은 그래들에 다음과 같은 `task`를 명시한 후 `./gradlew clean buildJar` 명령어를 입력하는 것으로 손쉽게 진행할 수 있다.
+```groovy
+task buildJar(type: Jar) {
+  manifest {
+    attributes 'Main-Class': 'ga.injuk.embed.EmbedTomcatWithSpringMain'
+  }
+  with jar
+}
+```
