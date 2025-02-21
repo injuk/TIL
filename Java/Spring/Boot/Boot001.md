@@ -509,3 +509,25 @@ task buildJar(type: Jar) {
 * **WAR 파일과 달리 JAR 파일은 내부에 라이브러리 역할을 수행하는 JAR 파일을 포함할 수 없으며, 강제로 포함시키더라도 인식이 되지 않는다**.
   * 이는 JAR 파일이 갖는 스펙 차원의 한계이며, 그렇다고 WAS 상에서만 실행 가능한 WAR 파일을 사용하는 것 역시 권장되지 않는다.
 * 가장 단순한 대안으로는 모든 JAR 파일을 구하여 `MANIFEST` 파일에 명시해주는 것이지만 이는 매우 번거롭고, 권장되지 않는 방법에 해당한다.
+
+## 2025-02-21 Fri
+### Fat JAR를 활용한 배포
+* 상술한 JAR 파일의 한계를 극복하기 위해, JAR 안에 필요한 모든 클래스를 포함하는 방식을 고려해볼 수 있다.
+  * 이러한 방식은 JAR가 JAR를 포함할 수 없지만 클래스는 얼마든지 포함할 수 있다는 점을 이용하며, `Fat JAR` 또는 `uber JAR` 라는 용어로 지칭한다.
+* 예를 들어 라이브러리 용도로 사용되는 JAR 파일을 unzip한 결과인 클래스들을 새로운 JAR 파일에 모두 포함시킬 수 있다.
+  * 결과물은 수많은 클래스를 포함하게 되며, `Fat JAR`라는 표현 역시 이로부터 기인한다.
+* 그래들의 경우 다음과 같은 사용자 정의 태스크를 명시한 후 `./gradlew buildFatJar` 명령어를 입력하는 것으로 `Fat JAR`를 간단히 생성할 수 있다.
+```groovy
+task buildFatJar(type: Jar) {
+  manifest {
+    attributes 'Main-Class': 'ga.injuk.embed.EmbedTomcatWithSpringMain'
+  }
+  duplicatesStrategy = DuplicatesStrategy.WARN
+  from {
+    configurations.runtimeClasspath.collect {
+      it.isDirectory() ? it : zipTree(it)
+    }
+  }
+  with jar
+}
+```
