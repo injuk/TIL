@@ -542,3 +542,66 @@ task buildFatJar(type: Jar) {
 * 반면, `Fat JAR` 역시 은탄환이 아니며 다음과 같은 여러 단점들을 수반한다.
   * 어떤 라이브러리가 포함되어 있는지 확인하기 어려워진다.
   * 여러 **라이브러리에 포함된 파일 이름의 중복을 해결할 수 없으며, 클래스와 리소스 이름이 같은 경우 무언가를 포기할 수 밖에 없다**.
+
+## 2025-02-23 Sun
+### 편리한 부트 클래스 작성하기
+* 다음과 같은 부트 클래스는 이름 그대로 시작 과정을 처리해주는 역할을 담당하며, 코드 상 내장 톰캣 실행부터 스프링과의 연결까지 모든 것을 처리한다.
+```java
+public class MySpringApplication {
+  public static void run(Class configClass, String[] args) {
+    System.out.println("run args=" + List.of(args));
+
+    // 톰캣 설정하기
+    Connector connector = new Connector();
+    connector.setPort(8080); // 톰캣이 제공하는 커넥터를 활용하여 8080 포트에 연결한다.
+
+    Tomcat tomcat = new Tomcat();
+    tomcat.setConnector(connector);
+
+    // 스프링 컨테이너 생성하기
+    AnnotationConfigWebApplicationContext appCtx = new AnnotationConfigWebApplicationContext();
+
+    // 스프링 컨테이너에 컨트롤러를 포함하는 Configuration 빈 등록하기
+    // 반면, **후술할 코드로부터 @ComponentScan 어노테이션이 할당된 클래스가 전달되므로 스프링 컨테이너 내부적으로 컴포넌트 스캔을 사용**하게 된다.
+    appCtx.register(configClass);
+
+    // 스프링 MVC 디스패처 서블릿 생성 및 스프링 컨테이너와 연결
+    DistpatcherServlet dispatcher = DistpatcherServlet(appCtx);
+
+    // 디스패처 서블릿 등록하기
+    Context context = tomcat.addContext("", "/");
+    tomcat.addServlet("", "dispatcher", dispatcher);
+    context.addServletMappingDecoded("/", "dispatcher"); // / 경로 호출에 대해 디스패처 서블릿을 실행한다.
+
+    // 설정된 톰캣을 시작하기
+    try {
+      tomcat.start();
+    } catch (LifecycleException e) {
+      throw new RuntimeException(e);
+    }
+  }
+}
+```
+* 또한, 사용자 정의 어노테이션을 다음과 같이 작성한다.
+  * 이 때, **`@ComponentScan`에 인자를 작성하지 않았으므로 해당 어노테이션이 명시된 클래스의 패키지와 모든 하위 패키지를 스캔 대상으로 적용**한다.
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@ComponentScan
+public @interface MySpringBootApplication {
+}
+```
+* 이제 작성된 어노테이션을 다음과 같이 `main` 역할을 수행할 클래스에 할당한다.
+  * **아래 코드로부터 `@MySpringBootApplication` 어노테이션이 할당된 클래스 자체를 설정으로 전달하므로 손쉬운 사용성을 제공**한다.
+  * 때문에 **함께 협업하는 다른 개발자들 역시 동일한 방법을 활용하여 컴포넌트 스캔을 손쉽게 사용**할 수 있게 된다.
+  * 이로 인해 내장 톰캣 실행과 스프링 컨테이너 생성, 그리고 디스패처 서블릿의 등록과 컴포넌트 스캔 모두 한 줄로 처리 가능하게 된다.
+```java
+@MySpringBootApplication
+public class MySpringBootMain {
+  public static void main(String[] args) {
+    // 자기 자신을 설정으로 사용하며, @MySpringBootApplication 어노테이션은 내부적으로 @ComponentScan을 명시하므로 컴포넌트 스캔이 적용된다.
+    MySpringApplication.run(MySpringBootMain.class, args);
+  }
+}
+```
