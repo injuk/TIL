@@ -605,3 +605,19 @@ public class MySpringBootMain {
   }
 }
 ```
+
+## 2025-02-24 Mon
+### 스프링 부트의 편리함
+* **상술한 모든 내용을 라이브러리화하여 배포할 경우, 그 자체가 스프링 부트**가 되는 것을 알 수 있다.
+* 예를 들어, 스프링 부트의 메인 클래스는 일반적으로 다음과 같은 형태를 갖는다.
+```java
+@SpringBootApplication
+public class MyApp {
+  public static void main(String[] args) {
+    SpringApplication.run(MyApp.class, args);
+  }
+}
+```
+* `@SpringBootApplication` 어노테이션은 `@ComponentScan`을 비롯한 여러 어노테이션을 내포한다.
+  * 때문에 상술한 코드와 동일한 이유에서 `SpringApplication.run()` 메소드에 전달하여 스프링 설정 정보로 사용할 수 있도록 지원한다.
+  * 다시 말해 **코드 한줄만으로 내장 톰캣과 스프링 컨테이너 생성 및 디스패처 서블릿의 연결과 컴포넌트 스캔까지 손쉽게 사용할 수 있도록 지원**한다.
