@@ -113,6 +113,7 @@
 ### Spring Boot
 ### 2025.01.16 ~ 2025.00.00
 * [Boot001](https://github.com/injuk/TIL/blob/master/Java/Spring/Boot/Boot001.md)
+* [Boot002](https://github.com/injuk/TIL/blob/master/Java/Spring/Boot/Boot002.md)
 
 ### DB I
 ### 2024.01.30 ~ 2024.03.21
