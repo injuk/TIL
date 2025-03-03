@@ -308,3 +308,13 @@ public class MyApp {
   * 이 때, 스프링 부트는 빌드시 스프링 부트 로더에 포함되는 모든 클래스들을 포함하는 JAR 파일을 생성한다.
 * 또한, 스프링 부트 로더는 `JarLauncher`를 통해 `BOOT-INF` 폴더 내부의 `classes`와 `lib` 폴더에 포함된 JAR 파일들을 읽어들여 사용한다.
   * 덧붙여 `BOOT-INF`와 같은 폴더는 WAR 파일 내부에 포함되는 내용 중 여러 사용자 클래스와 라이브러리를 포함하는 `WEB-INF` 폴더와 유사성이 있다.
+
+## 2025-03-03 Mon
+### 실행 가능한 JAR 파일의 실행 과정
+* `java -jar [파일명].jar` 명령어를 통해 실행 가능한 JAR 파일을 실행할 경우, 크게 다음과 같은 과정을 거쳐 스프링 부트 기반 애플리케이션이 실행된다.
+  1. `META-INF/MANIFEST.MF` 파일을 인식한다.
+  2. `JarLauncher` 클래스의 `main()` 메소드를 실행한다.
+  3. `JarLauncher` 및 스프링 부트 로더 클래스들에 의해 `BOOT-INF` 폴더의 `classes`와 `lib` 하위에 위치한 JAR 파일들이 인식된다.
+  4. `Start-Class`의 `main()` 메소드를 호출하는 것으로 애플리케이션이 실행된다.
+* 반면, IntelliJ와 같은 IDE 상에서는 `Start-Class`의 `main()` 메소드를 곧바로 실행하는 것처럼 보인다.
+  * 이는 IDE 차원에서 IDE가 필요한 모든 라이브러리를 인식할 수 있도록 지원하기 때문으로, 이 경우에는 `JarLauncher`와 클래스가 필요하지 않다.
