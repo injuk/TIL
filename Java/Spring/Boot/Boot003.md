@@ -135,3 +135,13 @@ dependencies {
   * 유사한 형태를 띄는 `@ConditionalXXX` 어노테이션들이 있으며, 이러한 어노테이션들은 모두 스프링 부트가 제공하는 자동 구성 기능의 핵심을 구성한다.
 * `@ConditionalOnMissingBean` 어노테이션은 인자에 명시된 유형의 빈이 없을 때에만 자동 구성을 실행하며, 이로 인해 개발자의 설정을 우선할 수 있다.
   * **해당 어노테이션은 `JdbcTemplate` 빈과 같이 동일한 유형의 빈이 여럿 등록되는 경우 충돌이 발생할 수 있는 가능성이 있는 경우에 활용**할 수 있다.
+
+## 2025-03-14 Fri
+### 스프링 부트가 제공하는 자동 구성 대상
+* 상술한 예를 들어, JDBC와 DB를 활용하는 애플리케이션은 다음과 같은 자동 구성 기능들이 필요한 빈을 등록한다.
+  1. `JdbcTemplateAutoConfiguration`: `JdbcTemplate` 빈을 자동 구성한다.
+  2. `DataSourceAutoConfiguration`: `DataSource` 빈을 자동 구성한다.
+  3. `DataSourceTransactionManagerAutoConfiguration`: `TransactionManager` 빈을 자동 구성한다.
+* 이들 자동 구성으로 인해 필요한 빈들이 각각 자동 등록되며, 이 밖에도 스프링 부트는 수 많은 자동 구성 기능을 제공한다.
+  * 이 때, 자동 구성이 가능한 대상들은 모두 스프링 부트의 공식 문서에 정리되어 있으므로 필요한 경우 참고할 수 있다.
+* 앞서 다뤘듯, 이러한 **자동 구성은 `spring-boot-autoconfigure` 프로젝트에 모여 있으며 스프링 부트의 경우 해당 라이브러리를 기본으로 포함**한다.
