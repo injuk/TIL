@@ -152,3 +152,15 @@ dependencies {
 * 이 때, 일반적으로 자동 설정이란 빈을 자동으로 등록하여 스프링이 동작할 수 있는 환경을 설정하므로 더 넓은 의미로 사용된다.
 * 반면, 자동 구성은 스프링이 실행되는 과정에서 필수적으로 필요한 빈들을 일종의 구성 요소로써 자동 배치하는 것과 같이 상대적으로 더 좁은 의미에 가깝다.
 * 그러나 **이러한 용어의 구분에 크게 집착할 필요는 없으며, 문맥에 따라 미묘한 차이 포함할 수 있다는 점을 기억하는 것이 바람직**하다.
+
+## 2025-03-16 Sun
+### @Conditional 어노테이션
+* 예를 들어 특정한 조건을 만족하는 경우를 쉽게 판별할 수 있도록 스프링 부트는 `@Conditional` 어노테이션을 제공한다.
+* 이 때, 이러한 기능을 사용하기 위해서는 우선 다음과 같은 `Condition` 인터페이스를 구현할 필요가 있다.
+```java
+public interface Condition {
+    boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata);
+}
+```
+* `Condition` 인터페이스가 제공하는 `matches()` 메소드가 참을 반환할 경우 조건을 만족한 것으로 판정하여 동작하며, 거짓을 반환할 경우 동작하지 않는다.
+  * 이 때, `ConditionContext`는 스프링 컨테이너나 환경 정보 등의 정보를 포함하고 `AnnotatedTypeMetadata`는 어노테이션의 메타데이터를 포함한다.
