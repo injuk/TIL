@@ -164,3 +164,26 @@ public interface Condition {
 ```
 * `Condition` 인터페이스가 제공하는 `matches()` 메소드가 참을 반환할 경우 조건을 만족한 것으로 판정하여 동작하며, 거짓을 반환할 경우 동작하지 않는다.
   * 이 때, `ConditionContext`는 스프링 컨테이너나 환경 정보 등의 정보를 포함하고 `AnnotatedTypeMetadata`는 어노테이션의 메타데이터를 포함한다.
+
+## 2025-03-17 Mon
+### @Conditional 어노테이션 활용하기
+* 어떠한 조건에 따라 적용될 수 있도록 `Condition` 인터페이스를 구현하는 경우, 다음과 같은 클래스를 작성해볼 수 있다.
+```java
+public class MyCondition implements Condition {
+  @Override
+  public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+      // 여기에 로직 적으로 적용 여부를 반환할 수 있도록 작성한다.
+      return true;
+  }
+}
+```
+* 이렇게 작성된 `Condition` 구현체는 다음과 같이 `@Configuration` 클래스에 적용할 수 있다.
+  * 이 경우, **`MyCondition` 클래스의 `matches()` 메소드가 참을 반환하는 경우에만 `MyConfig`의 빈들이 등록**된다.
+  * 반면, 스프링이 로딩되는 과정은 복잡하기 때문에 해당 `Condition` 구현체가 여러 번 호출될 수 있다.
+```java
+@Configuration
+@Conditional(MyCondition.class)
+public class MyConfig {
+  // ...생략
+}
+```
