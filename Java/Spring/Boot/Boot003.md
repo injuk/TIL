@@ -187,3 +187,10 @@ public class MyConfig {
   // ...생략
 }
 ```
+
+## 2025-03-18 Tue
+### 다양한 @Conditional 어노테이션 활용하기
+* 반면, 유사한 코드를 계속해서 다시 개발하는 일이 없도록 스프링은 이미 수많은 `@Conditional` 어노테이션을 제공한다.
+* 예를 들어, 환경 변수나 실행 인자 등을 기반으로 적용 여부를 결정한다면 `@ConditionalOnProperty` 어노테이션을 활용할 수 있다.
+  * 해당 어노테이션의 경우 `@ConditionalOnProperty(name = "[프로퍼티명]", havingValue = "[검증대상값])` 형태로 사용할 수 있다.
+  * 물론, 해당 어노테이션 역시 내부적으로는 `@Conditional` 어노테이션을 사용하며 인자로 `Condition` 인터페이스의 구현체를 명시하고 있다.
