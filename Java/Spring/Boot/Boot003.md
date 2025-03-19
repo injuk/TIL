@@ -194,3 +194,12 @@ public class MyConfig {
 * 예를 들어, 환경 변수나 실행 인자 등을 기반으로 적용 여부를 결정한다면 `@ConditionalOnProperty` 어노테이션을 활용할 수 있다.
   * 해당 어노테이션의 경우 `@ConditionalOnProperty(name = "[프로퍼티명]", havingValue = "[검증대상값])` 형태로 사용할 수 있다.
   * 물론, 해당 어노테이션 역시 내부적으로는 `@Conditional` 어노테이션을 사용하며 인자로 `Condition` 인터페이스의 구현체를 명시하고 있다.
+
+## 2025-03-19 Wed
+### 스프링이 제공하는 @ConditionalOnXXX 어노테이션 - I
+* 스프링은 `@Conditional` 어노테이션과 관련하여 개발자가 편리하게 사용할 수 있을만한 수 많은 어노테이션을 다음과 같이 제공한다.
+  1. `@ConditionalOnClass`: 명시된 클래스가 있는 경우에만 동작한다.
+  2. `@ConditionalOnMissingClass`: 명시된 클래스가 없는 경우에만 동작한다.
+  3. `@ConditionalOnBean`: 명시된 빈이 등록된 경우에만 동작한다.
+  4. `@ConditionalOnMissingBean`: 명시된 빈이 등록되지 않은 경우에만 동작한다.
+  5. `@ConditionalOnProperty`: 명시된 환경 정보가 있는 경우에만 동작한다.
