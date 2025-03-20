@@ -203,3 +203,13 @@ public class MyConfig {
   3. `@ConditionalOnBean`: 명시된 빈이 등록된 경우에만 동작한다.
   4. `@ConditionalOnMissingBean`: 명시된 빈이 등록되지 않은 경우에만 동작한다.
   5. `@ConditionalOnProperty`: 명시된 환경 정보가 있는 경우에만 동작한다.
+
+## 2025-03-20 Thu
+### 스프링이 제공하는 @ConditionalOnXXX 어노테이션들
+* 스프링은 또한 다음과 같은 `@Conditional` 관련 어노테이션들을 제공한다.
+  1. `@ConditionalOnResource`: 명시된 리소스가 있는 경우에만 동작한다.
+  2. `@ConditionalOnWebApplication`: 웹 애플리케이션인 경우에만 동작한다.
+  3. `@ConditionalOnNotWebApplication`: 웹 애플리케이션이 아닌 경우에만 동작한다.
+  4. `@ConditionalOnExpression`: `SpEL` 표현식을 만족하는 경우에만 동작한다.
+* 이렇듯 **`@ConditionalOnXXX` 어노테이션들은 직관적인 이름을 갖기에 동작을 바로 이해할 수 있으며, 주로 스프링 부트의 자동 구성에 사용**된다.
+* 추가적으로, `@Conditional` 어노테이션 자체는 스프링에 포함되는 반면 스프링 부트가 이를 확장한 `@ConditionalOnXXX` 어노테이션을 제공한다.
