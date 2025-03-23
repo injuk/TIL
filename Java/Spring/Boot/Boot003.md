@@ -239,3 +239,19 @@ dependencies {
   * 이는 나만의 라이브러리가 스프링 부트의 자동 구성 기능을 제공하지 않고, 컴포넌트 스캔 설정을 수정하지도 않은 경우에 해당한다.
 * 그러나 이러한 설정 방식은 개발자가 해당 라이브러리에 포함된 스프링 빈의 등록 방법을 모두 이해하고, 이를 코드로 직접 개발해야 한다는 번거로움이 수반된다.
 * 이러한 작업은 귀찮으면서도 휴먼 에러의 발생 가능성이 높으므로, 이를 자동으로 처리할 수 있도록 스프링 부트의 자동 구성을 활용하는 것을 고려해볼 수 있다. 
+
+## 2025-03-23 Sun
+### 번외 - 나만의 라이브러리에 자동 구성 기능을 추가하기
+* 예를 들어 `@RestController` 어노테이션이 명시된 컨트롤러에 대해 실행 인자에 따른 자동 구성 기능을 제공하고자 하는 경우, 다음과 같이 구현할 수 있다.
+```java
+import javax.management.MXBean;
+
+@AutoConfiguration
+@ConditionalOnProperty(name = "mode", havingValue = "on")
+public class MyAutoConfiguration {
+  @Bean
+  public MyController myController() {
+    return new MyController();
+  }
+} 
+```
