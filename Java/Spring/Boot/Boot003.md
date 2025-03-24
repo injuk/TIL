@@ -255,3 +255,17 @@ public class MyAutoConfiguration {
   }
 } 
 ```
+
+## 2025-03-24 Mon
+### 번외 - 자동 구성 대상 명시하기
+* **여기에 그치지 않고, `META-INF` 경로에 포함된 파일에 자동 구성 대상을 다음과 같이 반드시 명시해주어야 자동 구성 기능을 제공**할 수 있게 된다.
+  * 스프링 부트는 애플리케이션 시작시 아래와 같은 패키지 경로에 포함된 `긴 이름의 파일`에 명시된 정보를 읽어들여 자동 구성에 활용한다.
+  * 아래의 경우, **명시된 내용은 패키지를 포함한 자동 구성 클래스인 `myapp.MyAutoConfiguration`이므로 해당 설정 파일이 자동으로 처리**된다.
+```shell
+# src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
+myapp.MyAutoConfiguration
+```
+* 이 때, 파일 이름이 `org.springframework.boot.autoconfigure.AutoConfiguration.imports`와 같이 긴 것에 주의해야 한다.
+* 상술한 모든 과정을 올바르게 진행할 경우, 애플리케이션이 실행되는 과정에서 찾아낸 모든 `@AutoConfiguration` 설정을 조건에 따라 실행하게 된다.
+  * 예를 들어, **스프링 부트 애플리케이션은 실행 과정에서 자신이 포함하는 모든 라이브러리로부터 상술한 파일들을 읽어들인 후 필요한 자동 구성을 실행**한다.
+  * 때문에 `-Dmode=on`과 같은 인자와 함께 애플리케이션을 실행한 경우 `MyAutoConfiguration` 클래스에 명시된 내용에 따라 스프링 빈을 등록한다.
