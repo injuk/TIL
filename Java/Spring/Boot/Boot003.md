@@ -269,3 +269,14 @@ myapp.MyAutoConfiguration
 * 상술한 모든 과정을 올바르게 진행할 경우, 애플리케이션이 실행되는 과정에서 찾아낸 모든 `@AutoConfiguration` 설정을 조건에 따라 실행하게 된다.
   * 예를 들어, **스프링 부트 애플리케이션은 실행 과정에서 자신이 포함하는 모든 라이브러리로부터 상술한 파일들을 읽어들인 후 필요한 자동 구성을 실행**한다.
   * 때문에 `-Dmode=on`과 같은 인자와 함께 애플리케이션을 실행한 경우 `MyAutoConfiguration` 클래스에 명시된 내용에 따라 스프링 빈을 등록한다.
+
+## 2025-03-25 Tue
+### 스프링 부트의 자동 구성 원리
+* 상술한 바와 같이, 스프링 부트는 `src`로부터 시작하여 `org.[...생략].AutoConfiguration.imports` 파일을 조회하여 자동 구성에 활용한다.
+  * 이 때, **스프링은 애플리케이션에 포함된 모든 라이브러리에 대해 해당 파일을 찾아 내용을 조회하여 필요한 자동 구성을 등록하는 형태로 동작**한다.
+* 스프링 부트의 자동 구성은 크게 다음과 같은 순서에 따라 동작하는 것으로 이해할 수 있다.
+  1. `@SpringBootApplication`: 일반적으로 `main()`이 위치하는, 해당 어노테이션이 할당된 클래스를 설정 정보로 사용한다는 의미를 갖는다.
+  2. `@EnableAutoConfiguration`: `@SpringBootApplication`에 포함되어 있으며, 스프링 부트의 자동 구성을 활성화하는 기능을 제공한다.
+  3. `@Import(AutoConfigurationImportSelector.class)`: `@EnableAutoConfiguration`에 포함되며, 인자로 클래스를 전달 받는다.
+* 이 때, `@Import` 어노테이션은 일반적으로 `@Configuration`과 같은 스프링 설정 정보를 포함하기 위해 사용한다.
+  * 반면, 상술한 **`@Import`에 인자로 전달된 `AutoConfigurationImportSelector` 클래스는 `@Configuration` 어노테이션을 포함하지 않는다**.
