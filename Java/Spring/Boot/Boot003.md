@@ -280,3 +280,16 @@ myapp.MyAutoConfiguration
   3. `@Import(AutoConfigurationImportSelector.class)`: `@EnableAutoConfiguration`에 포함되며, 인자로 클래스를 전달 받는다.
 * 이 때, `@Import` 어노테이션은 일반적으로 `@Configuration`과 같은 스프링 설정 정보를 포함하기 위해 사용한다.
   * 반면, 상술한 **`@Import`에 인자로 전달된 `AutoConfigurationImportSelector` 클래스는 `@Configuration` 어노테이션을 포함하지 않는다**.
+
+## 2025-03-26 Wed
+### ImportSelector 인터페이스의 필요성
+* `@Import` 어노테이션을 통해 설정 정보를 추가하는 방법은 크게 다음과 같이 분류할 수 있다.
+  1. 정적인 방식: `@Import([클래스명])`과 같이 입력하는 것으로 설정 정보를 추가할 수 있으나, 대상은 동적으로 변경이 불가능하다.
+  2. 동적인 방식: `@Import([ImportSelector구현체])`와 같이 입력하는 것으로 설정 대상을 동적으로 결정할 수 있다.
+* 즉, 정적인 방식의 경우 아래와 같은 코드를 통해 설정 정보인 `MyConfiguration` 클래스를 정적으로 추가할 수 있다.
+```java
+@Configuration
+@Import(MyConfiguration.class)
+public class ApplicationConfiguration {}
+```
+* 반면, 상술한 방식은 설정 정보가 임의의 조건에 따라 동적으로 결정되는 경우에 대응이 불가능하기에 스프링은 `ImportSelector` 인터페이스를 제공한다.
