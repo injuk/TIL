@@ -293,3 +293,25 @@ myapp.MyAutoConfiguration
 public class ApplicationConfiguration {}
 ```
 * 반면, 상술한 방식은 설정 정보가 임의의 조건에 따라 동적으로 결정되는 경우에 대응이 불가능하기에 스프링은 `ImportSelector` 인터페이스를 제공한다.
+
+## 2025-03-27 Thu
+### ImportSelector 인터페이스 구현하기
+* 스프링은 임의의 조건에 따라 설정 정보가 동적으로 결정될 수 있도록 `ImportSelector` 인터페이스를 제공하며, 이는 기본적으로 다음과 같은 구조를 갖는다.
+  * 즉, 상술한 방식과 같이 하드코딩 형태로 설정 정보를 명시하는 대신 적용될 설정 정보를 프로그래밍적으로 결정할 수 있도록 지원한다.
+```java
+public interface ImportSelector {
+    String[] selectImports(AnnotationMetadata importingClassMetadata);
+    // ...생략
+}
+```
+* 이 때, `selectImports()` 메소드의 반환 값은 적용하고자 하는 설정 정보 클래스의 이름을 패키지명을 포함하여 작성한 문자열 배열이 된다.
+  * 예를 들어 `ga.injuk.MyConfiguration` 클래스를 설정 정보로 적용하고자 하는 경우, 아래와 같이 `ImportSelector` 인터페이스를 구현할 수 있다.
+  * 물론 이 경우에는 해당 메소드로부터 반환되는 문자열이 표현하는 경로에 해당하는 설정 정보가 적용된다.
+```java
+public class MyImportSelector implements ImportSelector {
+    @Override
+    String[] selectImports(AnnotationMetadata importingClassMetadata) {
+        return new String[]{"ga.injuk.MyConfiguration"};
+    }
+}
+```
