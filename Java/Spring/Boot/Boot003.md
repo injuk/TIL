@@ -315,3 +315,25 @@ public class MyImportSelector implements ImportSelector {
     }
 }
 ```
+
+## 2025-03-28 Fri
+### 정적인 설정 정보 적용 방식
+* 상술한 내용 중 정적인 방식의 경우, 다음과 같은 테스트 코드를 통해 그 동작을 확인할 수 있다.
+```java
+public class StaticTest {
+    @Test
+    void staticConfiguration() {
+        AnnotationConfigApplicationContext appCtx = new AnnotationConfigApplicationContext(StaticConfiguration.class);
+        
+        MyBean bean = appCtx.getBean(MyBean.class);
+        
+        Assertions.assertThat(bean).isNotNull();
+    }
+    
+    @Configuration
+    @Import(MyConfiguration.class)
+    public static class StaticConfig {}
+}
+```
+* 이 경우, 스프링 컨테이너인 `ctx`에서 `MyConfiguration` 설정 정보가 명시하는 빈을 이름으로 조회할 수 있게 된다.
+  * 즉, 어떠한 설정 정보에 포함된 빈이 필요한 경우 해당 설정 정보의 클래스 명을 `@Import` 어노테이션의 인자에 그대로 전달할 수 있다.
