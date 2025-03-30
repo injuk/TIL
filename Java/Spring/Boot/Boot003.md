@@ -359,3 +359,22 @@ public class DynamicTest {
 ```
 * 이 경우, `@Import` 어노테이션의 인자로 전달된 `ImportSelector` 인터페이스 구현체의 `selectImports()` 메소드를 호출하게 된다.
   * 결과로는 문자열이 반환되며, 해당 문자열은 패키지를 포함한 설정 정보 클래스의 전체 경로로 취급된다.
+
+## 2025-03-30 Sun
+### @EnableAutoConfiguration 어노테이션의 동작 원리
+* 상술한 과정에서 `@Import`와 `ImportSelector`를 이해했으므로, 다음과 같은 `@EnableAutoConfiguration` 어노테이션을 이해할 수 있게 된다.
+```java
+@AutoConfigurationPackage
+@Import(AutoConfigurationImportSelector.class)
+public @interface EnableAutoConfiguration {
+    // ...생략
+}
+```
+* `AutoConfigurationImportSelector` 클래스는 `ImportSelector`의 구현체이므로, 설정 정보를 동적으로 선택할 수 있도록 지원한다.
+  * 해당 클래스는 모든 라이브러리에 포함된 `org.springframework.boot.autoconfigure.AutoConfiguration.imports` 파일을 읽어들여 동작한다.
+* 결국 스프링 부트 자동 구성의 동작 방식은 다음과 같은 순서로 정리해볼 수 있다.
+  1. `@SpringBootApplication` 어노테이션
+  2. `@EnableAutoConfiguration` 어노테이션
+  3. `@Import(AutoConfigurationImportSelector.class)` 어노테이션
+  4. `resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 파일
+  5. 4.의 파일에 명시된 설정 정보가 조회되어 스프링 컨테이너에 등록
