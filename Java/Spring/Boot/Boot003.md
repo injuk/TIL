@@ -378,3 +378,22 @@ public @interface EnableAutoConfiguration {
   3. `@Import(AutoConfigurationImportSelector.class)` 어노테이션
   4. `resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 파일
   5. 4.의 파일에 명시된 설정 정보가 조회되어 스프링 컨테이너에 등록
+
+## 2025-03-31 Mon
+### 자동 구성 설정 주의 사항
+> @AutoConfiguration 어노테이션이 명시된 자동 구성 설정 파일은 컴포넌트 스캔 대상이 되지 않아야 한다.
+* 스프링 부트의 자동 구성을 직접 구현하는 경우, `@AutoConfiguration`에 자동 구성 순서를 명시할 수 있다.
+* `@AutoConfiguration`는 내부적으로 `@Configuration`을 포함하므로, 이 역시 일종의 설정 파일로 이해할 수 있다.
+  * 그러나 **이러한 설정 파일은 일반적인 스프링 설정과는 다른 생명 주기를 가져야하기에 파일에 명시해야 하며 컴포넌트 스캔의 대상은 되지 않아야 한다**.
+  * 때문에 스프링 부트의 컴포넌트 스캔 과정은 `@AutoConfiguration` 설정 파일을 제외하는 `AutoConfigurationExcludeFilter`를 포함한다.
+```java
+@SpringBootConfiguration
+@EnableAutoConfiguration
+@ComponentScan(excludeFilters = { @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class), 
+        @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })
+public @interface SpringBootApplication {
+    // ...생략
+}
+```
+* 자동 구성은 내부적으로 컴포넌트 스캔을 사용하지 않아야하는 반면, `@Import`를 활용한 설정 정보 파일 사용은 가능하다.
+  * 즉, `@AutoConfiguration` 어노테이션이 명시된 클래스에 `@ComponentScan`도 함께 명시하지 않아야 하는 반면 `@Import`는 사용이 가능하다.
