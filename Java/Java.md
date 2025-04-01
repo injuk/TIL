@@ -115,6 +115,7 @@
 * [Boot001](https://github.com/injuk/TIL/blob/master/Java/Spring/Boot/Boot001.md)
 * [Boot002](https://github.com/injuk/TIL/blob/master/Java/Spring/Boot/Boot002.md)
 * [Boot003](https://github.com/injuk/TIL/blob/master/Java/Spring/Boot/Boot003.md)
+* [Boot004](https://github.com/injuk/TIL/blob/master/Java/Spring/Boot/Boot004.md)
 
 ### DB I
 ### 2024.01.30 ~ 2024.03.21
