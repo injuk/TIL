@@ -175,3 +175,24 @@ public class OsEnv {
 * 이렇듯 필요한 값을 운영체제의 환경 변수로 등록하는 것으로 외부 설정을 손쉽게 활용할 수 있으며, 실무에서는 서버 별로 환경 변수를 달리 설정하게 된다.
 * 반면, 운영체제 환경 변수는 해당 운영체제에서 동작하는 모든 프로세스가 동일하게 사용하는 일종의 전역 변수로서 기능하게 된다.
   * 때문에 이러한 방식은 다른 프로세스에 영향을 줄 수 있으므로, 임의의 Java 애플리케이션에만 외부 설정을 적용하고자 하는 경우 다른 방법을 고려해야 한다.
+
+## 2025-04-06 Sun
+### Java 설정으로 외부 설정 값을 주입하기
+* **Java 시스템 속성은 실행한 JVM 내에서 접근 가능한 외부 설정 값이며, 이 중에는 Java 차원에서 미리 설정해두고 사용하는 속성들 역시 존재**한다.
+* Java 시스템 속성의 경우, 실행시 `java -Dstage=dev -jar myapp.jar` 형태와 같이 VM 옵션인 `-D` 인자를 통해 전달한다.
+  * 이 경우 **순서에 주의해야 하며, `-jar` 인자 앞에 `-D` 옵션을 부여**해야 한다.
+* Java의 경우, `System.getProperties()` 메소드를 호출하는 것으로 JVM에서 접근 가능한 외부 설정 값 목록에 접근이 가능하다.
+  * 해당 메소드의 반환 타입은 `Properties` 타입이며, 다음과 같이 `System.getProperty()` 메소드를 통해 각 설정 값에 접근이 가능하다.
+```java
+public class JavaSystemProperties {
+  public static void main(String[] args) {
+    Properties props = System.getProperties();
+    for (Object key: props.keySet()) {
+        log.info("prop {}={}", key, System.getProperty(String.valueOf(key)));
+    }
+  }
+}
+```
+* 이렇듯 **`System.getProperties()` 메소드는 `Map`의 자식 타입인 `Properties`를 반환하며, 이를 통해 Java 시스템 속성에 접근이 가능**하다.
+* 참고로, `System.setProperty("myprop", "my-value")` 형태로 코드 상에서 시스템 속성을 설정하는 것 역시 가능하다.
+  * 그러나 이 경우 코드 상에 시스템 속성을 결정하는 내용이 작성되므로, 외부 설정을 분리하는 이점을 누릴 수 없음에 주의해야 한다.
