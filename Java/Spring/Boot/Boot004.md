@@ -196,3 +196,20 @@ public class JavaSystemProperties {
 * 이렇듯 **`System.getProperties()` 메소드는 `Map`의 자식 타입인 `Properties`를 반환하며, 이를 통해 Java 시스템 속성에 접근이 가능**하다.
 * 참고로, `System.setProperty("myprop", "my-value")` 형태로 코드 상에서 시스템 속성을 설정하는 것 역시 가능하다.
   * 그러나 이 경우 코드 상에 시스템 속성을 결정하는 내용이 작성되므로, 외부 설정을 분리하는 이점을 누릴 수 없음에 주의해야 한다.
+
+## 2025-04-07 Mon
+### 실행 인자로 외부 설정 값을 주입하기
+* 메인 메소드 호출 형태을 예로 들어, 인자로 주입되는 `args`와 같이 Java 애플리케이션 실행 시 전달되는 인자를 통해 외부 설정 값을 주입받을 수 있다.
+  * 예를 들어, `java -jar myapp.jar paramA paramB`와 같은 형태의 실행에서 `paramA`와 `paramB`가 실행 인자에 해당한다.
+* 이는 Java의 기본 문법에 해당하므로, 다음과 같은 간단한 메인 클래스를 통해 실행 인자 정보를 확인하는 것이 가능하다.
+```java
+public class CommandLineV1 {
+  public static void main(String[] args) {
+    for (String arg : args) {
+        log.info("arg {}", arg);
+    }
+  }
+}
+```
+* 반면, 일반적으로는 사용성을 위해 실행 인자에 `key=value` 형태를 전달하게 되나 이를 직접 파싱해줘야하는 한계가 존재한다.
+  * 예를 들어, 실행 인자에서 `endpoint=dev.com`을 전달했다고 하면 `=` 기호를 기준으로 좌항을 키 / 우항을 값으로 매핑하는 로직이 작성되어야 한다.
