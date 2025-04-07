@@ -213,3 +213,33 @@ public class CommandLineV1 {
 ```
 * 반면, 일반적으로는 사용성을 위해 실행 인자에 `key=value` 형태를 전달하게 되나 이를 직접 파싱해줘야하는 한계가 존재한다.
   * 예를 들어, 실행 인자에서 `endpoint=dev.com`을 전달했다고 하면 `=` 기호를 기준으로 좌항을 키 / 우항을 값으로 매핑하는 로직이 작성되어야 한다.
+
+## 2025-04-08 Tue
+### 스프링과 커맨드 라인 옵션 인자
+* 상술한 내용과 같이, Java의 실행 인자로 전달된 문자열은 모두 키-값 쌍으로 매핑하는 작업이 필요하며 이는 번거롭고 에러 발생 가능성도 높은 축에 속한다.
+* 때문에 **스프링 진영에서는 이를 쉽게 사용할 수 있도록 스프링만의 표준을 정립하였고, 이를 `커맨드 라인 옵션 인자`라는 용어로 지칭**한다.
+* **`커맨드 라인 옵션 인자`는 `--` 기호를 사용하며, `--key=value` 형태의 인자는 아래와 같이 자동으로 키-값 쌍으로 인식하여 매핑**한다.
+  * 이 때, `--username=me --username=you`와 같이 동일한 키에 대해 여러 값을 매핑할 수도 있다.
+```java
+public class CommandLineV2 {
+  public static void main(String[] args) {
+    for (String arg : args) {
+        log.info("arg {}", arg);
+    }
+    
+    ApplicationArguments appArgs = new DefaultApplicationArguments(args);
+    log.info("SourceArgs = {}", List.of(appArgs.getSourceArgs()));
+    log.info("NonOptionArgs = {}", appArgs.getNonOptionArgs());
+    log.info("OptionNames = {}", appArgs.getOptionNames());
+    
+    Set<String> names = appArgs.getOptionNames();
+    for (String name : names) {
+      log.info("option arg {} = {}", name, appArgs.getOptionValues(name));
+    }
+    
+    // 아래의 경우, myArg 인자를 전달하지 않았거나 --를 붙이지 않고 myArg=42 형태로 전달했다면 커맨드 라인 옵션 인자로 취급되지 않아 null이 반환된다.
+    // List<String> values = appArgs.getOptionValues("myArg");
+  }
+}
+```
+* 이러한 **`커맨드 라인 옵션 인자`는 Java 표준이 아니며, 스프링 진영에서 개발 편의성을 위해 제공하는 기능으로 이해하는 것이 바람직**하다. 
