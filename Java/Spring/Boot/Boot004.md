@@ -258,3 +258,10 @@ public class CommandLineV2 {
   * 이러한 단점은 임의의 방식을 또 다른 방식으로 변경하고자 하는 수정 사항이 발생했을 때 애플리케이션 전역적인 수정을 유발할 잠재적인 위험성을 갖는다.
 * 외부 설정이 어디에 위치하든지와 관계 없이 이를 일관성 있게, 유연하게 조회할 수 있다면 더 편리하고 견고한 애플리케이션 작성이 가능하다.
   * **스프링 진영에서는 이러한 문제를 해결하기 위해 `Environment`와 `PropertySource`라는 추상화 계층을 제공**한다.
+
+## 2025-04-11 Fri
+### PropertySource란?
+* `PropertySource`는 스프링 코어에 포함되는 추상 클래스이며, 외부 설정의 종류에 따라 구현된 `XXXPropertySource` 구현체를 갖는다.
+  * 예를 들어, `CommandLinePropertySource`나 `SystemEnvironmentPropertySource` 등이 있다.
+* **스프링은 스프링 기반 애플리케이션이 로딩되는 시점에 필요한 `PropertySource` 구현체들을 생성하며, `Environment`에 연결하는 방식으로 동작**한다.
+  * 덕분에 `Environment`는 여러 `PropertySource` 구현체에 접근하여 사용하는 것이 가능하다.
