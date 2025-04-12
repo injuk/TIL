@@ -265,3 +265,12 @@ public class CommandLineV2 {
   * 예를 들어, `CommandLinePropertySource`나 `SystemEnvironmentPropertySource` 등이 있다.
 * **스프링은 스프링 기반 애플리케이션이 로딩되는 시점에 필요한 `PropertySource` 구현체들을 생성하며, `Environment`에 연결하는 방식으로 동작**한다.
   * 덕분에 `Environment`는 여러 `PropertySource` 구현체에 접근하여 사용하는 것이 가능하다.
+
+## 2025-04-12 Sat
+### Environment란?
+> 모든 외부 설정은 Environment만으로 접근이 가능하다.
+* **`Environment` 역시 스프링 코어에 포함되며, 임의의 키-값 형태의 외부 설정에 종속되지 않고 일관된 방식으로 접근할 수 있도록 지원**한다.
+  * 예를 들어, `env.getProperty([키])` 메소드 호출을 통해 임의의 키에 대응되는 값에 접근할 수 있다.
+* **`Environment`는 내부적인 동작 과정에서 여러 `PropertySource`에 접근이 가능하며, 동일한 키 쌍이 존재할 경우 미리 정해진 우선 순위**를 따른다.
+  * 다시 말해, 임의의 외부 설정 키에 대해 조회할 경우 `Environment`는 자신이 접근 가능한 `PropertySource`에 대해 우선 순위에 따라 조회한다.
+* 익히 알려진 `application.properties` 역시 외부 설정에 해당하므로 `PropertySource`에 추가되어 `Environment`에 의한 접근이 가능하다.
