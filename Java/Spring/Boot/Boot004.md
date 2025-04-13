@@ -274,3 +274,24 @@ public class CommandLineV2 {
 * **`Environment`는 내부적인 동작 과정에서 여러 `PropertySource`에 접근이 가능하며, 동일한 키 쌍이 존재할 경우 미리 정해진 우선 순위**를 따른다.
   * 다시 말해, 임의의 외부 설정 키에 대해 조회할 경우 `Environment`는 자신이 접근 가능한 `PropertySource`에 대해 우선 순위에 따라 조회한다.
 * 익히 알려진 `application.properties` 역시 외부 설정에 해당하므로 `PropertySource`에 추가되어 `Environment`에 의한 접근이 가능하다.
+
+## 2025-04-13 Sun
+### Environment 사용하기
+* `Environment` 역시 스프링 기반 애플리케이션의 동작 과정에서 빈으로 등록되므로, 다음과 같이 다른 빈에 의해 주입될 수 있다.
+  * 때문에 주입 받은 `Environment` 클래스에 대해 `env.getProperty([키])` 메소드를 호출하여 필요한 외부 설정 값에 접근할 수 있게 된다.
+```java
+@Component
+public class EnvironmentTest {
+  private final Environment env;
+
+  public EnvironmentTest(Environment env) {
+    this.env = env;
+  }
+
+  @PostConstruct
+  public void init() {
+      logger.info("something = {}", env.getProperty("something"));
+  }
+}
+```
+* 이렇듯 스프링은 외부 설정을 조회하는 방법을 추상화한 `Environment` 클래스를 제공하므로, 외부 설정 주입 방식이 변경되더라도 코드를 수정할 필요가 없다.
