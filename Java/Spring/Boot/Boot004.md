@@ -358,3 +358,12 @@ schema=my_schema
   * 예를 들어, `application-dev.properties` 파일을 조회하기 위해서는 이를 알릴 수 있는 별도의 설정 값이 필요하다.
   * 이를 위해 `profile`을 사용할 수 있으며, 예를 들어 `profile=dev` 설정을 사용할 경우 `application-dev.properties` 파일이 조회된다.
   * 이렇듯 **스프링은 이미 설정 데이터를 외부로 분리하고, 외부로부터 전달된 설정 값 중 `profile` 정보에 따라 각 파일을 조회하는 기능을 제공**한다.
+
+## 2025-04-20 Sun
+### 프로필이란?
+* 스프링은 상술한 `환경 별로 어떤 설정 파일을 조회할지 결정하는 구분 값`을 `profile`이라는 개념으로 제공한다.
+* 예를 들어, **`spring.profiles.active`라는 키를 갖는 외부 설정에 값을 작성할 경우 해당 프로필을 사용하는 것으로 판단**한다.
+* 또한, `application-{profile}.properties` 형태의 규칙으로 작성된 설정 데이터는 각각 대응되는 프로필에 맞추어 조회한다.
+  * 예를 들어 `spring.profiles.active=dev`가 작성된 경우 `application-dev.properties` 설정 데이터가 조회된다.
+* 이 때, **`profile` 정보는 운영 체제의 환경 변수나 Java 시스템 속성 또는 커맨드 라인 옵션 인자 형태로 애플리케이션에 적용**될 수 있다.
+  * 예를 들어, `-Dspring.profiles.active=dev` 형태의 Java 시스템 속성으로 `profile` 정보를 애플리케이션에 전달할 수 있다.
