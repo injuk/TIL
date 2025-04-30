@@ -174,3 +174,33 @@ password=prod_pw
   1. `Environment` 클래스
   2. `@Value` 어노테이션을 활용한 설정 데이터 주입
   3. `@ConfigurationProperties` 어노테이션을 활용한 타입 안전 데이터 주입
+
+## 2025-04-30 Wed
+### Environment 클래스를 활용한 외부 설정 데이터 주입
+* 예를 들어 `Environment` 클래스를 활용하여 외부 설정 데이터를 임의의 빈 클래스에 주입하는 경우, 다음과 같은 `@Configuration`을 작성할 수 있다.
+  * 이 때, 필요한 설정 데이터는 모두 `application.properties` 파일에 작성되어 있다고 가정한다.
+```java
+@Configuration
+public class EnvironmentConfiguration {
+    private final Environment env;
+    
+    // Environment 클래스는 별도의 작업 없이도 스프링에 의해 빈으로 등록되므로 자동으로 주입받을 수 있다.
+    public EnvironmentConfiguration(Environment env) {
+        this.env = env;
+    }
+    
+    @Bean
+    public MyDataSource myDataSource() {
+        String url = env.getProperty("my.datasource.url");
+        int maxConnection = env.getProperty("my.datasource.etc.max-connection", Integer.class); // 타입 정보를 전달할 수 있다.
+        Duration timeout = env.getProperty("my.datasource.etc.timeout", Duration.class); // 5000ms와 같이 입력한 데이터는 Duration 클래스로 매핑이 가능하다.
+        List<String> options = env.getProperty("my.datasource.etc.options", List.class); // 쉼표로 구분된 데이터는 List로 매핑이 가능하다.
+      
+        return new MyDataSource(url, maxConnection, timeout, options); 
+    }
+}
+```
+* `MyDataSource`라는 별도의 빈 클래스를 정의했다고 했을 때, 상술한 바와 같이 `Environment` 클래스를 활용하여 일관성 있는 외부 설정 조회가 가능하다.
+  * 예를 들어, **외부 설정이 어떠한 방식으로 주입되었건 간에 `Environment` 클래스만으로 접근이 가능**하다.
+* 또한, **`Environment.getProperty([설정 키], [클래스]);` 형태의 메소드를 호출하는 것으로 임의의 설정을 원하는 타입으로 변환하는 것이 가능**하다.
+  * 이 경우, **내부적으로 사전 정의된 다양한 타입들에 대해 기본적으로 적용되는 스프링의 타입 변환이 적용**된다.
