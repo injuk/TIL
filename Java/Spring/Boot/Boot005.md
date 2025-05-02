@@ -212,3 +212,29 @@ public class EnvironmentConfiguration {
 * 반면, `Environment` 클래스를 활용하는 방식은 `env.getProperty()` 메소드가 반복적으로 호출되어야 한다는 한계를 갖는다.
   * 또한, 외부 설정의 키는 문자열로 전달하므로 휴먼 에러에도 취약하다는 단점이 수반된다.
   * 이에 스프링은 `@Value` 어노테이션을 활용하여 외부 설정 값을 주입 받을 수 있도록 하는 개선된 기능을 제공한다.
+
+## 2025-05-02 Fri
+### @Value 어노테이션을 활용한 필드 주입
+* 스프링은 외부로부터 주입 받은 설정 데이터를 편리하게 사용할 수 있도록 `@Value` 어노테이션을 지원하며, 이는 다음과 같이 사용이 가능하다.
+  * 이 때, **`@Value` 어노테이션 역시 내부적인 동작 과정에서는 `Environment` 클래스를 활용**한다.
+```java
+@Configuration
+public class ValueAnnotationConfiguration {
+    @Value("${my.datasource.url}")
+    private String url;
+    @Value("${datasource.etc.max-connection}")
+    private int maxConnection;
+    @Value("${my.datasource.etc.timeout}")
+    private Duration timeout;
+    @Value("${my.datasource.etc.options}")
+    private List<String> options;
+    
+    @Bean
+    public MyDataSource myDataSource() {
+        return new MyDataSource(url, maxConnection, timeout, options); 
+    }
+}
+```
+* **생성자를 통해 주입했던 `Environment` 클래스 방식과 달리, `@Value` 어노테이션을 활용하는 경우 각 값이 외부로부터 주입**된다.
+  * 이렇듯 `@Value("${프로퍼티_키}")` 형태의 어노테이션을 활용하는 것으로 외부 설정 데이터를 손쉽게 주입 받는 것이 가능하다.
+* 반면, **`@Value` 어노테이션 역시 외부 설정 데이터를 원하는 클래스 형태로 캐스팅해주는 기능을 지원**한다.
