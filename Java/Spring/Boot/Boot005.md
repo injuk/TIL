@@ -238,3 +238,21 @@ public class ValueAnnotationConfiguration {
 * **생성자를 통해 주입했던 `Environment` 클래스 방식과 달리, `@Value` 어노테이션을 활용하는 경우 각 값이 외부로부터 주입**된다.
   * 이렇듯 `@Value("${프로퍼티_키}")` 형태의 어노테이션을 활용하는 것으로 외부 설정 데이터를 손쉽게 주입 받는 것이 가능하다.
 * 반면, **`@Value` 어노테이션 역시 외부 설정 데이터를 원하는 클래스 형태로 캐스팅해주는 기능을 지원**한다.
+
+## 2025-05-03 Sat
+### @Value 어노테이션을 활용한 인자 주입
+* 상술한 바와 같이 **`@Value` 어노테이션은 필드 주입에 활용할 수 있으나, 아래와 같이 작성할 경우 인자 주입에도 활용이 가능**하다.
+```java
+@Configuration
+public class ValueAnnotationConfiguration {
+    @Bean
+    public MyDataSource myDataSource(
+        @Value("${my.datasource.url}") String url,
+        @Value("${datasource.etc.max-connection}") int maxConnection,
+        @Value("${my.datasource.etc.timeout}") Duration timeout,
+        @Value("${my.datasource.etc.options}") List<String> options         
+    ) {
+        return new MyDataSource(url, maxConnection, timeout, options); 
+    }
+}
+```
