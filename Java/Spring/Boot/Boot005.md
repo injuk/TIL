@@ -256,3 +256,22 @@ public class ValueAnnotationConfiguration {
     }
 }
 ```
+
+## 2025-05-04 Sun
+### @Value 어노테이션에 기본값 명시하기
+* `@Value` 어노테이션을 통해 임의의 외부 설정 데이터를 주입 받고자 했으나, 대응되는 데이터가 존재하지 않는다면 아래와 같이 기본 값을 명시할 수 있다.
+  * 이 경우, 기본 값은 `:` 문자 뒤에 명시하게 되며 해당 프로퍼티 키에 대응되는 데이터가 존재하지 않는 경우에만 적용된다.
+```java
+@Configuration
+public class ValueAnnotationConfiguration {
+    @Bean
+    public MyDataSource myDataSource(
+        @Value("${my.datasource.url:local.db.com}") String url, // : 문자 뒤에 기본 값을 명시한다.
+        @Value("${my.datasource.etc.max-connection}") int maxConnection,
+        @Value("${my.datasource.etc.timeout}") Duration timeout,
+        @Value("${my.datasource.etc.options}") List<String> options         
+    ) {
+        return new MyDataSource(url, maxConnection, timeout, options); 
+    }
+}
+```
