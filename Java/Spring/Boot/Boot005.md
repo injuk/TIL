@@ -311,3 +311,29 @@ public class MyProperties {
 * `@ConfigurationProperties` 어노테이션이 명시된 경우 해당 객체가 외부 설정을 주입받을 것임을 선언하게 되며, 필요시 접두사를 인자에 전달할 수 있다.
   * 때문에 상술한 코드의 경우, `my.datasource`는 외부 설정 파일에 작성된 설정의 접두사를 의미한다.
 * **해당 방식의 경우 외부 설정 데이터의 주입에 Java 빈 프로퍼티 방식을 활용하므로, 반드시 각 필드에 대한 `Getter`와 `Setter`가 정의**되어야 한다.
+
+## 2025-05-08 Thu
+### @ConfigurationProperties 기반의 외부 설정 데이터 활용하기
+* 상술한 코드만으로는 동작하지 않으며, 아래와 같이 `@EnableConfigurationProperties` 어노테이션을 명시해줄 필요가 있다.
+  * 해당 어노테이션은 인자에 전달 받은 클래스의 인스턴스를 생성하고, 이를 스프링 빈으로 등록하도록 한다.
+```java
+@Configuration
+@EnableConfigurationProperties(MyProperties.class)
+public class PropertiesConfiguration {
+    private final MyProperties properties;
+    
+    public PropertiesConfiguration(MyProperties properties) {
+        this.properties = properties;
+    }
+    
+    @Bean
+    public MyDataSource myDataSource() {
+      return new MyDataSource(
+              properties.getUrl(), 
+              properties.getEtc().getMaxConnection(), 
+              properties.getEtc().getTimeout(), 
+              properties.getEtc().getOptions(),
+      );
+    }
+}
+```
