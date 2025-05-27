@@ -81,3 +81,35 @@ public class PropertiesConfiguration {
   * 사실 외부 데이터를 의미하는 필드 값들은 최초 한 번 초기화된 이후엔 변경되지 않는 것이 바람직하다.
 * 때문에 **외부 데이터는 `Setter` 대신 생성자를 사용하는 방식이 권장되며, 이 경우 초기화된 이후 데이터가 변경될 만한 가능성을 미연에 방지**할 수 있다.
   * 이렇듯 좋은 프로그램은 다소의 불편한 제약이 따르는 프로그램으로 이해할 수 있다.
+
+## 2025-05-26 Tue
+### @ConfigurationProperties 어노테이션과 생성자 주입
+* `@ConfigurationProperties` 기능은 `Getter`나 `Setter`를 사용하는 Java 빈 프로퍼티 방식 외에도 생성자 방식 역시 다음과 같이 제공한다.
+```java
+@Getter
+@ConfigurationProperties("my.datasource")
+public class MyProperties {
+    private String url;
+    private Etc etc;
+    
+    public MyProperties(String url, @DefaultValue Etc etc) {
+        this.url = url;
+        this.etc = etc;
+    }
+    
+    @Getter
+    public static class Etc {
+        private int maxConnection;
+        private Duration timeout;
+        private List<String> options;
+        
+        public Etc(int maxConnection, Duration timeout, @DefaultValue("DEFAULT") List<String> options) {
+            this.maxConnection = maxConnection;
+            this.timeout = timeout;
+            this.options = options;
+        }
+    }
+}
+```
+* 상술한 외부 설정 데이터 클래스를 활용하기 위한 `@Configuration` 설정 클래스는 크게 바뀔 것이 없으며, 의존성을 잘 연결해주는 것만으로도 잘 동작한다.
+  * 이는 외부 설정 데이터 클래스에 대한 인스턴스화 과정에서 Java 빈 방식 이외에도 생성자 주입 방식을 스프링 차원에서 잘 지원하기 때문이다.
