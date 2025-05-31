@@ -138,3 +138,15 @@ public class MyProperties {
 * 그러나 정수 타입을 예로 들어, 반드시 양수만 허용해야하는 외부 설정 데이터에 대해 `0`이나 음수가 전달되는 경우를 방지할 수는 없는 명확한 한계를 갖는다.
   * 다시 말해, 상술한 외부 설정 데이터 중 `my.datasource.etc.max-connection`에 양수가 전달되지 않은 경우 예외를 발생시키고 싶을 수 있다.
   * 그러나 현재까지 다루어 온 방식에서는 이러한 문제를 해결할 수 없으며, 주입된 외부 설정 데이터를 검증할 수 있을만한 방법을 마련할 필요성이 있다.
+
+## 2025-05-31 Sat
+### @ConfigurationProperties를 활용하는 외부 설정 데이터의 유효성 검증
+* **`@ConfigurationProperties`를 통해 주입된 데이터의 유효성을 검증하기 위해서는 다음과 같은 Java 빈 검증기의 도입을 고려**해볼 수 있다.
+  * 이는 `@ConfigurationProperties` 어노테이션이 할당된 대상 역시 Java 객체이기에 스프링 차원에서 Java 빈 검증기를 지원하기 때문에 가능하다.
+```groovy
+implementation 'org.springframework.boot:spring-boot-starter-validation'
+```
+* 추가적으로 상술한 의존성을 주입할 경우, 다음과 같이 `jakartar`와 `hibernate` 기반의 빈 검증기가 프로젝트에 추가되는 것을 확인할 수 있다.
+  1. `jakarta.validation.constraints`: Java 표준 검증기에서 지원하는 기능들이 포함된다.
+  2. `org.hibernate.validator.constraints`: Java 표준 검증기가 아닌, 하이버네이트 검증기라는 표준 검증기 구현체에서 제공하는 기능에 해당한다.
+* 이 경우 표준이 아닌 하이버네이트 검증기를 사용하는 것이 마음에 걸릴 수 있으나, 실무의 경우 대부분의 상황에서 해당 검증기를 사용하므로 문제가 되지 않는다.
