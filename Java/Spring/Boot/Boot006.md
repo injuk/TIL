@@ -150,3 +150,40 @@ implementation 'org.springframework.boot:spring-boot-starter-validation'
   1. `jakarta.validation.constraints`: Java 표준 검증기에서 지원하는 기능들이 포함된다.
   2. `org.hibernate.validator.constraints`: Java 표준 검증기가 아닌, 하이버네이트 검증기라는 표준 검증기 구현체에서 제공하는 기능에 해당한다.
 * 이 경우 표준이 아닌 하이버네이트 검증기를 사용하는 것이 마음에 걸릴 수 있으나, 실무의 경우 대부분의 상황에서 해당 검증기를 사용하므로 문제가 되지 않는다.
+
+## 2025-06-01 Sun
+### Java 빈 검증기를 활용한 외부 설정 데이터의 검증
+* 이 때, Java 빈 검증기를 적용하여 외부 설정 데이터의 유효성을 검증하는 코드의 예시는 다음과 같다.
+```java
+@Getter
+@ConfigurationProperties("my.datasource")
+@Validated
+public class MyProperties {
+    @NotEmpty
+    private String url;
+    private Etc etc;
+    
+    public MyProperties(String url, Etc etc) {
+        this.url = url;
+        this.etc = etc;
+    }
+    
+    @Getter
+    public static class Etc {
+        @Min(1)
+        @Max(999)
+        private int maxConnection;
+        @DurationMin(seconds = 1)
+        @DurationMax(seconds = 60)
+        private Duration timeout;
+        private List<String> options;
+        
+        public Etc(int maxConnection, Duration timeout, List<String> options) {
+            this.maxConnection = maxConnection;
+            this.timeout = timeout;
+            this.options = options;
+        }
+    }
+}
+```
+* 이 경우, `@Validated`를 활용하여 Java 빈 검증기의 동작을 유도하고 `@NotEmpty` 등을 통해 Java 빈 검증 로직을 활용하는 점을 확인할 수 있다.
