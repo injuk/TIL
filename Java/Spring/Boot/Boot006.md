@@ -203,3 +203,25 @@ public class MyProperties {
   * 한 편, YAML 작성시 계층 구조는 일반적으로 공백 두 글자를 사용한다.
 * 반면, 하나의 스프링 애플리케이션에 `properties`와 `yml` 확장자로 작성된 설정이 동시에 존재할 경우 `properties` 파일이 우선권을 갖는다.
   * 물론 **실무 관점에서 이를 혼용하는 것은 일관성이 깨지기에 권장되지 않으며, 일반적으로는 가독성이 좋은 YAML 설정 파일이 자주 사용**된다.
+
+## 2025-06-04 Wed
+### @Profile 어노테이션이란?
+* 상술한 과정을 기반으로 프로필과 외부 설정 기능을 조합하면 환경마다 서로 다른 설정 값을 적용할 수 있다.
+  * 반면, 나아가 설정 값 뿐만 아니라 환경 별로 생성되는 빈 자체를 달리하고자 하는 요구 사항이 발생할 수 있다.
+* `@Profile` 어노테이션은 현재 애플리케이션에 적용된 프로필 값에 따라 서로 다른 빈을 다음과 같이 등록하도록 할 수 있다.
+```java
+@Configuration
+public class MyConfig {
+    @Bean
+    @Profile("default") // 프로필을 설정하지 않은 경우 default 프로필이 활성화되므로, 해당 빈이 등록된다.
+    public MyClient myClient() {
+        return new MyClient();
+    }
+
+    @Bean
+    @Profile("prod")
+    public MyProdClient myProdClient() {
+      return new MyProdClient();
+    }
+}
+```
