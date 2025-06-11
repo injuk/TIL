@@ -303,3 +303,20 @@ management:
 ```
 * 반면, `shutdown`이라는 엔드포인트는 기본적으로 활성화되어 있지 않기에 상술한 설정을 통해서도 노출되지 않는다.
   * 결국 **임의의 액추에이터 기능을 활용하기 위해서는 대응되는 엔드포인트가 활성화되고, 노출되도록 설정되어야 함**을 알 수 있다.
+
+## 2025-06-12 Thu
+### 새로운 엔드포인트를 활성화하고 노출하기
+* 액추에이터가 제공하는 다양한 기능 중, `shutdown` 기능을 활성화하는 설정은 다음과 같이 작성할 수 있다.
+  * 이렇듯 임의의 엔드포인트를 활성화하는 경우, `management.endpoint.[엔드포인트명].enabled`를 `true`로 설정해주어야 한다.
+```yaml
+management:
+  endpoint:
+    shutdown:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+```
+* 해당 설정을 통해 `shutdown` 기능은 명시적으로 활성화되며, `management.endpoints.web.exposure.include`가 `*`로 설정되어 있기에 노출된다.
+  * 해당 기능을 활용하고자 하는 경우, 서버의 동작을 변경하는 것이므로 노출된 `/actuator/shutdown` 엔드포인트를 `POST` 메소드 호출해주어야 한다.
