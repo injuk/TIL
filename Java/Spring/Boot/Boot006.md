@@ -320,3 +320,23 @@ management:
 ```
 * 해당 설정을 통해 `shutdown` 기능은 명시적으로 활성화되며, `management.endpoints.web.exposure.include`가 `*`로 설정되어 있기에 노출된다.
   * 해당 기능을 활용하고자 하는 경우, 서버의 동작을 변경하는 것이므로 노출된 `/actuator/shutdown` 엔드포인트를 `POST` 메소드 호출해주어야 한다.
+
+## 2025-06-13 Fri
+### 임의의 엔드포인트를 선택적으로 노출하기
+* 활성화되어 있는 여러 엔드포인트를 모두 노출하는 대신 선택적인 기능만을 외부에 노출하고자 하는 경우, 설정을 다음과 같이 작성할 수 있다.
+```yaml
+management:
+  endpoints:
+    jmx:
+      exposure:
+        include: "health,info" # health와 info 엔드포인트만을 노출한다.
+```
+* 반면, 임의의 엔드포인트를 제외하고 모두 노출하고자 하는 경우의 설정은 다음과 같이 `exclude`를 사용한다.
+```yaml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+        exclude: "env,beans" # env와 beans 엔드포인트를 제외한 모든 엔드포인트를 노출한다.
+```
