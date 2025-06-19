@@ -407,3 +407,17 @@ management:
   4. `build`: 애플리케이션의 빌드 정보를 제공하며, 해당 기능은 `META-INF/build-info.properties` 파일이 작성되었음을 전제한다.
   5. `git`: 애플리케이션의 `git` 정보를 제공하며, 해당 기능 역시 `git.properties` 파일이 작성되었음을 전제한다.
 * 이 때, **`info` 엔드포인트와 관련된 여러 기능 중 `env`와 `java` 및 `os`는 기본적으로 비활성화**된다.
+
+## 2025-06-19 Thu
+### java와 os 애플리케이션 정보 확인하기
+* 액추에이터를 활용하여 Java 런타임 및 운영체제 정보를 확인하고자 하는 경우, 외부 설정 데이터 파일에 다음과 같은 내용을 작성해줄 필요가 있다.
+  * 이 때, `management.info` 형태이며 `management.endpoint.info` 형태가 아님에 주의해야 한다.
+```yaml
+management:
+  info:
+    java:
+      enabled: true
+    os:
+      enabled: true
+```
+* 해당 액추에이터 설정을 적용한 후, 애플리케이션을 시작하면 `/actuator/info` 경로를 통해 필요한 애플리케이션 정보를 확인하는 것이 가능하다.
