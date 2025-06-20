@@ -421,3 +421,20 @@ management:
       enabled: true
 ```
 * 해당 액추에이터 설정을 적용한 후, 애플리케이션을 시작하면 `/actuator/info` 경로를 통해 필요한 애플리케이션 정보를 확인하는 것이 가능하다.
+
+## 2025-06-20 Fri
+### env 애플리케이션 정보 확인하기
+* 상술한 `env` 설정의 경우, 다음과 같은 외부 설정 데이터 파일을 작성하게 된다.
+```yaml
+management:
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: my-awesome-application
+    alias: maa
+```
+* 이 경우, **`/actuator/info` 엔드포인트를 호출할 경우 `info` 경로 하위에 작성한 `app.name`과 `app.alias`가 결과에 포함**된다.
+  * 즉, `env`를 활용할 경우 애플리케이션에 자신만의 정보를 설정하고 이를 외부에서 확인하는 것이 가능하다.
