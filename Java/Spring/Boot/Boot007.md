@@ -342,3 +342,41 @@ management:
   7. `disk.free`
   8. `disk.total`
 * 이는 기본적으로 제공되는 다양한 지표 중 일부에 불과하며, 이렇듯 **아무런 설정 없이도 마이크로미터는 수 많은 지표 정보를 기본적으로 수집**한다.
+
+## 2025-07-02 Wed
+### metrics 엔드포인트를 활용한 지표 정보 조회
+* 마이크로미터에 의해 수집된 지표 정보는 `/actuator/metrics/[지표명]` 형태의 엔드포인트를 조회하는 것으로 확인할 수 있다.
+  * 상술한 지표 이름 목록을 예로 들었을 때, JVM 메모리 사용량은 `/actuator/metrics/jvm.memory.used` 형태의 엔드포인트로 조회할 수 있다.
+```json
+{
+  "name": "jvm.memory.used",
+  "description": "The amount of used memory",
+  "baseUnit": "bytes",
+  "measurements": [
+    {
+      "statistic": "VALUE",
+      "value": 42
+    }
+  ],
+  "availableTags": [
+    {
+      "tag": "area",
+      "values": [
+        "heap",
+        "noheap"
+      ]
+    },
+    {
+      "tag": "id",
+      "values": [
+        "G1 Survivor Space",
+        "Compressed Class Space",
+        "Metaspace",
+        "CodeCache",
+        "G1 Old Gen",
+        "G1 Eden Space"
+      ]
+    }
+  ]
+}
+```
