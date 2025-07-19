@@ -236,3 +236,40 @@ implementation 'io.micrometer:micrometer-registry-prometheus' // build.gradle에
   1. `http_server_requests_seconds_count`: 요청 수를 의미한다.
   2. `http_server_requests_seconds_sum`: 요청 수의 시간 합을 의미한다.
   3. `http_server_requests_seconds_max`: 최근 발생한 요청들 중 가장 오래 걸린 요청 수의 최대 시간을 의미한다.
+
+## 2025-07-19 Sat
+### 프로메테우스의 수집 설정
+```
+> 임의의 스프링 애플리케이션이 마이크로미터의 프로메테우스 구현체를 등록하여 지표 정보를 수집하고 있을 경우, 프로메테우스 역시 적절히 설정될 필요가 있다.
+```
+* 프로메테우스는 앞서 다루었던 `/actuator/prometheus` 엔드포인트를 주기적으로 호출하여 지표 정보를 수집하고, 저장한다.
+  * 때문에 이를 위해 프로메테우스 역시 설정될 필요가 있으며, 프로메테우스의 설정은 `prometheus.yml` 파일을 활용한다.
+* 프로메테우스의 설정 파일인 `prometheus.yml`에 다음과 같은 내용을 추가하는 것으로 스프링 애플리케이션으로부터 지표 정보를 수집할 수 있게 된다.
+```yaml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+alerting:
+  alertmanagers:
+    - static_configs:
+      - targets:
+        # - alertmanager:9093
+
+rule_files:
+scrape_configs:
+  # 해당 내용은 기본적으로 명시되어 있으며, 프로메테우스 서버가 자기 자신의 지표 정보를 수집하기 위한 설정에 해당한다.
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # 아래의 내용을 추가한다.
+  - job_name: "spring-actuator" # 사용자가 알아보기 쉬운 임의의 이름을 명시한다.
+    metric_path: "/actuator/prometheus" # 액추에이터가 제공하는 지표 정보 수집용 엔드포인트를 명시한다.
+    scrape_interval: 1s # 수집 주기를 명시하며, 일반적으로는 10초 ~ 1분 정도의 값을 명시한다.
+    static_configs:
+      - targets: ["localhost:8080"] # 지표 정보를 수집하기 위한 서버의 주소와 포트 정보를 명시한다.
+```
+* 이 때, 테스트를 위해 `scrape_interval`을 1초로 설정했으나 기본 값은 1분으로 설정된다는 점에 주의를 기울여야 한다.
+  * **지표 정보 수집 주기가 너무 짧을 경우, 오히려 애플리케이션의 성능에 악영향을 줄 수 있으므로 운영 환경에서는 최소한 10초 정도의 설정이 권장**된다.
+* 상술한 설정을 추가한 후 프로메테우스 서버를 재시작하면 설정이 적용되며, 신규 설정의 적용 여부는 프로메테우스 콘솔 상단의 `Status` 탭에서 확인 가능하다.
+  * 정확히는 `Status` 탭의 하위 메뉴 중 `Configuration`과 `Targets` 메뉴에서 설정 내용이 적용된 것을 상세히 확인할 수 있다.
