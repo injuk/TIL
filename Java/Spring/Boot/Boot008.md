@@ -305,3 +305,15 @@ http_server_requests_seconds_count{error="none",instance="localhost:8080",job="s
   4. `/`: 나눗셈에 해당한다.
   5. `%`: 모듈러 연산에 해당한다.
   6. `^`: 지수에 해당한다.
+
+## 2025-07-23 Wed
+### 프로메테우스의 빌트인 함수
+* SQL과 유사하게, 프로메테우스는 다음과 같은 유용한 빌트인 함수를 제공한다.
+  1. `sum`: 조회된 결과의 전체 합을 반환한다.
+  2. `sum by`: `sum by(method, status)(http_server_requests_seconds_count)`와 같은 형태로 그룹화한 합을 반환한다.
+  3. `count`: 지표 정보의 갯수를 반환한다.
+  4. `topk`: `topk(3, http_server_requests_seconds_count)`와 같은 형태로 임의의 지표 정보의 상위 `k` 개를 반환한다.
+  5. `offset`: `http_server_requests_seconds_count offset 10m`과 같은 형태로, 현재를 기준으로 임의의 시간 전의 지표 정보를 반환한다.
+* 이 밖에도 `http_server_requests_seconds_count[1m]`과 같은 형태로 입력하는 `범위 벡터 선택기` 기능 역시 제공된다.
+  * 해당 기능은 현재를 기준으로 지난 단위 시간 동안의 모든 기록값을 선택하여 반환한다.
+  * 반면, 해당 기능은 데이터로만 확인이 가능하며 이를 별도의 가공 과정을 거치지 않고서는 바로 시각화하는 것이 불가능하다.
