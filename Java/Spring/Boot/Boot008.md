@@ -397,3 +397,26 @@ http_server_requests_seconds_count{error="none",instance="localhost:8080",job="s
   2. JVM 메모리 사용량 초과
   3. 커넥션 풀 고갈
   4. 에러 로그 급증
+
+## 2025-08-02 Sat
+### 그라파나를 활용한 CPU 지표 확인
+* 에를 들어 애플리케이션에 CPU 관련한 문제가 발생한 상황을 가정하기 위해서는 다음과 같은 CPU 부하를 주는 코드를 작성해볼 수 있다.
+  * Postman 등의 도구를 통해 해당 API를 호출할 경우, for 문 처리를 위해 즉각적인 응답이 반환되지 않고 다소 시간이 걸리는 것을 확인할 수 있다.
+```kotlin
+@Slf4j
+@RestController
+class TestController {
+
+    @GetMapping("cpu")
+    fun cpu(): String {
+        log.info("cpu!")
+        var value: Long = 0
+        for (i in 1..1000000000000L) {
+            value++
+        }
+      
+        return "result: $value"
+    }
+}
+```
+* 이를 통해 그라파나 대시보드로부터 CPU 사용량 증가 지표 정보를 확인할 수 있으나, 프로메테우스의 지표 수집은 동기적이지 않으므로 약간의 시간이 필요하다.
