@@ -482,3 +482,20 @@ class TestController(
   * 이 경우, 대시보드에는 `Connection Timeout Count` 지표로 해당 정보를 확인할 수 있다.
 * **실무의 경우 `JDBC Template`과 `JPA`가 자주 사용되므로 커넥션을 자동으로 처리하여 커넥션을 깜빡하고 닫지 않는 현상은 잘 발생하지 않는다**.
   * 오히려 **임의의 쿼리가 최적화되지 않았거나 락이 설정된 것으로 인해 응답이 오래 걸릴 경우 발생하기 쉬우므로 해당 부분을 개선하는 것이 바람직**하다. 
+
+## 2025-08-06 Wed
+### 그라파나를 활용한 에러 로그 지표 확인
+* 에를 들어 애플리케이션에 에러 로그가 급증하는 상황을 가정하기 위해서는 다음과 같이 의도적으로 많은 에러 코드를 출력하는 코드를 작성해볼 수 있다.
+```kotlin
+@Slf4j
+@RestController
+class TestController {
+  @GetMapping("error-log")
+  fun errorLog(): String {
+    log.error("errorLog!")
+
+    return "failed"
+  }
+}
+```
+* 해당 API를 수십 회 이상 호출할 경우, 그라파나 대시보드의 `ERROR logs` 패널에서 해당 정보를 확인할 수 있다.
