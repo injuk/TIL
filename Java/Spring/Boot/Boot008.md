@@ -538,3 +538,38 @@ class TestController {
 * **해당 컴포넌트는 액추에이터를 활용하는 경우라면 스프링을 통해 자동으로 주입 받을 수 있으며, 이를 통해 카운터와 게이지 등을 등록**할 수 있다.
   * 앞서 다룬 바와 같이, 카운터는 점진적으로 증가하는 단일 누적 측정 지표이며 값을 증가시키거나 0으로 초기화하는 것이 가능하다.
   * 마이크로미터의 경우, 카운터 지표의 값을 감소시키는 기능을 지원하긴 하지만 이는 카운터 지표의 목적과는 맞지 않는다.
+
+## 2025-08-18 Mon
+### 카운터 유형의 비즈니스 메트릭 적용하기
+* 예를 들어 주문 기능을 제공하는 서비스가 있고, 주문 수와 취소 수 지표를 카운터 유형으로 분류했다고 가정할 경우 다음과 같이 작성하여 정보를 수집할 수 있다.
+```kotlin
+@Service
+@Slf4j
+class OrderService(
+    private val registry: MeterRegistry,
+) {
+    fun order() {
+        log.info("order")
+      
+        val counter: Counter = Counter.builder("my.order")
+            .tag("className", this.javaClass.name)
+            .tag("method", "order")
+            .description("this is my order metric")
+            .register(registry)
+      
+      counter.increment()
+    }
+  
+    fun cancel() {
+        log.info("cancel")
+
+        val counter: Counter = Counter.builder("my.order")
+            .tag("className", this.javaClass.name)
+            .tag("method", "cancel")
+            .description("this is my cancel metric")
+            .register(registry)
+  
+        counter.increment()
+    }
+}
+```
