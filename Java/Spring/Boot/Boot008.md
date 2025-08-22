@@ -622,3 +622,17 @@ class OrderService {
 }
 ```
 * 앞서 다루었던 `Counter` 빌더가 `tag`를 지원하듯, AOP 방식은 `tag`에 클래스와 메소드 이름을 기준으로 자동 분류된다.
+
+## 2025-08-23 Sat
+### CountedAspect 빈 등록하기
+* 반면, **상술한 어노테이션을 명시하는 데에서 그치지 않고 반드시 다음과 같은 `CountedAspect` 빈을 명시적으로 등록**해주어야 한다.
+    * 이렇듯 `CountedAspect`가 빈으로 등록되어 있어야 어노테이션을 활용한 AOP가 의도한대로 동작할 수 있다.
+    * 즉, **`CountedAspect`를 `@Counted`와 같은 AOP를 동작시키는 모듈로 이해**할 수 있다.
+```kotlin
+@Configuration
+class OrderConfig {
+    @Bean
+    fun countedAspect(registry: MeterRegistry): CountedAspect
+        = CountedAspect(registry)
+}
+```
