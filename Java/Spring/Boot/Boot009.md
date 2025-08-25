@@ -298,3 +298,48 @@ class OrderConfig {
     2. `seconds_sum`: 전체 실행 시간의 합을 의미한다.
     3. `seconds_max`: 게이지 유형의 지표이며, 실행에 가장 오래 걸린 시간을 의미한다.
 * 반면, `Timer`는 내부적으로 `Time window` 개념을 갖기에 약 1분에서 3분 정도마다 최대 실행 시간을 다시 계산한다.
+
+## 2025-08-25 Mon
+### Timer 빌더를 활용한 시간 측정
+* 상술한 `Timer` 기능을 활용하기 위해서는 `Timer.builder`와 같은 빌더를 다음과 같이 활용할 수 있다.
+  * 이 때, 빌더의 인자로 전달되는 `name`에는 이름을 명시하며 프로메테우스가 필터링할 수 있도록 적절한 `tag`를 명시할 수 있다.
+  * 또한, 수동으로 주입 받은 `MeterRegistry`에 타이머를 등록해주어야만 `Timer`는 실제로 동작할 수 있다.
+```kotlin
+@Service
+@Slf4j
+class OrderService(
+    private val registry: MeterRegistry,
+) {
+    @Counted("my.order")
+    fun order() {
+        val timer = Timer.builder("my.order")
+            .tag("class", this.getClass().getName())
+            .tag("method", "order")
+            .description("order")
+            .register(registry)
+        
+        timer.record {
+            log.info("order")
+            // 비즈니스 로직이 있다고 가정한다.
+            Thread.sleep(500)
+        }
+    }
+
+    @Counted("my.order")
+    fun cancel() {
+        val timer = Timer.builder("my.order")
+            .tag("class", this.getClass().getName())
+            .tag("method", "cancel")
+            .description("cancel")
+            .register(registry)
+
+        timer.record {
+            log.info("cancel")
+            // 비즈니스 로직이 있다고 가정한다.
+            Thread.sleep(500)
+        }
+    }
+}
+```
+* 이렇듯 `Timer`를 활용하여 시간을 측정하고자 하는 경우, `Timer`가 제공하는 `record` 메소드를 활용할 수 있다.
+  * 해당 메소드 내에 실제로 시간을 측정하고자 하는 로직을 함수 형태로 전달해주는 것으로 시간을 측정할 수 있게 된다.
