@@ -298,6 +298,7 @@ class OrderConfig {
     2. `seconds_sum`: 전체 실행 시간의 합을 의미한다.
     3. `seconds_max`: 게이지 유형의 지표이며, 실행에 가장 오래 걸린 시간을 의미한다.
 * 반면, `Timer`는 내부적으로 `Time window` 개념을 갖기에 약 1분에서 3분 정도마다 최대 실행 시간을 다시 계산한다.
+* 또한, 실행 시간의 합과 누적 실행 수 정보가 이미 수집되고 있으므로 필요한 경우 `secods_sum / seconds_count`를 활용한 평균을 구할 수 있다.
 
 ## 2025-08-25 Mon
 ### Timer 빌더를 활용한 시간 측정
@@ -310,7 +311,6 @@ class OrderConfig {
 class OrderService(
     private val registry: MeterRegistry,
 ) {
-    @Counted("my.order")
     fun order() {
         val timer = Timer.builder("my.order")
             .tag("class", this.getClass().getName())
@@ -325,7 +325,6 @@ class OrderService(
         }
     }
 
-    @Counted("my.order")
     fun cancel() {
         val timer = Timer.builder("my.order")
             .tag("class", this.getClass().getName())
@@ -343,3 +342,27 @@ class OrderService(
 ```
 * 이렇듯 `Timer`를 활용하여 시간을 측정하고자 하는 경우, `Timer`가 제공하는 `record` 메소드를 활용할 수 있다.
   * 해당 메소드 내에 실제로 시간을 측정하고자 하는 로직을 함수 형태로 전달해주는 것으로 시간을 측정할 수 있게 된다.
+
+## 2025-08-26 Tue
+### @Timed 어노테이션을 활용한 AOP 적용
+* 상술한 코드는 `Timer` 유형의 지표를 수동으로 등록하는 경우에 해당하며, 일반적으로는 `@Timed` 어노테이션을 다음과 같이 적용하여 AOP를 활용할 수 있다.
+```kotlin
+@Timed(value = "my.order")
+@Service
+@Slf4j
+class OrderService {
+    fun order() {
+        log.info("order")
+        // 비즈니스 로직이 있다고 가정한다.
+        Thread.sleep(500)
+    }
+
+    fun cancel() {
+        log.info("cancel")
+        // 비즈니스 로직이 있다고 가정한다.
+        Thread.sleep(500)
+    }
+}
+```
+* **`@Timed` 어노테이션은 타입이나 메소드 모두에 적용할 수 있으며, 코드와 같이 타입에 적용한 경우 해당 타입의 모든 공개 메소드에 타이머가 적용**된다.
+  * 즉, 타이머를 적용하고자 하지 않은 메소드의 접근 제어자가 `public`으로 설정되어 있다면 타이머가 적용될 가능성이 있으므로 주의해야 한다.
