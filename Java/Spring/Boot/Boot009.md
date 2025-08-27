@@ -366,3 +366,17 @@ class OrderService {
 ```
 * **`@Timed` 어노테이션은 타입이나 메소드 모두에 적용할 수 있으며, 코드와 같이 타입에 적용한 경우 해당 타입의 모든 공개 메소드에 타이머가 적용**된다.
   * 즉, 타이머를 적용하고자 하지 않은 메소드의 접근 제어자가 `public`으로 설정되어 있다면 타이머가 적용될 가능성이 있으므로 주의해야 한다.
+
+## 2025-08-27 Wed
+### TimedAspect 빈 등록하기
+* 반면, 앞선 `CountedAspect`와 유사한 이유에서 **반드시 다음과 같은 `TimedAspect` 빈을 명시적으로 등록**해주어야 한다.
+    * 이렇듯 `TimedAspect`가 빈으로 등록되어 있어야 어노테이션을 활용한 시간 측정 AOP가 의도한대로 동작할 수 있다.
+    * 즉, **`TimedAspect`를 `@Timed`와 같은 AOP를 동작시키는 모듈로 이해**할 수 있다.
+```kotlin
+@Configuration
+class OrderConfig {
+    @Bean
+    fun timedAspect(registry: MeterRegistry): TimedAspect
+            = TimedAspect(registry)
+}
+```
