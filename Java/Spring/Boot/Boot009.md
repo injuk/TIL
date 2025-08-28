@@ -380,3 +380,29 @@ class OrderConfig {
             = TimedAspect(registry)
 }
 ```
+
+## 2025-08-28 Thu
+### 게이지 유형의 지표 등록하기
+* 게이지는 임의로 오르내릴 수 있는 단일 숫자 값을 의미하는 지표 정보이며, 값의 현재 상태를 모니터링하는 데에 유용하다.
+  * 게이지 유형의 지표는 CPU 사용량 등과 같이 그 값이 증가하거나 감소할 수 있는 특징을 갖는다.
+  * 나아가 임의의 지표의 유형을 카운터나 게이지로 분류하기 위해서는 값의 감소 가능성을 확인해볼 수 있다.
+* 게이지 유형의 지표 정보를 수집하기 위해서는 다음과 같은 간단한 코드를 작성해볼 수 있다.
+  * 이는 `my.gauge`라는 이름으로 게이지 유형의 지표를 등록하며, 인자에 전달된 람다를 활용하는 방식에 해당한다. 
+```kotlin
+@Component
+class MyGaugeMetric(
+    private val myService: MyService,
+    private val registry: MeterRegistry,
+) {
+    
+    @PostConstruct
+    fun init() {
+        Gauge.builder("my.gauge", myService) { service ->
+            println("gauge call")
+            return service.getStock()
+        }
+    }
+}
+```
+* 상술한 형태로 작성한 클래스를 사용할 경우, **외부에서 지표 정보를 수집하는 등 지표 정보를 확인할 때마다 게이지 빌더에 전달된 람다 함수가 호출**된다.
+  * 이 때, 해당 **람다의 반환 값이 게이지 값**이 된다.
