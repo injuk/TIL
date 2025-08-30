@@ -418,3 +418,24 @@ class MyGaugeMetric(
   * 다시 말해, 게이지 빌더에 전달된 람다가 호출되어 그 반환 값이 프로메테우스에 의해 수집되는 것으로 이해할 수 있다.
 * 또한, 프로메테우스가 아닌 액추에이터의 엔드포인트를 활용하여 조회하는 경우에도 동일한 로그가 출력되는 것을 확인할 수 있다.
   * 이로 미루어보았을 때, **게이지 유형의 지표는 어떠한 방식으로든 지표 정보가 수집될 때 현재 값을 그대로 반환하는 방식으로 동작하는 것**을 알 수 있다.
+
+## 2025-08-30 Sat
+### 빈을 활용한 간단한 게이지 유형의 지표 등록
+* 앞서 작성했던 게이지 유형의 지표 수집 코드는 빈을 활용하여 다음과 같이 간단한 방식으로도 구현할 수 있다.
+    * 이 때, `register(registry)` 메소드의 반환값이 `MeterBinder`임에 주의하여 구현한다.
+```kotlin
+@Configuration
+class MyConfig {
+    
+    @Bean
+    fun getSize(service: MyService): MeterBinder = { registry ->
+        Gauge.builder("my.gauge", myService) { service ->
+            println("gauge call")
+            return service.getStock()
+        }
+            .also {
+                register(registry)
+            }
+    }
+}
+```
