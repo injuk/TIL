@@ -102,3 +102,8 @@
 * [Basics005](https://github.com/injuk/TIL/blob/master/Code/Git/Basics005.md)
 * [Basics006](https://github.com/injuk/TIL/blob/master/Code/Git/Basics006.md)
 * [Basics007](https://github.com/injuk/TIL/blob/master/Code/Git/Basics007.md)
+
+## FP
+## Elixir
+### 2025.09.07 ~ 2025.00.00
+* [Elixir001](https://github.com/injuk/TIL/blob/master/Code/FP/Elixir/Elixir001.md)
