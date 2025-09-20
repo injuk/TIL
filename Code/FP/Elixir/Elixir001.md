@@ -146,3 +146,13 @@ keyword_list = [name: "John", alias: "Wick", age: 40]
 # DB.save(records, [{:use_transaction: true}, {:logging: "TRACE"}])
 DB.save(records, use_transaction: true, logging: "TRACE")
 ```
+
+## 2025-09-20 Sat
+### 엘릭서 컬렉션 II - 맵
+* **맵은 `%{키 => 값}` 형태의 리터럴을 갖는 키-값 쌍 형태의 자료 구조이며, 키로는 문자열과 아톰을 비롯한 다양한 데이터 타입을 사용**할 수 있다.
+    * 심지어는 `String.downcase("Name")`과 같은 표현식 까지도 키로 사용하는 것이 가능하다.
+    * 일반적으로 하나의 맵에서는 모든 키를 같은 타입으로 구성하지만, 이는 반드시 따라야하는 문법적인 제약으로 볼 수는 없다.
+* 반면, 키가 아톰인 경우라면 상술한 키워드 리스트와 유사한 방식으로 단축 문법을 다음과 같이 사용할 수 있다.
+```elixir
+map = %{name: "John", age: 40, alias: "Wick"}
+```
