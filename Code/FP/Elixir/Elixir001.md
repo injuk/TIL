@@ -197,3 +197,33 @@ true === :true # true
 ```text
 숫자 < 아톰 < 레퍼런스 < 함수 < 포트 < 프로세스 Id < 튜플 < 맵 < 리스트 < 바이너리
 ```
+
+## 2025-09-25 Thu
+### Do 블록 스코프란?
+* 대부분의 프로그래밍 언어에서 지원하는 블록 스코프(`{}`)는 엘릭서에서 지원되지 않으며, 대신 Do 블록 스코프를 활용할 수 있다.
+```elixir
+# if 절에 맞으면 do - end 문이 실행된다. 이 때, 엘릭서에서 if 문은 표현식이므로 값을 반환한다.
+success = if (true) do
+    42
+  end
+
+IO.puts success # 42가 출력된다.
+
+failure = if (false) do
+    42
+  end
+
+IO.puts failure # failure는 nil이 되며, nil을 출력하고자 하는 경우 콘솔에는 빈 줄이 출력된다.
+```
+* 또한, **Do 블록 스코프는 다음과 같은 단축 문법을 지원**한다.
+```elixir
+success = if (true),
+do: 42
+
+IO.puts success # 42가 출력된다.
+
+failure = if (false),
+  do: 42
+
+IO.puts failure # failure는 nil이 되며, nil을 출력하고자 하는 경우 콘솔에는 빈 줄이 출력된다.
+```
