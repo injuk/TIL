@@ -227,3 +227,21 @@ failure = if (false),
 
 IO.puts failure # failure는 nil이 되며, nil을 출력하고자 하는 경우 콘솔에는 빈 줄이 출력된다.
 ```
+
+## 2025-09-26 Fri
+### with 표현식이란?
+* with 표현식은 변수의 스코프를 정의하고, 패턴 매칭에 실패한 경우 대응할 수 있도록 지원하는 기능을 제공하며, 이는 다음과 같은 예제로 확인할 수 있다.
+```elixir
+result = with [a | _] = [1, 2], do: a
+# IO.puts a # error: undefined variable "a"
+# a는 with 블록 스코프 밖에서 접근할 수 없으므로 컴파일 에러가 발생한다.
+
+# result = with [a | _] = nil, do: a # (MatchError) no match of right hand side value: nil
+# nil은 [a | _] 패턴과 매칭되지 않으므로 MatchError가 발생한다.
+
+result = with [a | _] <- nil, do: a
+# nil은 [a | _] 패턴과 매칭되지 않으나, <- 기호를 사용했기에 with 표현식은 매칭되지 않은 대상인 nil을 반환한다.
+# 같은 이유에서, nil 대신 매칭되지 않는 값인 42를 반환하도록 수정하면 result는 42가 된다.
+IO.puts result # nil을 출력할 경우, 콘솔에는 아무 것도 출력되지 않는다.
+```
+* 반면, **with 표현식은 내부적으로 함수 호출과 유사하게 처리되므로 첫 번째 인자에 대해 개행을 적용하지 않아야 하는 점에 주의**해야 한다.
