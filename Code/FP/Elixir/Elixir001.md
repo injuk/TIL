@@ -266,3 +266,22 @@ IO.puts sum.(1, 2) # 3이 출력된다.
 temp = fn -> IO.puts "Hello world!" end # Hello world!가 출력된다.
 # temp = fn () -> IO.puts "Hello world!" end # 이렇게 빈 괄호를 명시적으로 작성하는 것도 가능하다.
 ```
+
+## 2025-09-28 Sun
+### 본문을 여럿 갖는 함수 정의하기
+```
+> 엘릭서 함수를 하나 정의할 때, 인자의 타입이나 내용에 따라 여러 구현을 정의하는 것이 가능하다.
+```
+* **엘릭서 함수를 하나 정의할 때, 인자의 타입이나 내용에 따라 여러 구현을 정의하는 것이 가능하다.**를 가져야 한다.
+* 이 경우 어떠한 구현을 실행할지는 기본적으로 패턴 매칭을 통해 결정하며, 이는 다음과 같은 코드 예시로 확인할 수 있다.
+```elixir
+handle_open = fn
+  {:ok, file} -> "First line: #{IO.read(file, :line)}"
+  {_, error} -> "Error: #{:file.format_error(error)}" # atom인 :error를 명시하는 것이 아님에 주의한다!
+end
+
+IO.puts handle_open.(File.open("./hello.txt")) # 존재하는 파일에 대해서는 첫 번째 구현이 실행된다.
+IO.puts handle_open.(File.open("./none.txt")) # 존재하지 않는 파일에 대해서는 두 번째 구현이 실행된다.
+```
+* `handle_open` 함수는 모두 튜플을 인자로 받아 동작하지만, 첫 번째 구현의 경우 튜플을 구성하는 첫 인자가 `:ok`인 경우에만 실행된다.
+    * 반면, 두 번째 구현은 `_`를 활용하여 첫 번째 인자가 `:ok`가 아닌 모든 경우에 대해 동작하도록 정의된다.
