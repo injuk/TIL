@@ -418,3 +418,38 @@ end
     3. `<>`, `++`과 같은 연결 연산자
     4. 임의의 컬렉션이나 범위에 어떠한 값이 포함되는지 확인하기 위한 `in` 연산자
     5. `is_integer/1`나 `is_atom/1`과 같은 타입 확인 함수
+
+## 2025-10-07 Thu
+### 가드 조건절을 코드에 적용하기
+* 앞서 다룬 내용을 토대로, 임의의 인자 `x`의 타입을 확인하기 위한 `Guard` 모듈을 다음과 같이 작성해볼 수 있다.
+```elixir
+defmodule Guard do
+  def what_is(x) when is_number(x) do
+    IO.puts "#{x} is a number"
+  end
+  def what_is(x) when is_list(x) do
+    IO.puts "#{inspect x} is a list"
+  end
+  def what_is(x) when is_atom(x) do
+    IO.puts "#{x} is an atom"
+  end
+  # 가장 마지막에 실행되며, 상술한 가드 조건절에서 걸러내지 못한 경우에만 실행된다.
+  def what_is(x) do
+    IO.puts "#{inspect x} is something else... idk"
+  end
+end
+```
+* 이를 활용할 경우, 앞서 다루었던 `Factorial` 모듈도 다음과 같이 개선할 수 있다.
+```elixir
+defmodule Factorial do
+  def of(0), do: 1
+  
+  # 가드 조건절을 추가한다.
+  def of(n) when is_integer(n) and n > 0, do: n * of(n - 1)
+  
+  # 어디에도 매칭되지 않은 경우, 예외를 던지도록 한다.
+  def of(n) do
+    raise "Factorial is only defined for non-negative integers, got: #{inspect n}"
+  end
+end
+```
