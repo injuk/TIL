@@ -511,3 +511,15 @@ defmodule Params do
   end
 end
 ```
+
+## 2025-10-13 Mon
+### 프라이빗 함수 정의하기
+* `def` 키워드 대신 `defp` 키워드를 적용하는 것으로 임의의 기명 함수를 모듈의 프라이빗 함수로 정의할 수 있다.
+    * 이 경우, 어디서든 호출 가능한 퍼블릭 함수와 달리 모듈 내에서만 호출이 가능하다.
+* **프라이빗 함수 역시 동일한 함수를 여러 번 정의할 수 있으나, 다음과 같이 동일한 함수의 일부만을 프라이빗으로 적용할 수는 없다**.
+```elixir
+defmodule Invalid do
+  def fun(a) when is_list(a), do: true
+  defp fun(a), do: false
+end
+```
