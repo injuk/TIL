@@ -523,3 +523,38 @@ defmodule Invalid do
   defp fun(a), do: false
 end
 ```
+
+## 2025-10-14 Tue
+### 파이프 연산자 활용하기
+```
+> 프로그래밍은 데이터를 변형하는 작업이며, 파이프 연산자는 변형을 명시적으로 드러내는 좋은 방법이다.
+```
+* 절차지향적인 프로그래밍을 진행할 경우, 다음과 같은 코드를 작성하는 상황이 발생하기 쉽다.
+    * 이는 즉 일련의 함수 호출 흐름에서, 직전 함수 호출의 출력이 다음 함수 호출의 입력으로 사용되는 경우를 의미한다.
+```javascript
+const TARGET_YEAR = 2025;
+const people = await getPeople();
+const orders = await getOrder(people);
+const tax = await salesTax(orders, TARGET_YEAR);
+const filing = await prepareFiling(tax);
+
+// 또는 아래와 같은 끔찍한 시간을 보낼 수도 있다!
+// const filing = await prepareFiling(
+//     await salesTax(
+//         await getOrder(
+//             await getPeople(),
+//         ), TARGET_YEAR
+//     ),
+// );
+```
+* **엘릭서는 이러한 경우에 사용할 수 있는 강력한 연산자인 파이프 연산자(`|>`)를 제공하며, 이는 왼쪽 표현식의 결과를 오른쪽 함수의 첫 인자로 전달**한다.
+    * 아래의 `sales_tax(2025)`예시의 경우 언뜻 첫 인자로 정수 리터럴이, 두 번째 인자로 `get_order`의 출력이 전달되는 것처럼 보일 수 있다.
+    * 그러나 **파이프 연산자는 항상 다음 함수의 첫 번째 인자로 출력을 전달하므로, 실제로는 `sales_tax`의 두 번째 인자가 정수 리터럴**임을 알 수 있다.
+    * 때문에 기본적으로는 **파이프 연산자로 표기된 `val |> f(a, b)`와 같은 표현식은 `f(val, a, b)`와 같다고 이해해도 무방**하다.
+```elixir
+filing = DB.get_people
+  |> Orders.get_order # 모두 앞 연산의 결과를 받아 동작하며, 출력을 다음 연산의 첫번째 입력으로 전달한다!
+  |> sales_tax(2025)
+  |> prepare_filing
+```
+* 반면, **파이프라인 내에서 함수를 호출하기 위해서는 반드시 괄호를 표기해야 함에 주의**를 기울여야 한다.
