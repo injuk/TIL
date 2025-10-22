@@ -95,3 +95,15 @@ defmodule MyListV2 do
   def square([head|tail]), do: [head * head | square(tail)]
 end
 ```
+
+## 2025-10-22 Wed
+### 재귀를 활용한 나만의 map 함수 작성하기
+* 상술한 `len`과 `square`는 머리와 꼬리를 나누어 재귀적인 연산을 적용한다는 점에서 공통점이 있으며, 이는 다음과 같이 추상화할 수 있다.
+```elixir
+defmodule MyListV3 do
+  def my_map([], _func), do: []
+  def my_map([head|tail], func), do: [func.(head) | my_map(tail, func)]
+end
+```
+* 첫 번째 구현의 경우 빈 리스트를 반환하므로 두번째 인자인 `func`를 버리기 위해 `_` 기호를 명시하는 반면, 두 번째 구현은 상술했던 구현 방식을 추상화한다.
+    * 이 때, 두 번째 인자에는 익명 함수가 전달되므로 `fn (x) -> x * x end` 또는 `&(&1 * &1)` 등을 전달할 수 있다.
