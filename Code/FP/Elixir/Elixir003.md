@@ -124,3 +124,40 @@ defmodule Swapper do
   def swap([_]), do: raise "list contains odd number of elements"
 end
 ```
+
+## 2025-10-24 Fri
+### 패턴 내에서 패턴 매칭을 활용하기
+* 아래와 같은 모듈이 있다고 가정했을 때, `test_data`는 데이터 그 자체를 의미하는 반면 `for_location`은 두 번째 인자를 기준으로 필터링한다.
+```elixir
+defmodule WeatherHistory do
+  def test_data do
+    [
+      [1366225622, 26, 15, 0.125],
+      [1366225622, 27, 15, 0.45],
+      [1366225622, 28, 21, 0.25],
+      [1366229222, 26, 19, 0.081],
+      [1366229222, 27, 17, 0.468],
+      [1366229222, 28, 15, 0.60],
+      [1366232822, 26, 22, 0.095],
+      [1366232822, 27, 21, 0.05],
+      [1366232822, 28, 24, 0.03],
+      [1366236422, 26, 17, 0.025],
+    ]
+  end
+
+  def for_location([], _location_number), do: []
+  def for_location([[time, location_number, temp, rain]|tail], location_number), do: [[time, location_number, temp, rain]|for_location(tail, location_number)]
+  def for_location([_|tail], location_number), do: for_location(tail, location_number)
+end
+```
+* 반면, `for_location`의 두 번째 구현은 `location_number` 이외의 세 값을 불필요하게 패턴 매칭하므로 이를 아래와 같이 개선할 수 있다.
+```elixir
+defmodule WeatherHistory do
+  # ...생략
+  def for_location([], _location_number), do: []
+  def for_location([head = [_, location_number, _, _]|tail], location_number), do: [head|for_location(tail, location_number)]
+  def for_location([_|tail], location_number), do: for_location(tail, location_number)
+end
+```
+* 이는 **엘릭서의 패턴 매칭이 재귀적이기 떄문에 가능한 것으로, 패턴 내에서도 패턴 매칭을 수행하는 것으로 상술한 리팩토링을 적용**할 수 있다.
+    * 즉, 해당 패턴 매칭은 복합 리스트에서 두 번째 값을 기준으로 매칭하되 리스트의 머리는 전부 `head`라는 변수에 매칭한 것으로 해석할 수 있다. 
