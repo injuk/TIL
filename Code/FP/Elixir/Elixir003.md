@@ -239,3 +239,23 @@ map = %{ name: "Dave", age: 42 }
 
 %{ name: a_name, height: _ } = map # (MatchError) no match of right hand side value: %{name: "Dave", age: 42}, height는 존재하지 않는 키이므로 매칭되지 않는다.
 ```
+
+## 2025-10-31 Fri
+### 맵과 구조 분해 문법
+* 다음과 같은 코드에서 확인할 수 있듯, 구조 분해 문법을 활용하면 맵에 저장된 임의의 키에 대응되는 값을 추출할 수 있다.
+```elixir
+map = %{ name: "Dave", age: 42 }
+%{ name: name } = ma
+IO.puts name # Dave가 출력된다.
+```
+* 이는 `:name`에 대응되는 값인 `Dave`를 구조 분해한 것인 반면, 다음과 같이 **값에 대응되는 키를 구조 분해할 수는 없음에 주의**해야 한다.
+    * 에러 메시지에서 알 수 있듯, 맵의 패턴 매칭 과정에서 키에 대해 패턴을 적용할 수 없다.
+    * 또한, 아래의 코드와 같이 **맵을 정의하는 과정에서는 키에 변수를 적용할 수 있으나 패턴 매칭 시에는 키에 패턴을 적용할 수 없다는 점을 기억**해야 한다.
+```elixir
+%{ something => "Dave" } = map # error: cannot use variable something as map key inside a pattern.
+
+name = "name"
+age = "age"
+map2 = %{ name => "Dave", age => 42 }
+IO.puts "#{inspect map2}" # %{"age" => 42, "name" => "Dave"} 가 출력된다.
+```
