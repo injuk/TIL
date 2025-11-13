@@ -445,3 +445,22 @@ age = "age"
 map2 = %{ name => "Dave", age => 42 }
 IO.puts "#{inspect map2}" # %{"age" => 42, "name" => "Dave"} 가 출력된다.
 ```
+
+## 2025-11-13 Thu
+### 핀 연산자를 활용한 키 매칭
+* **핀 연산자는 매칭시 패턴을 의미하는 좌항에 변수가 존재하는 경우, 그 변수에 매칭된 값을 이번 매칭에 사용하도록 지원**한다.
+    * 이를 활용할 경우, 다음과 같이 패턴 매칭에 변수의 값을 사용하는 코드를 작성해볼 수 있다.
+```elixir
+defmodule Playground do
+  def data do
+    %{ name: "Dave", state: "TX", like: "Elixir" }
+  end
+
+  def show() do
+    for key <- [:name, :like] do
+      %{ ^key => value } = Playground.data # 핀 연산자가 없다면 키에 대한 패턴 매칭으로 취급되므로 컴파일 에러가 발생한다.
+      value
+    end
+  end
+end
+```
