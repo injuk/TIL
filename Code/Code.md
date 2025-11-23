@@ -105,7 +105,7 @@
 
 ## FP
 ## Elixir
-### 2025.09.07 ~ 2025.00.00
+### 2025.09.07 ~ 2025.11.23 (suspended)
 * [Elixir001](https://github.com/injuk/TIL/blob/master/Code/FP/Elixir/Elixir001.md)
 * [Elixir002](https://github.com/injuk/TIL/blob/master/Code/FP/Elixir/Elixir002.md)
 * [Elixir003](https://github.com/injuk/TIL/blob/master/Code/FP/Elixir/Elixir003.md)
