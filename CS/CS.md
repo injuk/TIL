@@ -19,3 +19,4 @@
 * [HTTP003](https://github.com/injuk/TIL/blob/master/CS/Web/HTTP/HTTP003.md)
 * [HTTP004](https://github.com/injuk/TIL/blob/master/CS/Web/HTTP/HTTP004.md)
 * [HTTP005](https://github.com/injuk/TIL/blob/master/CS/Web/HTTP/HTTP005.md)
+* [HTTP006](https://github.com/injuk/TIL/blob/master/CS/Web/HTTP/HTTP006.md)
