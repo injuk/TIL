@@ -1,4 +1,4 @@
-# JavaScript
+# CS
 
 ## Web
 ### Basics
@@ -13,7 +13,7 @@
 * [Basics008](https://github.com/injuk/TIL/blob/master/CS/Web/Basics/Basics008.md)
 
 ### HTTP
-### 2025.11.24 ~ 2026.00.00
+### 2025.11.24 ~ 2026.09.13
 * [HTTP001](https://github.com/injuk/TIL/blob/master/CS/Web/HTTP/HTTP001.md)
 * [HTTP002](https://github.com/injuk/TIL/blob/master/CS/Web/HTTP/HTTP002.md)
 * [HTTP003](https://github.com/injuk/TIL/blob/master/CS/Web/HTTP/HTTP003.md)
@@ -23,3 +23,4 @@
 * [HTTP007](https://github.com/injuk/TIL/blob/master/CS/Web/HTTP/HTTP007.md)
 * [HTTP008](https://github.com/injuk/TIL/blob/master/CS/Web/HTTP/HTTP008.md)
 * [HTTP009](https://github.com/injuk/TIL/blob/master/CS/Web/HTTP/HTTP009.md)
+* [HTTP010](https://github.com/injuk/TIL/blob/master/CS/Web/HTTP/HTTP010.md)
