@@ -186,3 +186,16 @@
 - `venv`나 `conda` 등 여러 방법이 있지만, `uv`는 크게 다음과 같은 장점을 갖는다.
   1. 파이썬 자체를 프로젝트에 설치하므로, 파이썬을 따로 관리하는 과정이 필요 없어진다.
   2. 다른 도구에 비해 압도적으로 빠르며, 이로 인해 환경을 정리할 때 '지우고 다시 만드는' 방식을 선택지에 두기 쉽다.
+
+## 2026-11-28 Sat
+### Node.js 기반의 필수 의존성 설치하기
+- 랭그래프는 Node.js 기반으로도 작성이 가능하며, 필수 의존성들을 설치하기 위한 명령어는 다음과 같이 정리할 수 있다.
+```bash
+npm install @langchain/langgraph langchain @langchain/core @langchain/openai dotenv zod \
+  @langchain/langgraph-checkpoint-sqlite @langfuse/langchain @langfuse/otel
+npm install -D @langchain/langgraph-cli
+```
+- 중요한 것은 `@langchain/langgraph`로, 그래프 런타임으로서 노드와 엣지 및 상태를 정의하는 핵심적인 기능을 처리한다.
+- `@langchain/core`는 메시지나 채팅 모델 등 공통 인터페이스를 정의하는 패키지에 해당한다.
+  - 랭그래프와 `LangChain` 패키지는 모두 해당 인터페이스들을 기준으로 호환된다고 이해할 수 있다.
+- `langchain`은 에이전트 생성 등의 고수준 기능을 모아두는 패키지로, 상술한 `core` 패키지 상에서 동작한다.
